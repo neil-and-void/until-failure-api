@@ -2,19 +2,56 @@
 
 package model
 
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+type AuthResult interface {
+	IsAuthResult()
 }
 
-type Todo struct {
+type AuthError struct {
+	Message string `json:"message"`
+}
+
+func (AuthError) IsAuthResult() {}
+
+type AuthSuccess struct {
+	RefreshToken string `json:"refreshToken"`
+	AuthToken    string `json:"authToken"`
+}
+
+func (AuthSuccess) IsAuthResult() {}
+
+type Exercise struct {
+	ID              string           `json:"id"`
+	ExerciseRoutine *ExerciseRoutine `json:"exerciseRoutine"`
+	Sets            []*Set           `json:"sets"`
+}
+
+type ExerciseRoutine struct {
 	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
+	Name string `json:"name"`
+	Sets int    `json:"sets"`
+	Reps int    `json:"reps"`
+}
+
+type Set struct {
+	ID   string `json:"id"`
+	Set  int    `json:"set"`
+	Reps int    `json:"reps"`
 }
 
 type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
+type Workout struct {
+	ID             string          `json:"id"`
+	WorkoutRoutine *WorkoutRoutine `json:"workoutRoutine"`
+	Exercise       []*Exercise     `json:"exercise"`
+}
+
+type WorkoutRoutine struct {
+	ID               string             `json:"id"`
+	Name             string             `json:"name"`
+	ExerciseRoutines []*ExerciseRoutine `json:"exerciseRoutines"`
 }
