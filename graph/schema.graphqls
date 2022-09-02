@@ -1,0 +1,29 @@
+type User {
+  id: ID!
+  name: String!
+  email: String!
+}
+
+type WorkoutRoutine {}
+
+type ExerciseRoutine {}
+
+type Workout {}
+
+type Exercise {}
+
+type Set {}
+
+type AuthSuccess {
+  refreshToken: String!
+  authToken: String!
+}
+
+type Query {
+  routines(): [Routine]
+}
+
+type Mutation {
+  login(email: String, password: String): AuthSuccess
+  signup(email: String, name: String, password: String, confirmPassword: String): AuthSuccess 
+}
