@@ -4,15 +4,36 @@ type User {
   email: String!
 }
 
-type WorkoutRoutine {}
+type WorkoutRoutine {
+  id: ID!
+  name: String!
+  exerciseRoutines: [ExerciseRoutine]
+}
 
-type ExerciseRoutine {}
+type ExerciseRoutine {  
+  id: ID!
+  name: String!
+  sets: Int!
+  reps: Int!
+}
 
-type Workout {}
+type Workout {  
+  id: ID!
+  workoutRoutine: WorkoutRoutine
+  exercise: [Exercise]
+}
 
-type Exercise {}
+type Exercise {  
+  id: ID!
+  ExerciseRoutine: ExerciseRoutine
+  sets: [Set]
+}
 
-type Set {}
+type Set {  
+  id: ID!
+  set: Int!
+  reps: Int!
+}
 
 type AuthSuccess {
   refreshToken: String!
