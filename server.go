@@ -7,8 +7,9 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/neilZon/workout-logger-api/graph"
-	"github.com/neilZon/workout-logger-api/graph/generated"
+	graph "github.com/neilZon/workout-logger-api/graphql"
+	db "github.com/neilZon/workout-logger-api/graphql/common/database"
+	"github.com/neilZon/workout-logger-api/graphql/generated"
 )
 
 const defaultPort = "8080"
@@ -18,6 +19,11 @@ func main() {
 	if port == "" {
 		port = defaultPort
 	}
+
+    db, err := db.InitDb()
+    if err != nil {
+        log.Fatal(err)
+    }
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
 

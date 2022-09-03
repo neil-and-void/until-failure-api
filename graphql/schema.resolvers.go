@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"net/mail"
 
-	"github.com/neilZon/workout-logger-api/graph/generated"
-	"github.com/neilZon/workout-logger-api/graph/model"
+	"github.com/neilZon/workout-logger-api/graphql/generated"
+	"github.com/neilZon/workout-logger-api/graphql/model"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
@@ -30,7 +30,12 @@ func (r *mutationResolver) Signup(ctx context.Context, email *string, name *stri
 		return nil, gqlerror.Errorf("Not a valid email")
 	}
 
-	panic(fmt.Errorf("not implemented: Signup - signup"))
+	// panic(fmt.Errorf("not implemented: Signup - signup"))
+
+	return model.AuthSuccess{
+		RefreshToken: "1234",
+		AuthToken: "1234",
+	}, nil
 }
 
 // WorkoutRoutines is the resolver for the workoutRoutines field.
