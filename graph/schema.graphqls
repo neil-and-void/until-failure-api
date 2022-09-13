@@ -41,7 +41,7 @@ type AuthError {
 
 type AuthSuccess {
   refreshToken: String!
-  authToken: String!
+  accessToken: String!
 }
 
 union AuthResult = AuthError | AuthSuccess

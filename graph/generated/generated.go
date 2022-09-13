@@ -12,7 +12,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/neilZon/workout-logger-api/graphql/model"
+	"github.com/neilZon/workout-logger-api/graph/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -48,7 +48,7 @@ type ComplexityRoot struct {
 	}
 
 	AuthSuccess struct {
-		AuthToken    func(childComplexity int) int
+		AccessToken  func(childComplexity int) int
 		RefreshToken func(childComplexity int) int
 	}
 
@@ -131,12 +131,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AuthError.Message(childComplexity), true
 
-	case "AuthSuccess.authToken":
-		if e.complexity.AuthSuccess.AuthToken == nil {
+	case "AuthSuccess.accessToken":
+		if e.complexity.AuthSuccess.AccessToken == nil {
 			break
 		}
 
-		return e.complexity.AuthSuccess.AuthToken(childComplexity), true
+		return e.complexity.AuthSuccess.AccessToken(childComplexity), true
 
 	case "AuthSuccess.refreshToken":
 		if e.complexity.AuthSuccess.RefreshToken == nil {
@@ -426,7 +426,7 @@ type AuthError {
 
 type AuthSuccess {
   refreshToken: String!
-  authToken: String!
+  accessToken: String!
 }
 
 union AuthResult = AuthError | AuthSuccess
@@ -660,8 +660,8 @@ func (ec *executionContext) fieldContext_AuthSuccess_refreshToken(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _AuthSuccess_authToken(ctx context.Context, field graphql.CollectedField, obj *model.AuthSuccess) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthSuccess_authToken(ctx, field)
+func (ec *executionContext) _AuthSuccess_accessToken(ctx context.Context, field graphql.CollectedField, obj *model.AuthSuccess) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AuthSuccess_accessToken(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -674,7 +674,7 @@ func (ec *executionContext) _AuthSuccess_authToken(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.AuthToken, nil
+		return obj.AccessToken, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -691,7 +691,7 @@ func (ec *executionContext) _AuthSuccess_authToken(ctx context.Context, field gr
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_AuthSuccess_authToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_AuthSuccess_accessToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "AuthSuccess",
 		Field:      field,
@@ -3757,9 +3757,9 @@ func (ec *executionContext) _AuthSuccess(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "authToken":
+		case "accessToken":
 
-			out.Values[i] = ec._AuthSuccess_authToken(ctx, field, obj)
+			out.Values[i] = ec._AuthSuccess_accessToken(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

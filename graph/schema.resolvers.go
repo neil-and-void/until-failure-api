@@ -8,8 +8,13 @@ import (
 	"fmt"
 	"net/mail"
 
-	"github.com/neilZon/workout-logger-api/graphql/generated"
-	"github.com/neilZon/workout-logger-api/graphql/model"
+	"github.com/neilZon/workout-logger-api/common"
+	"github.com/neilZon/workout-logger-api/common/database"
+	"github.com/neilZon/workout-logger-api/graph/generated"
+	"github.com/neilZon/workout-logger-api/graph/model"
+	"github.com/neilZon/workout-logger-api/utils"
+	"github.com/neilZon/workout-logger-api/utils/config"
+	"github.com/neilZon/workout-logger-api/utils/token"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
@@ -20,21 +25,45 @@ func (r *mutationResolver) Login(ctx context.Context, email *string, password *s
 
 // Signup is the resolver for the signup field.
 func (r *mutationResolver) Signup(ctx context.Context, email *string, name *string, password *string, confirmPassword *string) (model.AuthResult, error) {
-	fmt.Println(*email, *name, *password, *confirmPassword)
+	context := common.GetContext(ctx)
 
 	if *password != *confirmPassword {
 		return nil, gqlerror.Errorf("Passwords don't match")
 	}
 
-	if _, err := mail.ParseAddress(*email); err == nil {
+	// check strength
+	if !utils.IsStrong(*password) {
+		return nil, gqlerror.Errorf("Password needs at least 1 number")
+	}
+
+	if _, err := mail.ParseAddress(*email); err != nil {
 		return nil, gqlerror.Errorf("Not a valid email")
 	}
 
-	// panic(fmt.Errorf("not implemented: Signup - signup"))
+	var user database.User
+	context.Database.Where("email = ?", *email).First(&user)
+	// check if user was found
+	if user.ID != 0 {
+		return nil, gqlerror.Errorf("Email already exists")
+	}
+
+	err := context.Database.Create(&database.User{Name: *name, Email: *email, Password: *password}).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	c := token.Credentials{
+		Email: *email,
+		Name:  *name,
+	}
+
+	refreshToken := token.Sign(c, []byte(config.GetEnvVariable("REFRESH_SECRET")), config.REFRESH_TTL)
+	accessToken := token.Sign(c, []byte(config.GetEnvVariable("ACCESS_SECRET")), config.ACCESS_TTL)
 
 	return model.AuthSuccess{
-		RefreshToken: "1234",
-		AuthToken: "1234",
+		RefreshToken: refreshToken,
+		AccessToken:  accessToken,
 	}, nil
 }
 

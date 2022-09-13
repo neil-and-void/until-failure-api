@@ -1,4 +1,4 @@
-package db
+package database
 
 // User
 func GetUser() {}
@@ -6,5 +6,5 @@ func GetUser() {}
 // Workout Routine
 func GetWorkoutRoutine() {}
 
-// Exercise Routine 
+// Exercise Routine
 func GetExerciseRoutine() {}

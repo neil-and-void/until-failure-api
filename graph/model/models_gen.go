@@ -14,7 +14,7 @@ func (AuthError) IsAuthResult() {}
 
 type AuthSuccess struct {
 	RefreshToken string `json:"refreshToken"`
-	AuthToken    string `json:"authToken"`
+	AccessToken  string `json:"accessToken"`
 }
 
 func (AuthSuccess) IsAuthResult() {}
