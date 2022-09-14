@@ -32,6 +32,10 @@ type ExerciseRoutine struct {
 	Reps int    `json:"reps"`
 }
 
+type RefreshSuccess struct {
+	AccessToken string `json:"accessToken"`
+}
+
 type Set struct {
 	ID   string `json:"id"`
 	Set  int    `json:"set"`

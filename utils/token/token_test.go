@@ -10,6 +10,7 @@ func TestToken(t *testing.T) {
 	t.Parallel()
 
 	c := Credentials{
+		ID: "someid",
 		Email: "test@test.com",
 		Name:  "testname",
 	}

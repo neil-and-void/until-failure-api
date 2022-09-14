@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 	db "github.com/neilZon/workout-logger-api/common/database"
 	"github.com/neilZon/workout-logger-api/graph"
 	"github.com/neilZon/workout-logger-api/graph/generated"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 const defaultPort = "8080"
@@ -27,6 +29,10 @@ func main() {
 	}
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
+		// notify bug tracker...maybe? idk too much money	
+		return gqlerror.Errorf("Internal server error")
+	})
 
 	customCtx := &common.DBContext{
 		Database: db,

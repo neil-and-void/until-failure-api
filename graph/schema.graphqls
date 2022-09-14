@@ -46,6 +46,10 @@ type AuthSuccess {
 
 union AuthResult = AuthError | AuthSuccess
 
+type RefreshSuccess {
+  accessToken: String!
+}
+
 type Query {
   workoutRoutines: [WorkoutRoutine]
   exerciseRoutines: [ExerciseRoutine]
@@ -59,4 +63,5 @@ type Mutation {
     password: String
     confirmPassword: String
   ): AuthResult!
+  refreshAccessToken(refreshToken: String): RefreshSuccess!
 }

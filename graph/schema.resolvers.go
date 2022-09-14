@@ -16,11 +16,35 @@ import (
 	"github.com/neilZon/workout-logger-api/utils/config"
 	"github.com/neilZon/workout-logger-api/utils/token"
 	"github.com/vektah/gqlparser/v2/gqlerror"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, email *string, password *string) (model.AuthResult, error) {
-	panic(fmt.Errorf("not implemented: Login - login"))
+	context := common.GetContext(ctx)
+
+	var user database.User
+	context.Database.Where("email = ?", *email).First(&user)
+	if user.ID == 0 {
+		return nil, gqlerror.Errorf("Email does not exist")
+	}
+
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(*password))
+	if err != nil {
+		return nil, gqlerror.Errorf("Incorrect Password")
+	}
+	c := token.Credentials{
+		Email: user.Email,
+		Name:  user.Name,
+	}
+
+	refreshToken := token.Sign(c, []byte(config.GetEnvVariable("REFRESH_SECRET")), config.REFRESH_TTL)
+	accessToken := token.Sign(c, []byte(config.GetEnvVariable("ACCESS_SECRET")), config.ACCESS_TTL)
+
+	return model.AuthSuccess{
+		RefreshToken: refreshToken,
+		AccessToken:  accessToken,
+	}, nil
 }
 
 // Signup is the resolver for the signup field.
@@ -42,13 +66,18 @@ func (r *mutationResolver) Signup(ctx context.Context, email *string, name *stri
 
 	var user database.User
 	context.Database.Where("email = ?", *email).First(&user)
-	// check if user was found
+	// check if user was found from query
 	if user.ID != 0 {
 		return nil, gqlerror.Errorf("Email already exists")
 	}
 
-	err := context.Database.Create(&database.User{Name: *name, Email: *email, Password: *password}).Error
+	// Hashing the password with the default cost of 10
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(*password), bcrypt.DefaultCost)
+	if err != nil {
+		panic(err)
+	}
 
+	err = context.Database.Create(&database.User{Name: *name, Email: *email, Password: string(hashedPassword)}).Error
 	if err != nil {
 		return nil, err
 	}
@@ -64,6 +93,27 @@ func (r *mutationResolver) Signup(ctx context.Context, email *string, name *stri
 	return model.AuthSuccess{
 		RefreshToken: refreshToken,
 		AccessToken:  accessToken,
+	}, nil
+}
+
+// RefreshAccessToken is the resolver for the refreshAccessToken field.
+func (r *mutationResolver) RefreshAccessToken(ctx context.Context, refreshToken *string) (*model.RefreshSuccess, error) {
+	claims, err := token.Decode(*refreshToken, []byte(config.GetEnvVariable("REFRESH_SECRET")))
+	if err != nil {
+		return nil, gqlerror.Errorf("Refresh token invalid")
+	}
+	// need to convert interface{} to string
+	email := fmt.Sprintf("%v", claims["email"])
+	name := fmt.Sprintf("%v", claims["sub"])
+
+	c := token.Credentials{
+		Email: string(email),
+		Name:  string(name),
+	}
+	accessToken := token.Sign(c, []byte(config.GetEnvVariable("ACCESS_SECRET")), config.ACCESS_TTL)
+
+	return &model.RefreshSuccess{
+		AccessToken: accessToken,
 	}, nil
 }
 

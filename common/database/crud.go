@@ -1,10 +1,10 @@
 package database
 
 // User
-func GetUser() {}
+func GetUserByEmail(email string) {}
 
 // Workout Routine
-func GetWorkoutRoutine() {}
+func GetWorkoutRoutines(email string) {}
 
 // Exercise Routine
-func GetExerciseRoutine() {}
+func GetExerciseRoutines(email string) {}

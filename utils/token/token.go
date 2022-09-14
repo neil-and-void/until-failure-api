@@ -8,6 +8,7 @@ import (
 )
 
 type Credentials struct {
+	ID string
 	Name  string
 	Email string
 }

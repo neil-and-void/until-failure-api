@@ -66,13 +66,18 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		Login  func(childComplexity int, email *string, password *string) int
-		Signup func(childComplexity int, email *string, name *string, password *string, confirmPassword *string) int
+		Login              func(childComplexity int, email *string, password *string) int
+		RefreshAccessToken func(childComplexity int, refreshToken *string) int
+		Signup             func(childComplexity int, email *string, name *string, password *string, confirmPassword *string) int
 	}
 
 	Query struct {
 		ExerciseRoutines func(childComplexity int) int
 		WorkoutRoutines  func(childComplexity int) int
+	}
+
+	RefreshSuccess struct {
+		AccessToken func(childComplexity int) int
 	}
 
 	Set struct {
@@ -103,6 +108,7 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	Login(ctx context.Context, email *string, password *string) (model.AuthResult, error)
 	Signup(ctx context.Context, email *string, name *string, password *string, confirmPassword *string) (model.AuthResult, error)
+	RefreshAccessToken(ctx context.Context, refreshToken *string) (*model.RefreshSuccess, error)
 }
 type QueryResolver interface {
 	WorkoutRoutines(ctx context.Context) ([]*model.WorkoutRoutine, error)
@@ -206,6 +212,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.Login(childComplexity, args["email"].(*string), args["password"].(*string)), true
 
+	case "Mutation.refreshAccessToken":
+		if e.complexity.Mutation.RefreshAccessToken == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_refreshAccessToken_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RefreshAccessToken(childComplexity, args["refreshToken"].(*string)), true
+
 	case "Mutation.signup":
 		if e.complexity.Mutation.Signup == nil {
 			break
@@ -231,6 +249,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.WorkoutRoutines(childComplexity), true
+
+	case "RefreshSuccess.accessToken":
+		if e.complexity.RefreshSuccess.AccessToken == nil {
+			break
+		}
+
+		return e.complexity.RefreshSuccess.AccessToken(childComplexity), true
 
 	case "Set.id":
 		if e.complexity.Set.ID == nil {
@@ -431,6 +456,10 @@ type AuthSuccess {
 
 union AuthResult = AuthError | AuthSuccess
 
+type RefreshSuccess {
+  accessToken: String!
+}
+
 type Query {
   workoutRoutines: [WorkoutRoutine]
   exerciseRoutines: [ExerciseRoutine]
@@ -444,6 +473,7 @@ type Mutation {
     password: String
     confirmPassword: String
   ): AuthResult!
+  refreshAccessToken(refreshToken: String): RefreshSuccess!
 }
 `, BuiltIn: false},
 }
@@ -474,6 +504,21 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 		}
 	}
 	args["password"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_refreshAccessToken_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["refreshToken"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("refreshToken"))
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["refreshToken"] = arg0
 	return args, nil
 }
 
@@ -1134,6 +1179,65 @@ func (ec *executionContext) fieldContext_Mutation_signup(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_refreshAccessToken(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_refreshAccessToken(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().RefreshAccessToken(rctx, fc.Args["refreshToken"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.RefreshSuccess)
+	fc.Result = res
+	return ec.marshalNRefreshSuccess2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐRefreshSuccess(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_refreshAccessToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "accessToken":
+				return ec.fieldContext_RefreshSuccess_accessToken(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RefreshSuccess", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_refreshAccessToken_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_workoutRoutines(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_workoutRoutines(ctx, field)
 	if err != nil {
@@ -1358,6 +1462,50 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RefreshSuccess_accessToken(ctx context.Context, field graphql.CollectedField, obj *model.RefreshSuccess) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RefreshSuccess_accessToken(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AccessToken, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RefreshSuccess_accessToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RefreshSuccess",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3897,6 +4045,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "refreshAccessToken":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_refreshAccessToken(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3979,6 +4136,34 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				return ec._Query___schema(ctx, field)
 			})
 
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var refreshSuccessImplementors = []string{"RefreshSuccess"}
+
+func (ec *executionContext) _RefreshSuccess(ctx context.Context, sel ast.SelectionSet, obj *model.RefreshSuccess) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, refreshSuccessImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RefreshSuccess")
+		case "accessToken":
+
+			out.Values[i] = ec._RefreshSuccess_accessToken(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4520,6 +4705,20 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNRefreshSuccess2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐRefreshSuccess(ctx context.Context, sel ast.SelectionSet, v model.RefreshSuccess) graphql.Marshaler {
+	return ec._RefreshSuccess(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNRefreshSuccess2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐRefreshSuccess(ctx context.Context, sel ast.SelectionSet, v *model.RefreshSuccess) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._RefreshSuccess(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
