@@ -1,6 +1,6 @@
-# workout-logger-api
+# Workout Logger API
 
-The GraphQL api for a very simple workout logger app I built for myself to track progression of weight I'm lifting for certain exercises
+The GraphQL api for a very simple workout logger app I built for myself to track progression of weight I'm lifting for certain exercises.
 
 # Techonologies Used
 
