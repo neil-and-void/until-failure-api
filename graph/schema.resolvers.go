@@ -23,19 +23,21 @@ import (
 func (r *mutationResolver) Login(ctx context.Context, email *string, password *string) (model.AuthResult, error) {
 	context := common.GetContext(ctx)
 
-	var user database.User
-	context.Database.Where("email = ?", *email).First(&user)
-	if user.ID == 0 {
+	dbUser, err := database.GetUserByEmail(context.Database, *email)
+	if err != nil {
+		panic(err)
+	}
+	if dbUser.ID == 0 {
 		return nil, gqlerror.Errorf("Email does not exist")
 	}
-
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(*password))
-	if err != nil {
+	
+	if err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(*password)); err != nil {
 		return nil, gqlerror.Errorf("Incorrect Password")
 	}
 	c := token.Credentials{
-		Email: user.Email,
-		Name:  user.Name,
+		ID: dbUser.ID,
+		Email: dbUser.Email,
+		Name:  dbUser.Name,
 	}
 
 	refreshToken := token.Sign(c, []byte(config.GetEnvVariable("REFRESH_SECRET")), config.REFRESH_TTL)
@@ -64,11 +66,10 @@ func (r *mutationResolver) Signup(ctx context.Context, email *string, name *stri
 		return nil, gqlerror.Errorf("Not a valid email")
 	}
 
-	var user database.User
-	context.Database.Where("email = ?", *email).First(&user)
+	dbUser, err := database.GetUserByEmail(context.Database, *email)
 	// check if user was found from query
-	if user.ID != 0 {
-		return nil, gqlerror.Errorf("Email already exists")
+	if dbUser.ID != 0 {
+		return nil, gqlerror.Errorf(err.Error())
 	}
 
 	// Hashing the password with the default cost of 10
@@ -77,14 +78,16 @@ func (r *mutationResolver) Signup(ctx context.Context, email *string, name *stri
 		panic(err)
 	}
 
-	err = context.Database.Create(&database.User{Name: *name, Email: *email, Password: string(hashedPassword)}).Error
+	u := database.User{Name: *name, Email: *email, Password: string(hashedPassword)}
+	err = context.Database.Create(&u).Error
 	if err != nil {
 		return nil, err
 	}
 
 	c := token.Credentials{
-		Email: *email,
-		Name:  *name,
+		ID: u.ID,
+		Email: u.Email,
+		Name:  u.Name,
 	}
 
 	refreshToken := token.Sign(c, []byte(config.GetEnvVariable("REFRESH_SECRET")), config.REFRESH_TTL)
@@ -102,13 +105,18 @@ func (r *mutationResolver) RefreshAccessToken(ctx context.Context, refreshToken 
 	if err != nil {
 		return nil, gqlerror.Errorf("Refresh token invalid")
 	}
-	// need to convert interface{} to string
+	// need to convert interface{} to uint
+	id, ok := claims["ID"].(uint)
+	if !ok {
+		return nil, gqlerror.Errorf("Invalid user ID")
+	}
 	email := fmt.Sprintf("%v", claims["email"])
 	name := fmt.Sprintf("%v", claims["sub"])
 
 	c := token.Credentials{
-		Email: string(email),
-		Name:  string(name),
+		ID: id,
+		Email: email,
+		Name:  name,
 	}
 	accessToken := token.Sign(c, []byte(config.GetEnvVariable("ACCESS_SECRET")), config.ACCESS_TTL)
 
