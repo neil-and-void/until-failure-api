@@ -40,14 +40,14 @@ func Validate(tokenString string, secret []byte) bool {
 		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
 		return secret, nil
 	})
-
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		fmt.Println(claims["foo"], claims["nbf"])
-	} else {
-		fmt.Println(err)
+	if err != nil {
+		panic(err)
 	}
-
-	return true
+	if _, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return true
+	} else {
+		return false
+	}
 }
 
 func Decode(tokenString string, secret []byte) (jwt.MapClaims, error) {
@@ -59,6 +59,5 @@ func Decode(tokenString string, secret []byte) (jwt.MapClaims, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return claims, nil
 }

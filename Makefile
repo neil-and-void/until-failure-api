@@ -2,7 +2,7 @@ dev:
 	go run server.go
 
 test:
-	go test ./...
+	go test ./... -v
 
 format:
 	go fmt ./...

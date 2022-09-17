@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 	"net/mail"
+	"os"
 
-	"github.com/neilZon/workout-logger-api/common"
 	"github.com/neilZon/workout-logger-api/common/database"
 	"github.com/neilZon/workout-logger-api/graph/generated"
 	"github.com/neilZon/workout-logger-api/graph/model"
@@ -21,9 +21,7 @@ import (
 
 // Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, email *string, password *string) (model.AuthResult, error) {
-	context := common.GetContext(ctx)
-
-	dbUser, err := database.GetUserByEmail(context.Database, *email)
+	dbUser, err := database.GetUserByEmail(r.DB, *email)
 	if err != nil {
 		panic(err)
 	}
@@ -40,8 +38,8 @@ func (r *mutationResolver) Login(ctx context.Context, email *string, password *s
 		Name:  dbUser.Name,
 	}
 
-	refreshToken := token.Sign(c, []byte(config.GetEnvVariable("REFRESH_SECRET")), config.REFRESH_TTL)
-	accessToken := token.Sign(c, []byte(config.GetEnvVariable("ACCESS_SECRET")), config.ACCESS_TTL)
+	refreshToken := token.Sign(c, []byte(os.Getenv("REFRESH_SECRET")), config.REFRESH_TTL)
+	accessToken := token.Sign(c, []byte(os.Getenv("ACCESS_SECRET")), config.ACCESS_TTL)
 
 	return model.AuthSuccess{
 		RefreshToken: refreshToken,
@@ -51,8 +49,6 @@ func (r *mutationResolver) Login(ctx context.Context, email *string, password *s
 
 // Signup is the resolver for the signup field.
 func (r *mutationResolver) Signup(ctx context.Context, email *string, name *string, password *string, confirmPassword *string) (model.AuthResult, error) {
-	context := common.GetContext(ctx)
-
 	if *password != *confirmPassword {
 		return nil, gqlerror.Errorf("Passwords don't match")
 	}
@@ -66,7 +62,7 @@ func (r *mutationResolver) Signup(ctx context.Context, email *string, name *stri
 		return nil, gqlerror.Errorf("Not a valid email")
 	}
 
-	dbUser, err := database.GetUserByEmail(context.Database, *email)
+	dbUser, err := database.GetUserByEmail(r.DB, *email)
 	// check if user was found from query
 	if dbUser.ID != 0 {
 		return nil, gqlerror.Errorf(err.Error())
@@ -79,9 +75,9 @@ func (r *mutationResolver) Signup(ctx context.Context, email *string, name *stri
 	}
 
 	u := database.User{Name: *name, Email: *email, Password: string(hashedPassword)}
-	err = context.Database.Create(&u).Error
+	err = r.DB.Create(&u).Error
 	if err != nil {
-		return nil, err
+		return nil, gqlerror.Errorf(err.Error())
 	}
 
 	c := token.Credentials{
@@ -90,8 +86,8 @@ func (r *mutationResolver) Signup(ctx context.Context, email *string, name *stri
 		Name:  u.Name,
 	}
 
-	refreshToken := token.Sign(c, []byte(config.GetEnvVariable("REFRESH_SECRET")), config.REFRESH_TTL)
-	accessToken := token.Sign(c, []byte(config.GetEnvVariable("ACCESS_SECRET")), config.ACCESS_TTL)
+	refreshToken := token.Sign(c, []byte(os.Getenv("REFRESH_SECRET")), config.REFRESH_TTL)
+	accessToken := token.Sign(c, []byte(os.Getenv("ACCESS_SECRET")), config.ACCESS_TTL)
 
 	return model.AuthSuccess{
 		RefreshToken: refreshToken,
@@ -101,7 +97,7 @@ func (r *mutationResolver) Signup(ctx context.Context, email *string, name *stri
 
 // RefreshAccessToken is the resolver for the refreshAccessToken field.
 func (r *mutationResolver) RefreshAccessToken(ctx context.Context, refreshToken *string) (*model.RefreshSuccess, error) {
-	claims, err := token.Decode(*refreshToken, []byte(config.GetEnvVariable("REFRESH_SECRET")))
+	claims, err := token.Decode(*refreshToken, []byte(os.Getenv("REFRESH_SECRET")))
 	if err != nil {
 		return nil, gqlerror.Errorf("Refresh token invalid")
 	}
@@ -118,7 +114,7 @@ func (r *mutationResolver) RefreshAccessToken(ctx context.Context, refreshToken 
 		Email: email,
 		Name:  name,
 	}
-	accessToken := token.Sign(c, []byte(config.GetEnvVariable("ACCESS_SECRET")), config.ACCESS_TTL)
+	accessToken := token.Sign(c, []byte(os.Getenv("ACCESS_SECRET")), config.ACCESS_TTL)
 
 	return &model.RefreshSuccess{
 		AccessToken: accessToken,

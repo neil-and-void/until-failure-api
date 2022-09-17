@@ -8,7 +8,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/neilZon/workout-logger-api/common"
+	"github.com/joho/godotenv"
 	db "github.com/neilZon/workout-logger-api/common/database"
 	"github.com/neilZon/workout-logger-api/graph"
 	"github.com/neilZon/workout-logger-api/graph/generated"
@@ -18,6 +18,12 @@ import (
 const defaultPort = "8080"
 
 func main() {
+	err := godotenv.Load()
+
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
@@ -28,18 +34,16 @@ func main() {
 		log.Fatal(err)
 	}
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
+		DB: db,
+	}}))
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
-		// notify bug tracker...maybe? idk too much money	
+		// notify bug tracker...maybe? idk too much money
 		return gqlerror.Errorf("Internal server error")
 	})
 
-	customCtx := &common.DBContext{
-		Database: db,
-	}
-
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", common.CreateContext(customCtx, srv))
+	http.Handle("/query", srv)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
