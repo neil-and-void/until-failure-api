@@ -15,6 +15,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/neilZon/workout-logger-api/graph/generated"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -22,6 +23,8 @@ import (
 var db *gorm.DB
 
 func TestSchemaResolvers(t *testing.T) {
+	t.Parallel()
+
 	err := godotenv.Load("../.test.env")
 	if err != nil {
 		panic("Error loading .env file")
@@ -93,9 +96,89 @@ func TestSchemaResolvers(t *testing.T) {
 		}
 	})
 
-	t.Run("Login resolver wrong password", func(t *testing.T) {})
+	t.Run("Login resolver wrong password", func(t *testing.T) {
+		mockDb, mock, err := sqlmock.New() // mock sql.DB
+		if err != nil {
+			panic(err)
+		}
 
-	t.Run("Login resolver not an email", func(t *testing.T) {})
+		gormDB, err := gorm.Open(postgres.New(postgres.Config{
+			Conn: mockDb,
+		}), &gorm.Config{})
+		defer mockDb.Close()
+
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+			DB: gormDB,
+		}})))
+
+		rows := sqlmock.
+			NewRows([]string{"id", "name", "email", "password", "created_at", "deleted_at", "updated_at"}).
+			AddRow(u.ID, u.Name, u.Email, u.Password, u.CreatedAt, u.DeletedAt, u.UpdatedAt)
+
+		const userQuery = `SELECT * FROM "users" WHERE email = $1 AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1`
+		mock.ExpectQuery(regexp.QuoteMeta(userQuery)).WithArgs(u.Email).WillReturnRows(rows)
+
+		var resp struct {
+			Login struct {
+				Message  string
+			}
+		}
+		err = c.Post(`mutation Login {
+			login(
+			  email: "test@test.com",
+			  password: "NOTCORRECTHEHEHE",
+			) {
+			  ... on AuthSuccess {
+				refreshToken,
+				accessToken
+			  }
+			}
+		  }`,
+			&resp)
+		require.EqualError(t, err, "[{\"message\":\"Incorrect Password\",\"path\":[\"login\"]}]")
+
+		err = mock.ExpectationsWereMet() // make sure all expectations were met
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Login resolver not an email", func(t *testing.T) {
+		mockDb, mock, err := sqlmock.New() // mock sql.DB
+		if err != nil {
+			panic(err)
+		}
+
+		gormDB, err := gorm.Open(postgres.New(postgres.Config{
+			Conn: mockDb,
+		}), &gorm.Config{})
+		defer mockDb.Close()
+
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+			DB: gormDB,
+		}})))
+
+		// empty response struct since we know we are going to return an error
+		var resp struct {} 
+		err = c.Post(`mutation Login {
+			login(
+			  email: "this_is_def_not_an_email_WTFFFFF",
+			  password: "password123",
+			) {
+			  ... on AuthSuccess {
+				refreshToken,
+				accessToken
+			  }
+			}
+		  }`,
+			&resp)
+		require.EqualError(t, err, "[{\"message\":\"Not a valid email\",\"path\":[\"login\"]}]")
+
+		err = mock.ExpectationsWereMet() // make sure all expectations were met
+		if err != nil {
+			panic(err)
+		}
+	})
 
 	t.Run("Signup resolver success", func(t *testing.T) {
 		mockDb, mock, err := sqlmock.New() // mock sql.DB
@@ -155,7 +238,9 @@ func TestSchemaResolvers(t *testing.T) {
 	})
 
 	t.Run("Signup resolver with email already exists", func(t *testing.T) {})
-	t.Run("Signup resolver with non-email", func(t *testing.T) {})
+
+	t.Run("Signup resolver with invalid email", func(t *testing.T) {})
+
 	t.Run("Signup resolver with confirm not match password", func(t *testing.T) {})
 
 	// t.Run("Refresh resolver", func(t *testing.T) {})

@@ -21,6 +21,10 @@ import (
 
 // Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, email *string, password *string) (model.AuthResult, error) {
+	if _, err := mail.ParseAddress(*email); err != nil {
+		return nil, gqlerror.Errorf("Not a valid email")
+	}
+
 	dbUser, err := database.GetUserByEmail(r.DB, *email)
 	if err != nil {
 		panic(err)
