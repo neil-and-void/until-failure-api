@@ -28,12 +28,12 @@ func (r *mutationResolver) Login(ctx context.Context, email *string, password *s
 	if dbUser.ID == 0 {
 		return nil, gqlerror.Errorf("Email does not exist")
 	}
-	
+
 	if err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(*password)); err != nil {
 		return nil, gqlerror.Errorf("Incorrect Password")
 	}
 	c := token.Credentials{
-		ID: dbUser.ID,
+		ID:    dbUser.ID,
 		Email: dbUser.Email,
 		Name:  dbUser.Name,
 	}
@@ -81,7 +81,7 @@ func (r *mutationResolver) Signup(ctx context.Context, email *string, name *stri
 	}
 
 	c := token.Credentials{
-		ID: u.ID,
+		ID:    u.ID,
 		Email: u.Email,
 		Name:  u.Name,
 	}
@@ -106,11 +106,12 @@ func (r *mutationResolver) RefreshAccessToken(ctx context.Context, refreshToken 
 	if !ok {
 		return nil, gqlerror.Errorf("Invalid user ID")
 	}
+	// needed to convert interface to string
 	email := fmt.Sprintf("%v", claims["email"])
 	name := fmt.Sprintf("%v", claims["sub"])
 
 	c := token.Credentials{
-		ID: id,
+		ID:    id,
 		Email: email,
 		Name:  name,
 	}

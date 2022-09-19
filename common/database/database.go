@@ -1,14 +1,15 @@
 package database
 
 import (
-	"github.com/neilZon/workout-logger-api/utils/config"
+	"os"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
 func InitDb() (*gorm.DB, error) {
-	databaseUrl := config.GetEnvVariable("DATABASE_URL")
+	databaseUrl := os.Getenv("DATABASE_URL")
 
 	var err error
 	db, err := gorm.Open(postgres.Open(databaseUrl), &gorm.Config{

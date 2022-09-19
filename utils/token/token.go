@@ -8,7 +8,7 @@ import (
 )
 
 type Credentials struct {
-	ID uint
+	ID    uint
 	Name  string
 	Email string
 }

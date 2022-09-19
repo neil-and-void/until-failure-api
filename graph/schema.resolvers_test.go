@@ -26,46 +26,49 @@ func TestSchemaResolvers(t *testing.T) {
 	if err != nil {
 		panic("Error loading .env file")
 	}
+	ACCESS_SECRET := []byte(os.Getenv("ACCESS_SECRET"))
+	REFRESH_SECRET := []byte(os.Getenv("REFRESH_SECRET"))
 
-	u := database.User{	
+	u := database.User{
 		Model: gorm.Model{
-			ID: 23,
-			CreatedAt: time.Now(),	
+			ID:        23,
+			CreatedAt: time.Now(),
 			DeletedAt: gorm.DeletedAt{
-				Time: time.Time{},
+				Time:  time.Time{},
 				Valid: true,
-			},	
-			UpdatedAt: time.Now(),	
+			},
+			UpdatedAt: time.Now(),
 		},
-		Name: "testname",
-		Email: "test@test.com",
+		Name:     "testname",
+		Email:    "test@test.com",
 		Password: "$2a$10$0EGP2OywIngzJKu.GoKS8eG/08tGSbZi5sMbDoJ..nWVgvQQlaDcC",
 	}
 
-	t.Run("Login resolver", func(t *testing.T) {
+	t.Run("Login resolver success", func(t *testing.T) {
 		mockDb, mock, err := sqlmock.New() // mock sql.DB
 		if err != nil {
 			panic(err)
 		}
-	
+
 		gormDB, err := gorm.Open(postgres.New(postgres.Config{
 			Conn: mockDb,
 		}), &gorm.Config{})
-	
+		defer mockDb.Close()
+
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
 			DB: gormDB,
 		}})))
-	
+
 		rows := sqlmock.
 			NewRows([]string{"id", "name", "email", "password", "created_at", "deleted_at", "updated_at"}).
-			AddRow(u.ID, u.Name, u.Email, u.Password, time.Now(), nil, time.Now())
-	
+			AddRow(u.ID, u.Name, u.Email, u.Password, u.CreatedAt, u.DeletedAt, u.UpdatedAt)
+
 		const userQuery = `SELECT * FROM "users" WHERE email = $1 AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1`
-		mock.ExpectQuery(regexp.QuoteMeta(userQuery)).WithArgs("test@test.com").WillReturnRows(rows)
-	
+		mock.ExpectQuery(regexp.QuoteMeta(userQuery)).WithArgs(u.Email).WillReturnRows(rows)
+
 		var resp struct {
-			Login struct { 
-				AccessToken string
+			Login struct {
+				AccessToken  string
 				RefreshToken string
 			}
 		}
@@ -79,62 +82,81 @@ func TestSchemaResolvers(t *testing.T) {
 				accessToken
 			  }
 			}
-		  }`, 
-		  &resp)
-		assert.True(t, token.Validate(resp.Login.AccessToken, []byte(os.Getenv("ACCESS_SECRET"))))
-		assert.True(t, token.Validate(resp.Login.RefreshToken, []byte(os.Getenv("REFRESH_SECRET"))))
-	
+		  }`,
+			&resp)
+		assert.True(t, token.Validate(resp.Login.AccessToken, ACCESS_SECRET))
+		assert.True(t, token.Validate(resp.Login.RefreshToken, REFRESH_SECRET))
+
 		err = mock.ExpectationsWereMet() // make sure all expectations were met
 		if err != nil {
 			panic(err)
 		}
 	})
 
-	// t.Run("Signup resolver with email already exists", func(t *testing.T) {})
+	t.Run("Login resolver wrong password", func(t *testing.T) {})
 
-	// t.Run("Signup resolver with email already exists", func(t *testing.T) {
-	// 	mockDb, mock, err := sqlmock.New() // mock sql.DB
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	
-	// 	gormDB, err := gorm.Open(postgres.New(postgres.Config{
-	// 		Conn: mockDb,
-	// 	}), &gorm.Config{})
-	
-	// 	c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
-	// 		DB: gormDB,
-	// 	}})))
+	t.Run("Login resolver not an email", func(t *testing.T) {})
 
+	t.Run("Signup resolver success", func(t *testing.T) {
+		mockDb, mock, err := sqlmock.New() // mock sql.DB
+		if err != nil {
+			panic(err)
+		}
 
-	// 	const userQuery = `SELECT * FROM "users" WHERE email = $1 AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1`
-	// 	mock.ExpectQuery(regexp.QuoteMeta(userQuery)).WithArgs("test@test.com").WillReturnRows(sqlmock.NewRows(nil))
+		gormDB, err := gorm.Open(postgres.New(postgres.Config{
+			Conn: mockDb,
+		}), &gorm.Config{})
+		defer mockDb.Close()
 
-	// 	const createQuery = `INSERT INTO "users" ("email", "name", "password", "created_at", "deleted_at", "updated_at") VALUES ($1, $2, $3, $4, $5, $6)`
-	// 	mock.ExpectQuery(regexp.QuoteMeta(userQuery)).WithArgs("test@test.com", "testname", "password1234", time.Now(), nil, time.Now()).WillReturnRows(sqlmock.NewRows(nil))
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+			DB: gormDB,
+		}})))
 
-	// 	var resp struct {
-	// 		Signup struct { 
-	// 			AccessToken string
-	// 			RefreshToken string
-	// 		}
-	// 	}
-	// 	c.MustPost(`mutation Signup{
-	// 		signup(
-	// 		  email: "test@test.com",
-	// 		  name: "testname",
-	// 		  password: "password123",
-	// 		  confirmPassword: "password123"
-	// 		) {
-	// 		  ... on AuthSuccess {
-	// 			refreshToken,
-	// 			accessToken
-	// 		  }
-	// 		}
-	// 	  }`, 
-	// 	&resp)
+		nullUser := sqlmock.
+			NewRows([]string{"id", "name", "email", "password", "created_at", "deleted_at", "updated_at"}).
+			AddRow(0, "", "", "", time.Time{}, time.Time{}, time.Time{})
 
-	// })	
+		const userQuery = `SELECT * FROM "users" WHERE email = $1 AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1`
+		mock.ExpectQuery(regexp.QuoteMeta(userQuery)).WithArgs(u.Email).WillReturnRows(nullUser)
 
-	// t.Run("Refresh resolver", func(t *testing.T) {})	
+		mock.ExpectBegin()
+		const createQuery = `INSERT INTO "users" ("created_at","updated_at","deleted_at","name","email","password") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "id"`
+		mock.ExpectQuery(regexp.QuoteMeta(createQuery)).WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), u.Name, u.Email, sqlmock.AnyArg()).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(u.ID))
+		mock.ExpectCommit()
+
+		var resp struct {
+			Signup struct {
+				AccessToken  string
+				RefreshToken string
+			}
+		}
+		c.MustPost(`mutation Signup{
+			signup(
+			  email: "test@test.com",
+			  name: "testname",
+			  password: "password123",
+			  confirmPassword: "password123"
+			) {
+			  ... on AuthSuccess {
+				refreshToken,
+				accessToken
+			  }
+			}
+		  }`,
+			&resp)
+
+		assert.True(t, token.Validate(resp.Signup.AccessToken, ACCESS_SECRET))
+		assert.True(t, token.Validate(resp.Signup.RefreshToken, REFRESH_SECRET))
+
+		err = mock.ExpectationsWereMet() // make sure all expectations were met
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Signup resolver with email already exists", func(t *testing.T) {})
+	t.Run("Signup resolver with non-email", func(t *testing.T) {})
+	t.Run("Signup resolver with confirm not match password", func(t *testing.T) {})
+
+	// t.Run("Refresh resolver", func(t *testing.T) {})
 }
