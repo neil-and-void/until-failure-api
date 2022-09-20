@@ -59,7 +59,7 @@ func (r *mutationResolver) Signup(ctx context.Context, email *string, name *stri
 
 	// check strength
 	if !utils.IsStrong(*password) {
-		return nil, gqlerror.Errorf("Password needs at least 1 number")
+		return nil, gqlerror.Errorf("Password needs at least 1 number and 8 - 16 characters")
 	}
 
 	if _, err := mail.ParseAddress(*email); err != nil {
@@ -69,7 +69,7 @@ func (r *mutationResolver) Signup(ctx context.Context, email *string, name *stri
 	dbUser, err := database.GetUserByEmail(r.DB, *email)
 	// check if user was found from query
 	if dbUser.ID != 0 {
-		return nil, gqlerror.Errorf(err.Error())
+		return nil, gqlerror.Errorf("Email already exists")
 	}
 
 	// Hashing the password with the default cost of 10

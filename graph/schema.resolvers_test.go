@@ -6,17 +6,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/neilZon/workout-logger-api/common/database"
-	"github.com/neilZon/workout-logger-api/utils/token"
-
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/neilZon/workout-logger-api/common/database"
+	"github.com/neilZon/workout-logger-api/graph/generated"
+	"github.com/neilZon/workout-logger-api/tests"
+	"github.com/neilZon/workout-logger-api/utils/token"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/joho/godotenv"
-	"github.com/neilZon/workout-logger-api/graph/generated"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -48,26 +48,17 @@ func TestSchemaResolvers(t *testing.T) {
 	}
 
 	t.Run("Login resolver success", func(t *testing.T) {
-		mockDb, mock, err := sqlmock.New() // mock sql.DB
-		if err != nil {
-			panic(err)
-		}
-
-		gormDB, err := gorm.Open(postgres.New(postgres.Config{
-			Conn: mockDb,
-		}), &gorm.Config{})
-		defer mockDb.Close()
-
+		mock, gormDB := tests.SetupMockDB()
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
 			DB: gormDB,
 		}})))
 
-		rows := sqlmock.
+		userRow := sqlmock.
 			NewRows([]string{"id", "name", "email", "password", "created_at", "deleted_at", "updated_at"}).
 			AddRow(u.ID, u.Name, u.Email, u.Password, u.CreatedAt, u.DeletedAt, u.UpdatedAt)
 
 		const userQuery = `SELECT * FROM "users" WHERE email = $1 AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1`
-		mock.ExpectQuery(regexp.QuoteMeta(userQuery)).WithArgs(u.Email).WillReturnRows(rows)
+		mock.ExpectQuery(regexp.QuoteMeta(userQuery)).WithArgs(u.Email).WillReturnRows(userRow)
 
 		var resp struct {
 			Login struct {
@@ -97,16 +88,7 @@ func TestSchemaResolvers(t *testing.T) {
 	})
 
 	t.Run("Login resolver wrong password", func(t *testing.T) {
-		mockDb, mock, err := sqlmock.New() // mock sql.DB
-		if err != nil {
-			panic(err)
-		}
-
-		gormDB, err := gorm.Open(postgres.New(postgres.Config{
-			Conn: mockDb,
-		}), &gorm.Config{})
-		defer mockDb.Close()
-
+		mock, gormDB := tests.SetupMockDB()
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
 			DB: gormDB,
 		}})))
@@ -144,16 +126,7 @@ func TestSchemaResolvers(t *testing.T) {
 	})
 
 	t.Run("Login resolver not an email", func(t *testing.T) {
-		mockDb, mock, err := sqlmock.New() // mock sql.DB
-		if err != nil {
-			panic(err)
-		}
-
-		gormDB, err := gorm.Open(postgres.New(postgres.Config{
-			Conn: mockDb,
-		}), &gorm.Config{})
-		defer mockDb.Close()
-
+		mock, gormDB := tests.SetupMockDB()
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
 			DB: gormDB,
 		}})))
@@ -181,16 +154,7 @@ func TestSchemaResolvers(t *testing.T) {
 	})
 
 	t.Run("Signup resolver success", func(t *testing.T) {
-		mockDb, mock, err := sqlmock.New() // mock sql.DB
-		if err != nil {
-			panic(err)
-		}
-
-		gormDB, err := gorm.Open(postgres.New(postgres.Config{
-			Conn: mockDb,
-		}), &gorm.Config{})
-		defer mockDb.Close()
-
+		mock, gormDB := tests.SetupMockDB()
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
 			DB: gormDB,
 		}})))
@@ -237,11 +201,154 @@ func TestSchemaResolvers(t *testing.T) {
 		}
 	})
 
-	t.Run("Signup resolver with email already exists", func(t *testing.T) {})
+	t.Run("Signup resolver with email already exists", func(t *testing.T) {
+		mock, gormDB := tests.SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+			DB: gormDB,
+		}})))
 
-	t.Run("Signup resolver with invalid email", func(t *testing.T) {})
+		userRow := sqlmock.
+			NewRows([]string{"id", "name", "email", "password", "created_at", "deleted_at", "updated_at"}).
+			AddRow(u.ID, u.Name, u.Email, u.Password, u.CreatedAt, u.DeletedAt, u.UpdatedAt)
+		const userQuery = `SELECT * FROM "users" WHERE email = $1 AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1`
+		mock.ExpectQuery(regexp.QuoteMeta(userQuery)).WithArgs(u.Email).WillReturnRows(userRow)
 
-	t.Run("Signup resolver with confirm not match password", func(t *testing.T) {})
+		// empty struct since we not use it
+		var resp struct {}
+		err := c.Post(`mutation Signup{
+			signup(
+			  email: "test@test.com",
+			  name: "testname",
+			  password: "password123",
+			  confirmPassword: "password123"
+			) {
+			  ... on AuthSuccess {
+				refreshToken,
+				accessToken
+			  }
+			}
+		  }`,
+			&resp)
+		require.EqualError(t, err, "[{\"message\":\"Email already exists\",\"path\":[\"signup\"]}]")
+	})
 
-	// t.Run("Refresh resolver", func(t *testing.T) {})
+	t.Run("Signup resolver with invalid email", func(t *testing.T) {
+		mock, gormDB := tests.SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+			DB: gormDB,
+		}})))
+
+		// empty response struct since we know we are going to return an error
+		var resp struct {} 
+		err = c.Post(`mutation Signup{
+			signup(
+			  email: "@notanemail:)",
+			  name: "testname",
+			  password: "password123",
+			  confirmPassword: "password123"
+			) {
+			  ... on AuthSuccess {
+				refreshToken,
+				accessToken
+			  }
+			}
+		  }`,
+			&resp)
+		require.EqualError(t, err, "[{\"message\":\"Not a valid email\",\"path\":[\"signup\"]}]")
+
+		err = mock.ExpectationsWereMet() // make sure all expectations were met
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Signup resolver with confirm not match password", func(t *testing.T) {
+		mock, gormDB := tests.SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+			DB: gormDB,
+		}})))
+
+		// empty response struct since we know we are going to return an error
+		var resp struct {} 
+		err = c.Post(`mutation Signup{
+			signup(
+			  email: "test@test.com",
+			  name: "testname",
+			  password: "NOPE",
+			  confirmPassword: "password123"
+			) {
+			  ... on AuthSuccess {
+				refreshToken,
+				accessToken
+			  }
+			}
+		  }`,
+			&resp)
+		require.EqualError(t, err, "[{\"message\":\"Passwords don't match\",\"path\":[\"signup\"]}]")
+
+		err = mock.ExpectationsWereMet() // make sure all expectations were met
+		if err != nil {
+			panic(err)
+		}	
+	})
+
+	t.Run("Signup resolver weak password no number", func(t *testing.T) {
+		mock, gormDB := tests.SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+			DB: gormDB,
+		}})))
+
+		// empty response struct since we know we are going to return an error
+		var resp struct {} 
+		err = c.Post(`mutation Signup{
+			signup(
+			  email: "test@test.com",
+			  name: "testname",
+			  password: "passwords",
+			  confirmPassword: "passwords"
+			) {
+			  ... on AuthSuccess {
+				refreshToken,
+				accessToken
+			  }
+			}
+		  }`,
+			&resp)
+		require.EqualError(t, err, "[{\"message\":\"Password needs at least 1 number and 8 - 16 characters\",\"path\":[\"signup\"]}]")
+
+		err = mock.ExpectationsWereMet() // make sure all expectations were met
+		if err != nil {
+			panic(err)
+		}	
+	})
+
+	t.Run("Signup resolver weak password length", func(t *testing.T) {
+		mock, gormDB := tests.SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+			DB: gormDB,
+		}})))
+
+		// empty response struct since we know we are going to return an error
+		var resp struct {} 
+		err = c.Post(`mutation Signup{
+			signup(
+			  email: "test@test.com",
+			  name: "testname",
+			  password: "bowo",
+			  confirmPassword: "bowo"
+			) {
+			  ... on AuthSuccess {
+				refreshToken,
+				accessToken
+			  }
+			}
+		  }`,
+			&resp)
+		require.EqualError(t, err, "[{\"message\":\"Password needs at least 1 number and 8 - 16 characters\",\"path\":[\"signup\"]}]")
+
+		err = mock.ExpectationsWereMet() // make sure all expectations were met
+		if err != nil {
+			panic(err)
+		}
+	})
 }
