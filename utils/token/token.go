@@ -1,7 +1,9 @@
 package token
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -13,6 +15,24 @@ type Credentials struct {
 	Email string
 }
 
+// takes claims and puts it into a Credentials struct representing the user
+func ClaimsToStruct(c jwt.MapClaims) *Credentials {
+	// need to convert interface{} to uint
+	id, ok := c["ID"].(uint)
+	if !ok {
+		return &Credentials{}
+	}
+	name := fmt.Sprintf("%v", c["name"])
+	email := fmt.Sprintf("%v", c["email"])
+
+	return &Credentials{
+		ID: id,
+		Name: name,
+		Email: email,
+	}
+}
+
+// signs a token
 func Sign(c Credentials, secret []byte, dtl int) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub":   c.Name,
@@ -51,8 +71,14 @@ func Validate(tokenString string, secret []byte) bool {
 }
 
 func Decode(tokenString string, secret []byte) (jwt.MapClaims, error) {
+	f := strings.Fields(tokenString)
+
+	if len(f) != 2 || f[0] != "Bearer" {
+		return nil,  errors.New("Missing type \"Bearer\" in token string")
+	}
+
 	claims := jwt.MapClaims{}
-	_, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+	_, err := jwt.ParseWithClaims(f[1], claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
 

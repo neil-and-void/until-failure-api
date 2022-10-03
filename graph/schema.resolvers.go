@@ -27,7 +27,7 @@ func (r *mutationResolver) Login(ctx context.Context, email *string, password *s
 
 	dbUser, err := database.GetUserByEmail(r.DB, *email)
 	if err != nil {
-		panic(err)
+		return nil, gqlerror.Errorf(err.Error())
 	}
 	if dbUser.ID == 0 {
 		return nil, gqlerror.Errorf("Email does not exist")
@@ -101,25 +101,14 @@ func (r *mutationResolver) Signup(ctx context.Context, email *string, name *stri
 
 // RefreshAccessToken is the resolver for the refreshAccessToken field.
 func (r *mutationResolver) RefreshAccessToken(ctx context.Context, refreshToken *string) (*model.RefreshSuccess, error) {
+	// read token from context
 	claims, err := token.Decode(*refreshToken, []byte(os.Getenv("REFRESH_SECRET")))
 	if err != nil {
 		return nil, gqlerror.Errorf("Refresh token invalid")
 	}
-	// need to convert interface{} to uint
-	id, ok := claims["ID"].(uint)
-	if !ok {
-		return nil, gqlerror.Errorf("Invalid user ID")
-	}
-	// needed to convert interface to string
-	email := fmt.Sprintf("%v", claims["email"])
-	name := fmt.Sprintf("%v", claims["sub"])
+	credentials := token.ClaimsToStruct(claims)
 
-	c := token.Credentials{
-		ID:    id,
-		Email: email,
-		Name:  name,
-	}
-	accessToken := token.Sign(c, []byte(os.Getenv("ACCESS_SECRET")), config.ACCESS_TTL)
+	accessToken := token.Sign(*credentials, []byte(os.Getenv("ACCESS_SECRET")), config.ACCESS_TTL)
 
 	return &model.RefreshSuccess{
 		AccessToken: accessToken,

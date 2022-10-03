@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 	"testing"
@@ -22,7 +23,7 @@ import (
 
 var db *gorm.DB
 
-func TestSchemaResolvers(t *testing.T) {
+func TestAuthResolvers(t *testing.T) {
 	t.Parallel()
 
 	err := godotenv.Load("../.test.env")
@@ -350,5 +351,36 @@ func TestSchemaResolvers(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
+	})
+
+	t.Run("Refresh resolver refreshes access token", func(t *testing.T) {
+		_, gormDB := tests.SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+			DB: gormDB,
+		}})))
+
+		cred := token.Credentials{
+			ID: 12,
+			Name: "testname",
+			Email: "test@test.com",
+		}
+
+		refreshToken := token.Sign(cred, REFRESH_SECRET, 5)
+
+		// send request and get back refresh token
+		var resp struct {
+			RefreshAccessToken struct {
+				AccessToken  string
+			}
+		}
+		refreshAccessTokenMutation := fmt.Sprintf(`
+		mutation RefreshAccessToken {
+			refreshAccessToken(
+			  refreshToken: "Bearer %s",
+			) {
+				  accessToken
+			}
+		  }`, refreshToken)
+		c.MustPost(refreshAccessTokenMutation, &resp)
 	})
 }
