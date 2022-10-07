@@ -12,6 +12,7 @@ import (
 	"github.com/neilZon/workout-logger-api/common/database"
 	"github.com/neilZon/workout-logger-api/graph/generated"
 	"github.com/neilZon/workout-logger-api/graph/model"
+	"github.com/neilZon/workout-logger-api/middleware"
 	"github.com/neilZon/workout-logger-api/utils"
 	"github.com/neilZon/workout-logger-api/utils/config"
 	"github.com/neilZon/workout-logger-api/utils/token"
@@ -36,7 +37,7 @@ func (r *mutationResolver) Login(ctx context.Context, email *string, password *s
 	if err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(*password)); err != nil {
 		return nil, gqlerror.Errorf("Incorrect Password")
 	}
-	c := token.Credentials{
+	c := &token.Credentials{
 		ID:    dbUser.ID,
 		Email: dbUser.Email,
 		Name:  dbUser.Name,
@@ -84,7 +85,7 @@ func (r *mutationResolver) Signup(ctx context.Context, email *string, name *stri
 		return nil, gqlerror.Errorf(err.Error())
 	}
 
-	c := token.Credentials{
+	c := &token.Credentials{
 		ID:    u.ID,
 		Email: u.Email,
 		Name:  u.Name,
@@ -106,12 +107,41 @@ func (r *mutationResolver) RefreshAccessToken(ctx context.Context, refreshToken 
 	if err != nil {
 		return nil, gqlerror.Errorf("Refresh token invalid")
 	}
-	credentials := token.ClaimsToStruct(claims)
 
-	accessToken := token.Sign(*credentials, []byte(os.Getenv("ACCESS_SECRET")), config.ACCESS_TTL)
+	accessToken := token.Sign(&token.Credentials{
+			ID: claims.ID,
+			Email: claims.Subject,
+			Name: claims.Name,
+		}, 
+		[]byte(os.Getenv("ACCESS_SECRET")),
+		config.ACCESS_TTL,
+	)
 
 	return &model.RefreshSuccess{
 		AccessToken: accessToken,
+	}, nil
+}
+
+// CreateWorkoutRoutine is the resolver for the createWorkoutRoutine field.
+func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine *model.WorkoutRoutineInput) (*model.WorkoutRoutine, error) {
+	u, ok := ctx.Value(middleware.UserCtxKey).(*token.Claims)
+	if !ok || (token.Claims{}) == *u {
+		return &model.WorkoutRoutine{}, gqlerror.Errorf("Invalid User Credentials")
+	}
+
+	wr := &database.WorkoutRoutine{
+		UserID: u.ID,
+		Name: routine.Name,
+	}
+	res := database.CreateWorkoutRoutine(r.DB, wr)
+	if res.RowsAffected != 1 {
+		return &model.WorkoutRoutine{}, gqlerror.Errorf("Error Creating Workout Routine")
+	}
+
+	return &model.WorkoutRoutine{
+		ID:               fmt.Sprintf("%d", wr.ID),
+		Name:             wr.Name,
+		ExerciseRoutines: []*model.ExerciseRoutine{},
 	}, nil
 }
 

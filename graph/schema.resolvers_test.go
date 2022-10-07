@@ -359,7 +359,7 @@ func TestAuthResolvers(t *testing.T) {
 			DB: gormDB,
 		}})))
 
-		cred := token.Credentials{
+		cred := &token.Credentials{
 			ID: 12,
 			Name: "testname",
 			Email: "test@test.com",

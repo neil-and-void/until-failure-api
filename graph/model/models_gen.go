@@ -32,6 +32,12 @@ type ExerciseRoutine struct {
 	Reps int    `json:"reps"`
 }
 
+type ExerciseRoutineInput struct {
+	Name string `json:"name"`
+	Sets int    `json:"sets"`
+	Reps int    `json:"reps"`
+}
+
 type RefreshSuccess struct {
 	AccessToken string `json:"accessToken"`
 }
@@ -58,4 +64,9 @@ type WorkoutRoutine struct {
 	ID               string             `json:"id"`
 	Name             string             `json:"name"`
 	ExerciseRoutines []*ExerciseRoutine `json:"exerciseRoutines"`
+}
+
+type WorkoutRoutineInput struct {
+	Name             string                  `json:"name"`
+	ExerciseRoutines []*ExerciseRoutineInput `json:"exerciseRoutines"`
 }

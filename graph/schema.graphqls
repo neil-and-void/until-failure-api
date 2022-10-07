@@ -1,3 +1,4 @@
+### TYPES ###
 type User {
   id: ID!
   name: String!
@@ -50,6 +51,23 @@ type RefreshSuccess {
   accessToken: String!
 }
 
+### END TYPES ###
+
+### INPUTS ###
+
+input WorkoutRoutineInput {
+  name: String!
+  exerciseRoutines: [ExerciseRoutineInput]
+}
+
+input ExerciseRoutineInput {
+  name: String!
+  sets: Int!
+  reps: Int!
+}
+
+### END INPUTS ###
+
 type Query {
   workoutRoutines: [WorkoutRoutine]
   exerciseRoutines: [ExerciseRoutine]
@@ -64,4 +82,5 @@ type Mutation {
     confirmPassword: String
   ): AuthResult!
   refreshAccessToken(refreshToken: String): RefreshSuccess!
+  createWorkoutRoutine(routine: WorkoutRoutineInput): WorkoutRoutine
 }

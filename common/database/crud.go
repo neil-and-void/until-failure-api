@@ -11,6 +11,11 @@ func GetUserByEmail(db *gorm.DB, email string) (*User, error) {
 	return &user, result.Error
 }
 
+func CreateWorkoutRoutine(db *gorm.DB, routine *WorkoutRoutine) (*gorm.DB) {
+	result := db.Create(routine)
+	return result
+}
+
 // Workout Routine
 func GetWorkoutRoutines(db *gorm.DB, email string) {}
 
