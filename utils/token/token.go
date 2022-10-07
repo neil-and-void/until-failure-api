@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type Credentials struct {
@@ -15,30 +15,27 @@ type Credentials struct {
 	Email string
 }
 
-// takes claims and puts it into a Credentials struct representing the user
-func ClaimsToStruct(c jwt.MapClaims) *Credentials {
-	// need to convert interface{} to uint
-	id, ok := c["ID"].(uint)
-	if !ok {
-		return &Credentials{}
-	}
-	name := fmt.Sprintf("%v", c["name"])
-	email := fmt.Sprintf("%v", c["email"])
-
-	return &Credentials{
-		ID: id,
-		Name: name,
-		Email: email,
-	}
+type Claims struct { 
+	Name string
+	ID uint
+	jwt.StandardClaims
 }
 
 // signs a token
-func Sign(c Credentials, secret []byte, dtl int) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub":   c.Name,
-		"email": c.Email,
-		"exp":   time.Now().UTC().AddDate(0, 0, dtl).Unix(),
-	})
+func Sign(c *Credentials, secret []byte, ttl time.Duration) string {
+	claims := Claims{
+		c.Name,
+		c.ID,
+		jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(ttl * time.Hour).Unix(),
+			IssuedAt:  time.Now().Unix(),
+			NotBefore: time.Now().Unix(),
+			Issuer:    "neil:)",
+			Subject:   c.Email,
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Sign and get the complete encoded token as a string using the secret
 	tokenString, err := token.SignedString(secret)
@@ -70,20 +67,24 @@ func Validate(tokenString string, secret []byte) bool {
 	}
 }
 
-func Decode(tokenString string, secret []byte) (jwt.MapClaims, error) {
+func Decode(tokenString string, secret []byte) (*Claims, error) {
 	f := strings.Fields(tokenString)
 
 	if len(f) != 2 || f[0] != "Bearer" {
 		return nil,  errors.New("Missing type \"Bearer\" in token string")
 	}
 
-	claims := jwt.MapClaims{}
-	_, err := jwt.ParseWithClaims(f[1], claims, func(token *jwt.Token) (interface{}, error) {
+	t, err := jwt.ParseWithClaims(f[1], &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
-
+	
 	if err != nil {
-		return nil, err
+		return &Claims{}, err
 	}
-	return claims, nil
+
+	if claims, ok := t.Claims.(*Claims); ok && t.Valid {
+		return claims, nil
+	}
+
+	return &Claims{}, nil
 }

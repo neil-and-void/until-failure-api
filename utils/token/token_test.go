@@ -2,6 +2,7 @@ package token
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -15,20 +16,20 @@ func TestToken(t *testing.T) {
 		Name:  "testname",
 	}
 	secret := "somesecret"
-	dtl := 7 // days
+	var ttl time.Duration = 168 // days
 
 	t.Run("Successfully sign and decode a token", func(t *testing.T) {
-		tkn := Sign(c, []byte(secret), dtl)
+		tkn := Sign(&c, []byte(secret), ttl)
 
-		data, err := Decode("Bearer " + tkn, []byte(secret))
+		claims, err := Decode("Bearer " + tkn, []byte(secret))
 
 		assert.Nil(t, err, "Error decoding token")
-		assert.Equal(t, data["email"], "test@test.com")
-		assert.Equal(t, data["sub"], "testname")
+		assert.Equal(t, claims.Subject, "test@test.com")
+		assert.Equal(t, claims.Name, "testname")
 	})
 
 	t.Run("Fail to decode a tampered token", func(t *testing.T) {
-		tkn := Sign(c, []byte(secret), dtl)
+		tkn := Sign(&c, []byte(secret), ttl)
 		tamperedToken := tkn + "hehehe"
 
 		_, err := Decode(tamperedToken, []byte("Bearer " + secret))
@@ -36,7 +37,7 @@ func TestToken(t *testing.T) {
 	})
 
 	t.Run("Fail to validate an expired token", func(t *testing.T) {
-		tkn := Sign(c, []byte(secret), -5) // 5 days in the past from now
+		tkn := Sign(&c, []byte(secret), -5) // 5 hours in the past from now
 
 		_, err := Decode(tkn, []byte("Bearer " +secret))
 

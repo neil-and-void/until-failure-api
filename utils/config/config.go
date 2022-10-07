@@ -1,6 +1,8 @@
 package config
 
+import "time"
+
 const (
-	ACCESS_TTL  = 30 // days
-	REFRESH_TTL = 1  // day
+	ACCESS_TTL time.Duration = 720 // hours
+	REFRESH_TTL time.Duration = 24  // hours
 )
