@@ -21,7 +21,6 @@ const defaultPort = "8080"
 
 func main() {
 	err := godotenv.Load()
-
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	}
@@ -44,14 +43,15 @@ func main() {
 		return gqlerror.Errorf("Internal server error")
 	})
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", 
-	cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:8080", "https://studio.apollographql.com"},
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://127.0.0.1", "http://localhost:8080", "https://hoppscotch.io/"},
 		AllowCredentials: true,
 		Debug:            true,
-		AllowedHeaders: []string{"Content-Type","Authorization"},
-	}).Handler(middleware.AuthMiddleware(srv)))
+		AllowedHeaders: []string{"Content-Type", "Authorization"},
+	})
+
+	http.Handle("/", playground.Handler("GraphQL playground", "/query"))	
+	http.Handle("/query", c.Handler(middleware.AuthMiddleware(srv)))
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
