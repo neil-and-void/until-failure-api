@@ -124,10 +124,12 @@ func (r *mutationResolver) RefreshAccessToken(ctx context.Context, refreshToken 
 
 // CreateWorkoutRoutine is the resolver for the createWorkoutRoutine field.
 func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine *model.WorkoutRoutineInput) (*model.WorkoutRoutine, error) {
-	u, ok := ctx.Value(middleware.UserCtxKey).(*token.Claims)
-	if !ok || (token.Claims{}) == *u {
-		return &model.WorkoutRoutine{}, gqlerror.Errorf("Invalid User Credentials")
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.WorkoutRoutine{}, gqlerror.Errorf("Error Creating Workout: %s", err.Error())
 	}
+
+	// TODO: check if user is authorized to make the change here
 
 	wr := &database.WorkoutRoutine{
 		UserID: u.ID,

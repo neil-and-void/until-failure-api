@@ -1,4 +1,4 @@
-package graph
+package test
 
 import (
 	"fmt"
@@ -10,8 +10,8 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/neilZon/workout-logger-api/common/database"
+	"github.com/neilZon/workout-logger-api/graph"
 	"github.com/neilZon/workout-logger-api/graph/generated"
-	"github.com/neilZon/workout-logger-api/tests"
 	"github.com/neilZon/workout-logger-api/utils/token"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -26,7 +26,7 @@ var db *gorm.DB
 func TestAuthResolvers(t *testing.T) {
 	t.Parallel()
 
-	err := godotenv.Load("../.test.env")
+	err := godotenv.Load("../../.env")
 	if err != nil {
 		panic("Error loading .env file")
 	}
@@ -44,13 +44,13 @@ func TestAuthResolvers(t *testing.T) {
 			UpdatedAt: time.Now(),
 		},
 		Name:     "testname",
-		Email:    "test@test.com",
+		Email:    "test@com",
 		Password: "$2a$10$0EGP2OywIngzJKu.GoKS8eG/08tGSbZi5sMbDoJ..nWVgvQQlaDcC",
 	}
 
 	t.Run("Login resolver success", func(t *testing.T) {
-		mock, gormDB := tests.SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+		mock, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 			DB: gormDB,
 		}})))
 
@@ -69,7 +69,7 @@ func TestAuthResolvers(t *testing.T) {
 		}
 		c.MustPost(`mutation Login {
 			login(
-			  email: "test@test.com",
+			  email: "test@com",
 			  password: "password123",
 			) {
 			  ... on AuthSuccess {
@@ -89,8 +89,8 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Login resolver wrong password", func(t *testing.T) {
-		mock, gormDB := tests.SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+		mock, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 			DB: gormDB,
 		}})))
 
@@ -108,7 +108,7 @@ func TestAuthResolvers(t *testing.T) {
 		}
 		err = c.Post(`mutation Login {
 			login(
-			  email: "test@test.com",
+			  email: "test@com",
 			  password: "NOTCORRECTHEHEHE",
 			) {
 			  ... on AuthSuccess {
@@ -127,8 +127,8 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Login resolver not an email", func(t *testing.T) {
-		mock, gormDB := tests.SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+		mock, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 			DB: gormDB,
 		}})))
 
@@ -155,8 +155,8 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Signup resolver success", func(t *testing.T) {
-		mock, gormDB := tests.SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+		mock, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 			DB: gormDB,
 		}})))
 
@@ -180,7 +180,7 @@ func TestAuthResolvers(t *testing.T) {
 		}
 		c.MustPost(`mutation Signup{
 			signup(
-			  email: "test@test.com",
+			  email: "test@com",
 			  name: "testname",
 			  password: "password123",
 			  confirmPassword: "password123"
@@ -203,8 +203,8 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Signup resolver with email already exists", func(t *testing.T) {
-		mock, gormDB := tests.SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+		mock, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 			DB: gormDB,
 		}})))
 
@@ -218,7 +218,7 @@ func TestAuthResolvers(t *testing.T) {
 		var resp struct {}
 		err := c.Post(`mutation Signup{
 			signup(
-			  email: "test@test.com",
+			  email: "test@com",
 			  name: "testname",
 			  password: "password123",
 			  confirmPassword: "password123"
@@ -234,8 +234,8 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Signup resolver with invalid email", func(t *testing.T) {
-		mock, gormDB := tests.SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+		mock, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 			DB: gormDB,
 		}})))
 
@@ -264,8 +264,8 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Signup resolver with confirm not match password", func(t *testing.T) {
-		mock, gormDB := tests.SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+		mock, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 			DB: gormDB,
 		}})))
 
@@ -273,7 +273,7 @@ func TestAuthResolvers(t *testing.T) {
 		var resp struct {} 
 		err = c.Post(`mutation Signup{
 			signup(
-			  email: "test@test.com",
+			  email: "test@com",
 			  name: "testname",
 			  password: "NOPE",
 			  confirmPassword: "password123"
@@ -294,8 +294,8 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Signup resolver weak password no number", func(t *testing.T) {
-		mock, gormDB := tests.SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+		mock, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 			DB: gormDB,
 		}})))
 
@@ -303,7 +303,7 @@ func TestAuthResolvers(t *testing.T) {
 		var resp struct {} 
 		err = c.Post(`mutation Signup{
 			signup(
-			  email: "test@test.com",
+			  email: "test@com",
 			  name: "testname",
 			  password: "passwords",
 			  confirmPassword: "passwords"
@@ -324,8 +324,8 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Signup resolver weak password length", func(t *testing.T) {
-		mock, gormDB := tests.SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+		mock, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 			DB: gormDB,
 		}})))
 
@@ -333,7 +333,7 @@ func TestAuthResolvers(t *testing.T) {
 		var resp struct {} 
 		err = c.Post(`mutation Signup{
 			signup(
-			  email: "test@test.com",
+			  email: "test@com",
 			  name: "testname",
 			  password: "bowo",
 			  confirmPassword: "bowo"
@@ -354,15 +354,15 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Refresh resolver refreshes access token", func(t *testing.T) {
-		_, gormDB := tests.SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{
+		_, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 			DB: gormDB,
 		}})))
 
 		cred := &token.Credentials{
 			ID: 12,
 			Name: "testname",
-			Email: "test@test.com",
+			Email: "test@com",
 		}
 
 		refreshToken := token.Sign(cred, REFRESH_SECRET, 5)

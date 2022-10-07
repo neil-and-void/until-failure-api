@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 
@@ -24,4 +25,12 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 	})
+}
+
+func GetUser(ctx context.Context) (*token.Claims, error) {
+	u, ok := ctx.Value(UserCtxKey).(*token.Claims)
+	if !ok || (token.Claims{}) == *u {
+		return nil, errors.New("Invalid Token")	
+	}
+	return u, nil
 }
