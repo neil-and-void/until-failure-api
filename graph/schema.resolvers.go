@@ -129,7 +129,10 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine *mo
 		return &model.WorkoutRoutine{}, gqlerror.Errorf("Error Creating Workout: %s", err.Error())
 	}
 
-	// TODO: check if user is authorized to make the change here
+	// validate input
+	if len([]rune(routine.Name)) <= 2 {
+		return &model.WorkoutRoutine{}, gqlerror.Errorf("Invalid Routine Name Length")
+	}
 
 	wr := &database.WorkoutRoutine{
 		UserID: u.ID,
@@ -149,7 +152,37 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine *mo
 
 // WorkoutRoutines is the resolver for the workoutRoutines field.
 func (r *queryResolver) WorkoutRoutines(ctx context.Context) ([]*model.WorkoutRoutine, error) {
-	panic(fmt.Errorf("not implemented: WorkoutRoutines - workoutRoutines"))
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return []*model.WorkoutRoutine{}, gqlerror.Errorf("Error Getting Workout Routine: %s", err.Error())
+	}
+
+	dbwr, err := database.GetWorkoutRoutines(r.DB, u.Subject)
+	if err != nil {
+		return []*model.WorkoutRoutine{}, gqlerror.Errorf("Error Getting Workout Routine")
+	}
+
+	// map database workout routine to graphql workout routine
+	workoutRoutines := make([]*model.WorkoutRoutine, 0)
+	for _, wr := range dbwr {
+
+		// map database exercise routine to graphql exercise routine
+		exerciseRoutines := make([]*model.ExerciseRoutine, 0)
+		for _, er := range wr.ExerciseRoutines {
+			exerciseRoutines = append(exerciseRoutines, &model.ExerciseRoutine{
+				ID:   fmt.Sprintf("%d", er.ID),
+				Name: er.Name,
+				Sets: int(er.Sets),
+				Reps: int(er.Reps),
+			})
+		}
+		workoutRoutines = append(workoutRoutines, &model.WorkoutRoutine{
+			ID:               fmt.Sprintf("%d", wr.ID),
+			Name:             wr.Name,
+			ExerciseRoutines: exerciseRoutines,
+		})
+	}
+	return workoutRoutines, nil
 }
 
 // ExerciseRoutines is the resolver for the exerciseRoutines field.

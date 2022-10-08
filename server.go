@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -40,6 +41,9 @@ func main() {
 	}}))
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
 		// notify bug tracker...maybe? idk too much money
+		if err != nil { 
+			fmt.Println(err)
+		}
 		return gqlerror.Errorf("Internal server error")
 	})
 
