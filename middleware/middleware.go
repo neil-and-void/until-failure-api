@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/neilZon/workout-logger-api/utils/config"
 	"github.com/neilZon/workout-logger-api/utils/token"
 )
 
@@ -16,7 +17,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		t := r.Header.Get("Authorization")
 
 		// decode token to get user
-		claims, _ := token.Decode(t, []byte(os.Getenv("ACCESS_SECRET")))
+		claims, _ := token.Decode(t, []byte(os.Getenv(config.ACCESS_SECRET)))
 		
 		// put it in context
 		ctx := context.WithValue(r.Context(), UserCtxKey, claims)

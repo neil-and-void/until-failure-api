@@ -12,6 +12,7 @@ import (
 	"github.com/neilZon/workout-logger-api/common/database"
 	"github.com/neilZon/workout-logger-api/graph"
 	"github.com/neilZon/workout-logger-api/graph/generated"
+	"github.com/neilZon/workout-logger-api/utils/config"
 	"github.com/neilZon/workout-logger-api/utils/token"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -30,8 +31,8 @@ func TestAuthResolvers(t *testing.T) {
 	if err != nil {
 		panic("Error loading .env file")
 	}
-	ACCESS_SECRET := []byte(os.Getenv("ACCESS_SECRET"))
-	REFRESH_SECRET := []byte(os.Getenv("REFRESH_SECRET"))
+	ACCESS_SECRET := []byte(os.Getenv(config.ACCESS_SECRET))
+	REFRESH_SECRET := []byte(os.Getenv(config.REFRESH_SECRET))
 
 	u := database.User{
 		Model: gorm.Model{

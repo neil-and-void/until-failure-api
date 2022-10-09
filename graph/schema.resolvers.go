@@ -43,8 +43,8 @@ func (r *mutationResolver) Login(ctx context.Context, email *string, password *s
 		Name:  dbUser.Name,
 	}
 
-	refreshToken := token.Sign(c, []byte(os.Getenv("REFRESH_SECRET")), config.REFRESH_TTL)
-	accessToken := token.Sign(c, []byte(os.Getenv("ACCESS_SECRET")), config.ACCESS_TTL)
+	refreshToken := token.Sign(c, []byte(os.Getenv(config.REFRESH_SECRET)), config.REFRESH_TTL)
+	accessToken := token.Sign(c, []byte(os.Getenv(config.ACCESS_SECRET)), config.ACCESS_TTL)
 
 	return model.AuthSuccess{
 		RefreshToken: refreshToken,
@@ -91,8 +91,8 @@ func (r *mutationResolver) Signup(ctx context.Context, email *string, name *stri
 		Name:  u.Name,
 	}
 
-	refreshToken := token.Sign(c, []byte(os.Getenv("REFRESH_SECRET")), config.REFRESH_TTL)
-	accessToken := token.Sign(c, []byte(os.Getenv("ACCESS_SECRET")), config.ACCESS_TTL)
+	refreshToken := token.Sign(c, []byte(os.Getenv(config.REFRESH_SECRET)), config.REFRESH_TTL)
+	accessToken := token.Sign(c, []byte(os.Getenv(config.ACCESS_SECRET)), config.ACCESS_TTL)
 
 	return model.AuthSuccess{
 		RefreshToken: refreshToken,
@@ -113,7 +113,7 @@ func (r *mutationResolver) RefreshAccessToken(ctx context.Context, refreshToken 
 			Email: claims.Subject,
 			Name: claims.Name,
 		}, 
-		[]byte(os.Getenv("ACCESS_SECRET")),
+		[]byte(os.Getenv(config.ACCESS_SECRET)),
 		config.ACCESS_TTL,
 	)
 
