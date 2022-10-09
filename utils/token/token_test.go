@@ -21,7 +21,7 @@ func TestToken(t *testing.T) {
 	t.Run("Successfully sign and decode a token", func(t *testing.T) {
 		tkn := Sign(&c, []byte(secret), ttl)
 
-		claims, err := Decode("Bearer " + tkn, []byte(secret))
+		claims, err := Decode("Bearer "+tkn, []byte(secret))
 
 		assert.Nil(t, err, "Error decoding token")
 		assert.Equal(t, claims.Subject, "test@test.com")
@@ -32,14 +32,14 @@ func TestToken(t *testing.T) {
 		tkn := Sign(&c, []byte(secret), ttl)
 		tamperedToken := tkn + "hehehe"
 
-		_, err := Decode(tamperedToken, []byte("Bearer " + secret))
+		_, err := Decode(tamperedToken, []byte("Bearer "+secret))
 		assert.NotNil(t, err, "There should be an error decoding")
 	})
 
 	t.Run("Fail to validate an expired token", func(t *testing.T) {
 		tkn := Sign(&c, []byte(secret), -5) // 5 hours in the past from now
 
-		_, err := Decode(tkn, []byte("Bearer " +secret))
+		_, err := Decode(tkn, []byte("Bearer "+secret))
 
 		assert.NotNil(t, err, "Should be an error decoding a token")
 	})

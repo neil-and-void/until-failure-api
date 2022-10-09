@@ -104,7 +104,7 @@ func TestAuthResolvers(t *testing.T) {
 
 		var resp struct {
 			Login struct {
-				Message  string
+				Message string
 			}
 		}
 		err = c.Post(`mutation Login {
@@ -134,7 +134,7 @@ func TestAuthResolvers(t *testing.T) {
 		}})))
 
 		// empty response struct since we know we are going to return an error
-		var resp struct {} 
+		var resp struct{}
 		err = c.Post(`mutation Login {
 			login(
 			  email: "this_is_def_not_an_email_WTFFFFF",
@@ -216,7 +216,7 @@ func TestAuthResolvers(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta(userQuery)).WithArgs(u.Email).WillReturnRows(userRow)
 
 		// empty struct since we not use it
-		var resp struct {}
+		var resp struct{}
 		err := c.Post(`mutation Signup{
 			signup(
 			  email: "test@com",
@@ -241,7 +241,7 @@ func TestAuthResolvers(t *testing.T) {
 		}})))
 
 		// empty response struct since we know we are going to return an error
-		var resp struct {} 
+		var resp struct{}
 		err = c.Post(`mutation Signup{
 			signup(
 			  email: "@notanemail:)",
@@ -271,7 +271,7 @@ func TestAuthResolvers(t *testing.T) {
 		}})))
 
 		// empty response struct since we know we are going to return an error
-		var resp struct {} 
+		var resp struct{}
 		err = c.Post(`mutation Signup{
 			signup(
 			  email: "test@com",
@@ -291,7 +291,7 @@ func TestAuthResolvers(t *testing.T) {
 		err = mock.ExpectationsWereMet() // make sure all expectations were met
 		if err != nil {
 			panic(err)
-		}	
+		}
 	})
 
 	t.Run("Signup resolver weak password no number", func(t *testing.T) {
@@ -301,7 +301,7 @@ func TestAuthResolvers(t *testing.T) {
 		}})))
 
 		// empty response struct since we know we are going to return an error
-		var resp struct {} 
+		var resp struct{}
 		err = c.Post(`mutation Signup{
 			signup(
 			  email: "test@com",
@@ -321,7 +321,7 @@ func TestAuthResolvers(t *testing.T) {
 		err = mock.ExpectationsWereMet() // make sure all expectations were met
 		if err != nil {
 			panic(err)
-		}	
+		}
 	})
 
 	t.Run("Signup resolver weak password length", func(t *testing.T) {
@@ -331,7 +331,7 @@ func TestAuthResolvers(t *testing.T) {
 		}})))
 
 		// empty response struct since we know we are going to return an error
-		var resp struct {} 
+		var resp struct{}
 		err = c.Post(`mutation Signup{
 			signup(
 			  email: "test@com",
@@ -361,8 +361,8 @@ func TestAuthResolvers(t *testing.T) {
 		}})))
 
 		cred := &token.Credentials{
-			ID: 12,
-			Name: "testname",
+			ID:    12,
+			Name:  "testname",
 			Email: "test@com",
 		}
 
@@ -371,7 +371,7 @@ func TestAuthResolvers(t *testing.T) {
 		// send request and get back refresh token
 		var resp struct {
 			RefreshAccessToken struct {
-				AccessToken  string
+				AccessToken string
 			}
 		}
 		refreshAccessTokenMutation := fmt.Sprintf(`

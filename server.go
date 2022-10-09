@@ -41,7 +41,7 @@ func main() {
 	}}))
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
 		// notify bug tracker...maybe? idk too much money
-		if err != nil { 
+		if err != nil {
 			fmt.Println(err)
 		}
 		return gqlerror.Errorf("Internal server error")
@@ -51,10 +51,10 @@ func main() {
 		AllowedOrigins:   []string{"http://127.0.0.1", "http://localhost:8080", "https://hoppscotch.io/"},
 		AllowCredentials: true,
 		Debug:            true,
-		AllowedHeaders: []string{"Content-Type", "Authorization"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 	})
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))	
+	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", c.Handler(middleware.AuthMiddleware(srv)))
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)

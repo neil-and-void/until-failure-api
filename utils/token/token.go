@@ -15,9 +15,9 @@ type Credentials struct {
 	Email string
 }
 
-type Claims struct { 
+type Claims struct {
 	Name string
-	ID uint
+	ID   uint
 	jwt.StandardClaims
 }
 
@@ -71,13 +71,13 @@ func Decode(tokenString string, secret []byte) (*Claims, error) {
 	f := strings.Fields(tokenString)
 
 	if len(f) != 2 || f[0] != "Bearer" {
-		return nil,  errors.New("Missing type \"Bearer\" in token string")
+		return nil, errors.New("Missing type \"Bearer\" in token string")
 	}
 
 	t, err := jwt.ParseWithClaims(f[1], &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
-	
+
 	if err != nil {
 		return &Claims{}, err
 	}

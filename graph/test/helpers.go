@@ -25,8 +25,8 @@ func SetupMockDB() (sqlmock.Sqlmock, *gorm.DB) {
 }
 
 func AddContext(u *token.Claims) client.Option {
-    return func(bd *client.Request) {
-        ctx := context.WithValue(bd.HTTP.Context(), middleware.UserCtxKey, u)
-        bd.HTTP = bd.HTTP.WithContext(ctx)
-    }
+	return func(bd *client.Request) {
+		ctx := context.WithValue(bd.HTTP.Context(), middleware.UserCtxKey, u)
+		bd.HTTP = bd.HTTP.WithContext(ctx)
+	}
 }

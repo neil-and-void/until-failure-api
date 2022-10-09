@@ -109,10 +109,10 @@ func (r *mutationResolver) RefreshAccessToken(ctx context.Context, refreshToken 
 	}
 
 	accessToken := token.Sign(&token.Credentials{
-			ID: claims.ID,
-			Email: claims.Subject,
-			Name: claims.Name,
-		}, 
+		ID:    claims.ID,
+		Email: claims.Subject,
+		Name:  claims.Name,
+	},
 		[]byte(os.Getenv(config.ACCESS_SECRET)),
 		config.ACCESS_TTL,
 	)
@@ -136,7 +136,7 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine *mo
 
 	wr := &database.WorkoutRoutine{
 		UserID: u.ID,
-		Name: routine.Name,
+		Name:   routine.Name,
 	}
 	res := database.CreateWorkoutRoutine(r.DB, wr)
 	if res.RowsAffected != 1 {
