@@ -3,20 +3,14 @@ package test
 import (
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/joho/godotenv"
-	"github.com/neilZon/workout-logger-api/common/database"
 	"github.com/neilZon/workout-logger-api/graph"
 	"github.com/neilZon/workout-logger-api/graph/generated"
-	"github.com/neilZon/workout-logger-api/utils/config"
-	"github.com/neilZon/workout-logger-api/utils/token"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 type WorkoutRoutineResp struct {
@@ -52,63 +46,9 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 	if err != nil {
 		panic("Error loading .env file")
 	}
-	u := &token.Claims{
-		Name: "test",
-		ID:   28,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(config.ACCESS_TTL * time.Hour).Unix(),
-			IssuedAt:  time.Now().Unix(),
-			NotBefore: time.Now().Unix(),
-			Issuer:    "neil:)",
-			Subject:   "test@test.com",
-		},
-	}
 
-	wr := &database.WorkoutRoutine{
-		Name: "Legs",
-		ExerciseRoutines: []database.ExerciseRoutine{
-			{
-				Model: gorm.Model{
-					ID:        3,
-					CreatedAt: time.Now(),
-					DeletedAt: gorm.DeletedAt{
-						Time:  time.Time{},
-						Valid: true,
-					},
-					UpdatedAt: time.Now(),
-				},
-				Name:             "squat",
-				Sets:             4,
-				Reps:             6,
-				WorkoutRoutineID: 8,
-			},
-			{
-				Model: gorm.Model{
-					ID:        4,
-					CreatedAt: time.Now(),
-					DeletedAt: gorm.DeletedAt{
-						Time:  time.Time{},
-						Valid: true,
-					},
-					UpdatedAt: time.Now(),
-				},
-				Name:             "leg extensions",
-				Sets:             4,
-				Reps:             6,
-				WorkoutRoutineID: 8,
-			},
-		},
-		UserID: 28,
-		Model: gorm.Model{
-			ID:        8,
-			CreatedAt: time.Now(),
-			DeletedAt: gorm.DeletedAt{
-				Time:  time.Time{},
-				Valid: true,
-			},
-			UpdatedAt: time.Now(),
-		},
-	}
+	wr := WorkoutRoutine
+	u := User
 
 	t.Run("Create workout routine success", func(t *testing.T) {
 		mock, gormDB := SetupMockDB()
