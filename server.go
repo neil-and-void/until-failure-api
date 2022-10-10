@@ -10,6 +10,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/joho/godotenv"
+	"github.com/neilZon/workout-logger-api/accesscontrol"
 	db "github.com/neilZon/workout-logger-api/common/database"
 	"github.com/neilZon/workout-logger-api/graph"
 	"github.com/neilZon/workout-logger-api/graph/generated"
@@ -36,11 +37,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
+	client := generated.Config{ Resolvers: &graph.Resolver{
 		DB: db,
-	}}))
+		AC: accesscontrol.NewAccessController(db),
+	}}
+
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(client))
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
-		// notify bug tracker...maybe? idk too much money
+		// notify bug tracker...maybe? idk too much mone˜
 		if err != nil {
 			fmt.Println(err)
 		}

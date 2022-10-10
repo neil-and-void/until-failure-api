@@ -5,9 +5,11 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/mail"
 	"os"
+	"strconv"
 
 	"github.com/neilZon/workout-logger-api/common/database"
 	"github.com/neilZon/workout-logger-api/graph/generated"
@@ -18,6 +20,7 @@ import (
 	"github.com/neilZon/workout-logger-api/utils/token"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 // Login is the resolver for the login field.
@@ -27,11 +30,11 @@ func (r *mutationResolver) Login(ctx context.Context, email *string, password *s
 	}
 
 	dbUser, err := database.GetUserByEmail(r.DB, *email)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, gqlerror.Errorf("Email does not exist")
+	}
 	if err != nil {
 		return nil, gqlerror.Errorf(err.Error())
-	}
-	if dbUser.ID == 0 {
-		return nil, gqlerror.Errorf("Email does not exist")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(*password)); err != nil {
@@ -203,8 +206,35 @@ func (r *queryResolver) WorkoutRoutines(ctx context.Context) ([]*model.WorkoutRo
 }
 
 // ExerciseRoutines is the resolver for the exerciseRoutines field.
-func (r *queryResolver) ExerciseRoutines(ctx context.Context) ([]*model.ExerciseRoutine, error) {
-	panic(fmt.Errorf("not implemented: ExerciseRoutines - exerciseRoutines"))
+func (r *queryResolver) ExerciseRoutines(ctx context.Context, workoutRoutineID *string) ([]*model.ExerciseRoutine, error) {
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Workout Routine: %s", err.Error())
+	}
+
+	userId := fmt.Sprintf("%d", u.ID)
+	err = r.AC.CanAccessWorkoutRoutine(userId, *workoutRoutineID)
+	if err != nil {
+		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Workout Routine: %s", err.Error())
+	}
+
+	id, err := strconv.ParseUint(*workoutRoutineID, 10, 64)
+	if err != nil {
+		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Invalid Workout Routine ID")
+	} 
+	erdb, err := database.GetExerciseRoutines(r.DB, uint(id))
+
+	exerciseRoutines := make([]*model.ExerciseRoutine, 0)
+	for _, er := range erdb {
+		exerciseRoutines = append(exerciseRoutines, &model.ExerciseRoutine{
+			ID:   fmt.Sprintf("%d", er.ID),
+			Name: er.Name,
+			Sets: int(er.Sets),
+			Reps: int(er.Reps),
+		})
+	}
+
+	return exerciseRoutines, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
