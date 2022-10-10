@@ -103,7 +103,7 @@ func (r *mutationResolver) Signup(ctx context.Context, email *string, name *stri
 // RefreshAccessToken is the resolver for the refreshAccessToken field.
 func (r *mutationResolver) RefreshAccessToken(ctx context.Context, refreshToken *string) (*model.RefreshSuccess, error) {
 	// read token from context
-	claims, err := token.Decode(*refreshToken, []byte(os.Getenv("REFRESH_SECRET")))
+	claims, err := token.Decode(*refreshToken, []byte(os.Getenv(config.REFRESH_SECRET)))
 	if err != nil {
 		return nil, gqlerror.Errorf("Refresh token invalid")
 	}
@@ -134,13 +134,30 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine *mo
 		return &model.WorkoutRoutine{}, gqlerror.Errorf("Invalid Routine Name Length")
 	}
 
-	wr := &database.WorkoutRoutine{
-		UserID: u.ID,
-		Name:   routine.Name,
+	exerciseRoutines := make([]database.ExerciseRoutine, 0)
+	for _, er := range routine.ExerciseRoutines {
+		exerciseRoutines = append(exerciseRoutines, database.ExerciseRoutine{Name: er.Name, Reps: uint(er.Reps), Sets: uint(er.Sets)})
 	}
+
+	wr := &database.WorkoutRoutine{
+		Name:             routine.Name,
+		ExerciseRoutines: exerciseRoutines,
+		UserID:           u.ID,
+	}
+
 	res := database.CreateWorkoutRoutine(r.DB, wr)
-	if res.RowsAffected != 1 {
+	if res.Error != nil {
 		return &model.WorkoutRoutine{}, gqlerror.Errorf("Error Creating Workout Routine")
+	}
+
+	dbExerciseRoutines := make([]*model.ExerciseRoutine, 0)
+	for _, er := range wr.ExerciseRoutines {
+		dbExerciseRoutines = append(dbExerciseRoutines, &model.ExerciseRoutine{
+			ID:   fmt.Sprintf("%d", er.ID),
+			Name: er.Name,
+			Sets: int(er.Sets),
+			Reps: int(er.Reps),
+		})
 	}
 
 	return &model.WorkoutRoutine{
