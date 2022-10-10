@@ -1,6 +1,9 @@
 package graph
 
-import "gorm.io/gorm"
+import (
+	"github.com/neilZon/workout-logger-api/accesscontrol"
+	"gorm.io/gorm"
+)
 
 // This file will not be regenerated automatically.
 //
@@ -8,4 +11,5 @@ import "gorm.io/gorm"
 
 type Resolver struct {
 	DB *gorm.DB
+	AC *accesscontrol.AccessController
 }
