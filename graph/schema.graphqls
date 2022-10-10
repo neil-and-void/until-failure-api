@@ -70,7 +70,7 @@ input ExerciseRoutineInput {
 
 type Query {
   workoutRoutines: [WorkoutRoutine]
-  exerciseRoutines: [ExerciseRoutine]
+  exerciseRoutines(workoutRoutineId: ID): [ExerciseRoutine]
 }
 
 type Mutation {
