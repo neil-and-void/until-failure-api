@@ -45,7 +45,7 @@ func TestAuthResolvers(t *testing.T) {
 			UpdatedAt: time.Now(),
 		},
 		Name:     "testname",
-		Email:    "test@com",
+		Email:    "test@test.com",
 		Password: "$2a$10$0EGP2OywIngzJKu.GoKS8eG/08tGSbZi5sMbDoJ..nWVgvQQlaDcC",
 	}
 
@@ -70,7 +70,7 @@ func TestAuthResolvers(t *testing.T) {
 		}
 		c.MustPost(`mutation Login {
 			login(
-			  email: "test@com",
+			  email: "test@test.com",
 			  password: "password123",
 			) {
 			  ... on AuthSuccess {
@@ -109,7 +109,7 @@ func TestAuthResolvers(t *testing.T) {
 		}
 		err = c.Post(`mutation Login {
 			login(
-			  email: "test@com",
+			  email: "test@test.com",
 			  password: "NOTCORRECTHEHEHE",
 			) {
 			  ... on AuthSuccess {
@@ -120,6 +120,37 @@ func TestAuthResolvers(t *testing.T) {
 		  }`,
 			&resp)
 		require.EqualError(t, err, "[{\"message\":\"Incorrect Password\",\"path\":[\"login\"]}]")
+
+		err = mock.ExpectationsWereMet() // make sure all expectations were met
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Login resolver email not found", func(t *testing.T) {
+		mock, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
+			DB: gormDB,
+		}})))
+
+		const userQuery = `SELECT * FROM "users" WHERE email = $1 AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1`
+		mock.ExpectQuery(regexp.QuoteMeta(userQuery)).WithArgs("notexistingemail@test.com").WillReturnError(gorm.ErrRecordNotFound)
+
+		// empty response struct since we know we are going to return an error
+		var resp struct{}
+		err = c.Post(`mutation Login {
+			login(
+			  email: "notexistingemail@test.com",
+			  password: "password123",
+			) {
+			  ... on AuthSuccess {
+				refreshToken,
+				accessToken
+			  }
+			}
+		  }`,
+			&resp)
+		require.EqualError(t, err, "[{\"message\":\"Email does not exist\",\"path\":[\"login\"]}]")
 
 		err = mock.ExpectationsWereMet() // make sure all expectations were met
 		if err != nil {
@@ -181,7 +212,7 @@ func TestAuthResolvers(t *testing.T) {
 		}
 		c.MustPost(`mutation Signup{
 			signup(
-			  email: "test@com",
+			  email: "test@test.com",
 			  name: "testname",
 			  password: "password123",
 			  confirmPassword: "password123"
@@ -219,7 +250,7 @@ func TestAuthResolvers(t *testing.T) {
 		var resp struct{}
 		err := c.Post(`mutation Signup{
 			signup(
-			  email: "test@com",
+			  email: "test@test.com",
 			  name: "testname",
 			  password: "password123",
 			  confirmPassword: "password123"
@@ -274,7 +305,7 @@ func TestAuthResolvers(t *testing.T) {
 		var resp struct{}
 		err = c.Post(`mutation Signup{
 			signup(
-			  email: "test@com",
+			  email: "test@test.com",
 			  name: "testname",
 			  password: "NOPE",
 			  confirmPassword: "password123"
@@ -304,7 +335,7 @@ func TestAuthResolvers(t *testing.T) {
 		var resp struct{}
 		err = c.Post(`mutation Signup{
 			signup(
-			  email: "test@com",
+			  email: "test@test.com",
 			  name: "testname",
 			  password: "passwords",
 			  confirmPassword: "passwords"
@@ -334,7 +365,7 @@ func TestAuthResolvers(t *testing.T) {
 		var resp struct{}
 		err = c.Post(`mutation Signup{
 			signup(
-			  email: "test@com",
+			  email: "test@test.com",
 			  name: "testname",
 			  password: "bowo",
 			  confirmPassword: "bowo"
@@ -363,7 +394,7 @@ func TestAuthResolvers(t *testing.T) {
 		cred := &token.Credentials{
 			ID:    12,
 			Name:  "testname",
-			Email: "test@com",
+			Email: "test@test.com",
 		}
 
 		refreshToken := token.Sign(cred, REFRESH_SECRET, 5)
