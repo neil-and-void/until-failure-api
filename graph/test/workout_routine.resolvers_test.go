@@ -269,21 +269,4 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			&resp)
 		require.EqualError(t, err, "[{\"message\":\"Error Getting Workout Routine: Invalid Token\",\"path\":[\"workoutRoutines\"]}]")
 	})
-
-	t.Run("Get Workout Routine DB Error", func(t *testing.T) {
-		_, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-		}})))
-
-		var resp GetWorkoutRoutineResp
-		err := c.Post(`query WorkoutRoutines {
-			workoutRoutines {
-				id
-				name
-			}
-		}`,
-			&resp, AddContext(u))
-		require.EqualError(t, err, "[{\"message\":\"Error Getting Workout Routine\",\"path\":[\"workoutRoutines\"]}]")
-	})
 }
