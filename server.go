@@ -37,7 +37,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	client := generated.Config{ Resolvers: &graph.Resolver{
+	client := generated.Config{Resolvers: &graph.Resolver{
 		DB: db,
 		AC: accesscontrol.NewAccessController(db),
 	}}

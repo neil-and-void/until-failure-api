@@ -53,7 +53,7 @@ func GetExerciseRoutines(db *gorm.DB, workout_routine_id uint) ([]ExerciseRoutin
 	for rows.Next() {
 		var er ExerciseRoutine
 		db.ScanRows(rows, &er)
-		exerciseRoutines = append(exerciseRoutines, er)	
+		exerciseRoutines = append(exerciseRoutines, er)
 	}
 	return exerciseRoutines, nil
 }

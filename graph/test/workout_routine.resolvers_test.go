@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/neilZon/workout-logger-api/graph"
 	"github.com/neilZon/workout-logger-api/graph/generated"
+	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,12 +18,7 @@ type WorkoutRoutineResp struct {
 	CreateWorkoutRoutine struct {
 		ID               string
 		Name             string
-		ExerciseRoutines []struct {
-			ID   string
-			Name string
-			Sets int
-			Reps int
-		}
+		ExerciseRoutines []model.ExerciseRoutine
 	}
 }
 
@@ -30,12 +26,7 @@ type GetWorkoutRoutineResp struct {
 	WorkoutRoutines []struct {
 		ID               string
 		Name             string
-		ExerciseRoutines []struct {
-			ID   string
-			Name string
-			Sets int
-			Reps int
-		}
+		ExerciseRoutines []model.ExerciseRoutine
 	}
 }
 

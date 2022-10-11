@@ -23,7 +23,7 @@ func TestAccessControl(t *testing.T) {
 		workoutRoutineRow := sqlmock.
 			NewRows([]string{"id", "name", "user_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(wr.ID, wr.Name, wr.UserID, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt)
-		
+
 		const userQuery = `SELECT * FROM "workout_routines" WHERE (user_id = $1 AND id = $2) AND "workout_routines"."deleted_at" IS NULL`
 		mock.ExpectQuery(regexp.QuoteMeta(userQuery)).WithArgs(userId, workoutRoutineId).WillReturnRows(workoutRoutineRow)
 
@@ -37,7 +37,7 @@ func TestAccessControl(t *testing.T) {
 
 		userId := fmt.Sprintf("%d", wr.UserID)
 		workoutRoutineId := fmt.Sprintf("%d", wr.ID)
-		
+
 		const userQuery = `SELECT * FROM "workout_routines" WHERE (user_id = $1 AND id = $2) AND "workout_routines"."deleted_at" IS NULL`
 		mock.ExpectQuery(regexp.QuoteMeta(userQuery)).WithArgs(userId, workoutRoutineId).WillReturnError(gorm.ErrRecordNotFound)
 

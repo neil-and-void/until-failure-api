@@ -11,6 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const workoutRoutineAccessQuery = `SELECT * FROM "workout_routines" WHERE (user_id = $1 AND id = $2) AND "workout_routines"."deleted_at" IS NULL ORDER BY "workout_routines"."id" LIMIT 1`
+
 func SetupMockDB() (sqlmock.Sqlmock, *gorm.DB) {
 	mockDb, mock, err := sqlmock.New() // mock sql.DB
 	if err != nil {
