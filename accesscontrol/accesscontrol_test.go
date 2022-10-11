@@ -38,8 +38,7 @@ func TestAccessControl(t *testing.T) {
 		userId := fmt.Sprintf("%d", wr.UserID)
 		workoutRoutineId := fmt.Sprintf("%d", wr.ID)
 
-		const userQuery = `SELECT * FROM "workout_routines" WHERE (user_id = $1 AND id = $2) AND "workout_routines"."deleted_at" IS NULL`
-		mock.ExpectQuery(regexp.QuoteMeta(userQuery)).WithArgs(userId, workoutRoutineId).WillReturnError(gorm.ErrRecordNotFound)
+		mock.ExpectQuery(regexp.QuoteMeta(test.WorkoutRoutineAccessQuery)).WithArgs(userId, workoutRoutineId).WillReturnError(gorm.ErrRecordNotFound)
 
 		ac := &AccessController{DB: gormDB}
 		err := ac.CanAccessWorkoutRoutine(userId, workoutRoutineId)
