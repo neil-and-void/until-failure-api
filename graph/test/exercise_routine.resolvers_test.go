@@ -16,11 +16,10 @@ import (
 
 type GetExerciseRoutineResp struct {
 	ExerciseRoutines []struct {
-		ID   string 
-		Name string 
+		ID   string
+		Name string
 		Sets int
-   		Reps int    
-		
+		Reps int
 	}
 }
 
