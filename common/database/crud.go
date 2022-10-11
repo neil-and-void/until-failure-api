@@ -24,7 +24,10 @@ func GetWorkoutRoutine(db *gorm.DB, userId string, workoutRoutineId string) (*Wo
 
 // Workout Routine
 func GetWorkoutRoutines(db *gorm.DB, email string) ([]WorkoutRoutine, error) {
-	result := db.Model(&User{}).Select("workout_routines.id, workout_routines.name, workout_routines.created_at, workout_routines.updated_at, workout_routines.deleted_at").Joins("left join workout_routines on workout_routines.user_id = users.id").Where("users.email = ?", email)
+	result := db.Model(&User{}).
+		Select("workout_routines.id, workout_routines.name, workout_routines.created_at, workout_routines.updated_at, workout_routines.deleted_at").
+		Joins("left join workout_routines on workout_routines.user_id = users.id").
+		Where("users.email = ?", email)
 	rows, err := result.Rows()
 	if err != nil {
 		return []WorkoutRoutine{}, err
@@ -41,8 +44,11 @@ func GetWorkoutRoutines(db *gorm.DB, email string) ([]WorkoutRoutine, error) {
 }
 
 // Exercise Routine
-func GetExerciseRoutines(db *gorm.DB, workout_routine_id uint) ([]ExerciseRoutine, error) {
-	result := db.Model(&WorkoutRoutine{}).Select("exercise_routines.id, exercise_routines.name, exercise_routines.sets, exercise_routines.reps, exercise_routines.created_at, exercise_routines.updated_at, exercise_routines.deleted_at").Joins("left join exercise_routines on workout_routines.id = exercise_routines.workout_routine_id").Where("exercise_routines.workout_routine_id = ?", workout_routine_id)
+func GetExerciseRoutines(db *gorm.DB, workout_routine_id string) ([]ExerciseRoutine, error) {
+	result := db.Model(&WorkoutRoutine{}).
+		Select("exercise_routines.id, exercise_routines.name, exercise_routines.sets, exercise_routines.reps, exercise_routines.created_at, exercise_routines.updated_at, exercise_routines.deleted_at").
+		Joins("left join exercise_routines on workout_routines.id = exercise_routines.workout_routine_id").
+		Where("exercise_routines.workout_routine_id = ?", workout_routine_id)
 	rows, err := result.Rows()
 	if err != nil {
 		return []ExerciseRoutine{}, err

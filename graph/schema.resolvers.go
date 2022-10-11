@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net/mail"
 	"os"
-	"strconv"
 
 	"github.com/neilZon/workout-logger-api/common/database"
 	"github.com/neilZon/workout-logger-api/graph/generated"
@@ -218,11 +217,10 @@ func (r *queryResolver) ExerciseRoutines(ctx context.Context, workoutRoutineID *
 		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Workout Routine: %s", err.Error())
 	}
 
-	id, err := strconv.ParseUint(*workoutRoutineID, 10, 64)
 	if err != nil {
 		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Invalid Workout Routine ID")
 	}
-	erdb, err := database.GetExerciseRoutines(r.DB, uint(id))
+	erdb, err := database.GetExerciseRoutines(r.DB, *workoutRoutineID)
 
 	exerciseRoutines := make([]*model.ExerciseRoutine, 0)
 	for _, er := range erdb {
