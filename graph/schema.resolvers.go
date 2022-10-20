@@ -217,9 +217,6 @@ func (r *queryResolver) ExerciseRoutines(ctx context.Context, workoutRoutineID *
 		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Workout Routine: %s", err.Error())
 	}
 
-	if err != nil {
-		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Invalid Workout Routine ID")
-	}
 	erdb, err := database.GetExerciseRoutines(r.DB, *workoutRoutineID)
 
 	exerciseRoutines := make([]*model.ExerciseRoutine, 0)

@@ -12,6 +12,7 @@ import (
 	"github.com/neilZon/workout-logger-api/accesscontrol"
 	"github.com/neilZon/workout-logger-api/graph"
 	"github.com/neilZon/workout-logger-api/graph/generated"
+	"gorm.io/gorm"
 )
 
 type GetExerciseRoutineResp struct {
@@ -53,13 +54,32 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		const exerciseRoutineQuery = `SELECT exercise_routines.id, exercise_routines.name, exercise_routines.sets, exercise_routines.reps, exercise_routines.created_at, exercise_routines.updated_at, exercise_routines.deleted_at FROM "workout_routines" left join exercise_routines on workout_routines.id = exercise_routines.workout_routine_id WHERE exercise_routines.workout_routine_id = $1 AND "workout_routines"."deleted_at" IS NULL`
 		mock.ExpectQuery(regexp.QuoteMeta(exerciseRoutineQuery)).WithArgs(fmt.Sprintf("%d", wr.ID)).WillReturnRows(exerciseRoutineRow)
 
-		var resp WorkoutRoutineResp
+		var resp GetExerciseRoutineResp
 		query := fmt.Sprintf(`query ExerciseRoutines {
 			exerciseRoutines(workoutRoutineId: "%d") {
 				id
 				name
 			}
 		}`, er.WorkoutRoutineID)
+		c.MustPost(query, &resp, AddContext(u))
+	})
+
+	t.Run("Get Exercise Routine Access Denied", func(t *testing.T) {
+		mock, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
+			DB: gormDB,
+			AC: &accesscontrol.AccessController{DB: gormDB},
+		}})))
+
+		mock.ExpectQuery(regexp.QuoteMeta(WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", 1234)).WillReturnError(gorm.ErrRecordNotFound)
+
+		var resp GetExerciseRoutineResp
+		query := fmt.Sprintf(`query ExerciseRoutines {
+			exerciseRoutines(workoutRoutineId: "%d") {
+				id
+				name
+			}
+		}`, 1234)
 		err = c.Post(query, &resp, AddContext(u))
 
 		err = mock.ExpectationsWereMet() // make sure all expectations were met
