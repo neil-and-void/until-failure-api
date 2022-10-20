@@ -32,7 +32,7 @@ type ExerciseRoutine struct {
 type WorkoutSession struct {
 	gorm.Model
 	Start            time.Time `gorm:"not null"`
-	End              time.Time
+	End              *time.Time
 	WorkoutRoutineID uint
 	UserID           uint
 	Exercises        []Exercise
