@@ -2,6 +2,10 @@
 
 package model
 
+import (
+	"time"
+)
+
 type AuthResult interface {
 	IsAuthResult()
 }
@@ -22,7 +26,12 @@ func (AuthSuccess) IsAuthResult() {}
 type Exercise struct {
 	ID              string           `json:"id"`
 	ExerciseRoutine *ExerciseRoutine `json:"exerciseRoutine"`
-	Sets            []*Set           `json:"sets"`
+	Sets            []*SetEntry      `json:"sets"`
+}
+
+type ExerciseInput struct {
+	ExerciseRoutineID string           `json:"exerciseRoutineId"`
+	SetEntries        []*SetEntryInput `json:"setEntries"`
 }
 
 type ExerciseRoutine struct {
@@ -42,10 +51,17 @@ type RefreshSuccess struct {
 	AccessToken string `json:"accessToken"`
 }
 
-type Set struct {
-	ID   string `json:"id"`
-	Set  int    `json:"set"`
-	Reps int    `json:"reps"`
+type SetEntry struct {
+	ID     string  `json:"id"`
+	Weight float64 `json:"weight"`
+	Reps   int     `json:"reps"`
+	Notes  *string `json:"notes"`
+}
+
+type SetEntryInput struct {
+	Weight float64 `json:"weight"`
+	Reps   int     `json:"reps"`
+	Notes  *string `json:"notes"`
 }
 
 type User struct {
@@ -69,4 +85,11 @@ type WorkoutRoutine struct {
 type WorkoutRoutineInput struct {
 	Name             string                  `json:"name"`
 	ExerciseRoutines []*ExerciseRoutineInput `json:"exerciseRoutines"`
+}
+
+type WorkoutSessionInput struct {
+	WorkoutRoutineID string           `json:"workoutRoutineId"`
+	Start            time.Time        `json:"start"`
+	End              *time.Time       `json:"end"`
+	Exercises        []*ExerciseInput `json:"exercises"`
 }

@@ -1,4 +1,6 @@
 ### TYPES ###
+scalar Time
+
 type User {
   id: ID!
   name: String!
@@ -27,13 +29,14 @@ type Workout {
 type Exercise {
   id: ID!
   exerciseRoutine: ExerciseRoutine
-  sets: [Set]
+  sets: [SetEntry]
 }
 
-type Set {
+type SetEntry {
   id: ID!
-  set: Int!
+  weight: Float!
   reps: Int!
+  notes: String
 }
 
 type AuthError {
@@ -66,6 +69,24 @@ input ExerciseRoutineInput {
   reps: Int!
 }
 
+input WorkoutSessionInput {
+  workoutRoutineId: ID!
+  start: Time!
+  end: Time
+  exercises: [ExerciseInput]
+}
+
+input ExerciseInput {
+  exerciseRoutineId: ID!
+  setEntries: [SetEntryInput]
+}
+
+input SetEntryInput {
+  weight: Float!
+  reps: Int!
+  notes: String
+}
+
 ### END INPUTS ###
 
 type Query {
@@ -83,4 +104,5 @@ type Mutation {
   ): AuthResult!
   refreshAccessToken(refreshToken: String): RefreshSuccess!
   createWorkoutRoutine(routine: WorkoutRoutineInput): WorkoutRoutine
+  addWorkoutSession(workout: WorkoutSessionInput): Workout
 }
