@@ -1,6 +1,10 @@
 package database
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type User struct {
 	gorm.Model
@@ -23,4 +27,28 @@ type ExerciseRoutine struct {
 	Sets             uint   `gorm:"not null"`
 	Reps             uint   `gorm:"not null"`
 	WorkoutRoutineID uint
+}
+
+type WorkoutSession struct {
+	gorm.Model
+	Start            time.Time `gorm:"not null"`
+	End              time.Time
+	WorkoutRoutineID uint
+	UserID           uint
+	Exercises        []Exercise
+}
+
+type Exercise struct {
+	gorm.Model
+	WorkoutSessionID  uint
+	ExerciseRoutineID uint
+	Sets              []SetEntry
+}
+
+type SetEntry struct {
+	gorm.Model
+	Amount     float32 `gorm:"not null" sql:"type:decimal(10,2);"`
+	Reps       uint    `gorm:"not null"`
+	Notes      *string `gorm:"size:512"`
+	ExerciseID uint
 }

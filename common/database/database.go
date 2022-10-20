@@ -24,6 +24,6 @@ func InitDb() (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	db.AutoMigrate(User{}, WorkoutRoutine{}, ExerciseRoutine{})
+	db.AutoMigrate(User{}, WorkoutRoutine{}, ExerciseRoutine{}, WorkoutSession{}, Exercise{}, SetEntry{})
 	return db, nil
 }
