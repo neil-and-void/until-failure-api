@@ -70,12 +70,6 @@ type User struct {
 	Email string `json:"email"`
 }
 
-type Workout struct {
-	ID             string          `json:"id"`
-	WorkoutRoutine *WorkoutRoutine `json:"workoutRoutine"`
-	Exercise       []*Exercise     `json:"exercise"`
-}
-
 type WorkoutRoutine struct {
 	ID               string             `json:"id"`
 	Name             string             `json:"name"`
@@ -85,6 +79,14 @@ type WorkoutRoutine struct {
 type WorkoutRoutineInput struct {
 	Name             string                  `json:"name"`
 	ExerciseRoutines []*ExerciseRoutineInput `json:"exerciseRoutines"`
+}
+
+type WorkoutSession struct {
+	ID             string          `json:"id"`
+	Start          time.Time       `json:"start"`
+	End            *time.Time      `json:"end"`
+	WorkoutRoutine *WorkoutRoutine `json:"workoutRoutine"`
+	Exercise       []*Exercise     `json:"exercise"`
 }
 
 type WorkoutSessionInput struct {

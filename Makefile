@@ -1,5 +1,5 @@
 dev:
-	go run server.go
+	air
 
 test:
 	go test ./... -v
