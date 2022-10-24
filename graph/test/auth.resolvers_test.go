@@ -9,11 +9,11 @@ import (
 
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/neilZon/workout-logger-api/common/database"
+	"github.com/neilZon/workout-logger-api/config"
+	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph"
 	"github.com/neilZon/workout-logger-api/graph/generated"
-	"github.com/neilZon/workout-logger-api/utils/config"
-	"github.com/neilZon/workout-logger-api/utils/token"
+	"github.com/neilZon/workout-logger-api/token"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/joho/godotenv"

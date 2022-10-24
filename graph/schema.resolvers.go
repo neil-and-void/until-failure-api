@@ -9,14 +9,15 @@ import (
 	"fmt"
 	"net/mail"
 	"os"
+	"strconv"
 
-	"github.com/neilZon/workout-logger-api/common/database"
+	"github.com/neilZon/workout-logger-api/config"
+	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph/generated"
 	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/middleware"
+	"github.com/neilZon/workout-logger-api/token"
 	"github.com/neilZon/workout-logger-api/utils"
-	"github.com/neilZon/workout-logger-api/utils/config"
-	"github.com/neilZon/workout-logger-api/utils/token"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -149,7 +150,7 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine *mo
 
 	res := database.CreateWorkoutRoutine(r.DB, wr)
 	if res.Error != nil {
-		return &model.WorkoutRoutine{}, gqlerror.Errorf("Error Creating Workout Routine")
+		return &model.WorkoutRoutine{}, gqlerror.Errorf(err.Error())
 	}
 
 	dbExerciseRoutines := make([]*model.ExerciseRoutine, 0)
@@ -166,6 +167,86 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine *mo
 		ID:               fmt.Sprintf("%d", wr.ID),
 		Name:             wr.Name,
 		ExerciseRoutines: []*model.ExerciseRoutine{},
+	}, nil
+}
+
+// AddWorkoutSession is the resolver for the addWorkoutSession field.
+func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout *model.WorkoutSessionInput) (*model.WorkoutSession, error) {
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.WorkoutSession{}, gqlerror.Errorf("Error Adding Workout Session: %s", err.Error())
+	}
+
+	var dbExercises []database.Exercise
+	for _, e := range workout.Exercises {
+		var set []database.SetEntry
+
+		for _, s := range e.SetEntries {
+			set = append(set, database.SetEntry{
+				Weight: float32(s.Weight),
+				Reps:   uint(s.Reps),
+				Notes:  s.Notes,
+			})
+		}
+
+		dbExercises = append(dbExercises, database.Exercise{
+			Sets: set,
+		})
+	}
+
+	workotuRoutineID, err := strconv.ParseUint(workout.WorkoutRoutineID, 10, 64)
+	if err != nil {
+		return &model.WorkoutSession{}, gqlerror.Errorf("Invalid Workout Routine ID")
+	}
+
+	ws := &database.WorkoutSession{
+		Start:            workout.Start,
+		End:              workout.End,
+		WorkoutRoutineID: uint(workotuRoutineID),
+		UserID:           u.ID,
+		Exercises:        dbExercises,
+	}
+	err = database.AddWorkoutSession(r.DB, ws)
+	if err != nil {
+		return &model.WorkoutSession{}, gqlerror.Errorf(err.Error())
+	}
+
+	// todo query for ALL exercise routines here
+
+	var exercises []*model.Exercise
+	for _, e := range ws.Exercises {
+		var sets []*model.SetEntry
+
+		for _, s := range e.Sets {
+			sets = append(sets, &model.SetEntry{
+				ID:     fmt.Sprintf("%d", s.ID),
+				Weight: float64(s.Weight),
+				Reps:   int(s.Reps),
+				Notes:  s.Notes,
+			})
+		}
+
+		exercises = append(exercises, &model.Exercise{
+			Sets: sets,
+		})
+	}
+	
+	// TODO query for workout routine 
+	wr, err := database.GetWorkoutRoutine(r.DB, fmt.Sprintf("%d", u.ID), workout.WorkoutRoutineID)
+	if err != nil {
+		return &model.WorkoutSession{}, gqlerror.Errorf("Error Adding Workout Session: %s", err.Error())
+	}
+
+	return &model.WorkoutSession{
+		ID:             fmt.Sprintf("%d", ws.ID),
+		Start:          ws.Start,
+		End:            ws.End,
+		WorkoutRoutine: &model.WorkoutRoutine{
+			ID:               fmt.Sprintf("%d", wr.ID),
+			Name:             wr.Name,
+			ExerciseRoutines: []*model.ExerciseRoutine{},
+		},
+		Exercise:       exercises,
 	}, nil
 }
 

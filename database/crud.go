@@ -63,3 +63,8 @@ func GetExerciseRoutines(db *gorm.DB, workout_routine_id string) ([]ExerciseRout
 	}
 	return exerciseRoutines, nil
 }
+
+func AddWorkoutSession(db *gorm.DB, workout *WorkoutSession) error {
+	result := db.Create(workout)
+	return result.Error
+}

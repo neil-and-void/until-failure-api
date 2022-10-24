@@ -3,7 +3,7 @@ package accesscontrol
 import (
 	"errors"
 
-	"github.com/neilZon/workout-logger-api/common/database"
+	"github.com/neilZon/workout-logger-api/database"
 	"gorm.io/gorm"
 )
 

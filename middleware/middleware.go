@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/neilZon/workout-logger-api/utils/config"
-	"github.com/neilZon/workout-logger-api/utils/token"
+	"github.com/neilZon/workout-logger-api/config"
+	"github.com/neilZon/workout-logger-api/token"
 )
 
 const UserCtxKey string = "USER"
@@ -30,7 +30,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 func GetUser(ctx context.Context) (*token.Claims, error) {
 	u, ok := ctx.Value(UserCtxKey).(*token.Claims)
-	if !ok || (token.Claims{}) == *u {
+	if !ok || u == nil || (token.Claims{}) == *u {
 		return nil, errors.New("Invalid Token")
 	}
 	return u, nil

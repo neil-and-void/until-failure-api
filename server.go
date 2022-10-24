@@ -11,7 +11,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/joho/godotenv"
 	"github.com/neilZon/workout-logger-api/accesscontrol"
-	db "github.com/neilZon/workout-logger-api/common/database"
+	db "github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph"
 	"github.com/neilZon/workout-logger-api/graph/generated"
 	"github.com/neilZon/workout-logger-api/middleware"

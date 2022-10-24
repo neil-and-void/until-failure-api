@@ -6,7 +6,7 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/neilZon/workout-logger-api/middleware"
-	"github.com/neilZon/workout-logger-api/utils/token"
+	"github.com/neilZon/workout-logger-api/token"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

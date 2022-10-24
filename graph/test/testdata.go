@@ -4,9 +4,9 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/neilZon/workout-logger-api/common/database"
-	"github.com/neilZon/workout-logger-api/utils/config"
-	"github.com/neilZon/workout-logger-api/utils/token"
+	"github.com/neilZon/workout-logger-api/config"
+	"github.com/neilZon/workout-logger-api/database"
+	"github.com/neilZon/workout-logger-api/token"
 	"gorm.io/gorm"
 )
 
