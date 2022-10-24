@@ -171,10 +171,10 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine *mo
 }
 
 // AddWorkoutSession is the resolver for the addWorkoutSession field.
-func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout *model.WorkoutSessionInput) (*model.WorkoutSession, error) {
+func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout *model.WorkoutSessionInput) (string, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return &model.WorkoutSession{}, gqlerror.Errorf("Error Adding Workout Session: %s", err.Error())
+		return "", gqlerror.Errorf("Error Adding Workout Session: %s", err.Error())
 	}
 
 	var dbExercises []database.Exercise
@@ -196,7 +196,7 @@ func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout *model
 
 	workotuRoutineID, err := strconv.ParseUint(workout.WorkoutRoutineID, 10, 64)
 	if err != nil {
-		return &model.WorkoutSession{}, gqlerror.Errorf("Invalid Workout Routine ID")
+		return "", gqlerror.Errorf("Invalid Workout Routine ID")
 	}
 
 	ws := &database.WorkoutSession{
@@ -208,46 +208,10 @@ func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout *model
 	}
 	err = database.AddWorkoutSession(r.DB, ws)
 	if err != nil {
-		return &model.WorkoutSession{}, gqlerror.Errorf(err.Error())
+		return "", gqlerror.Errorf(err.Error())
 	}
 
-	// todo query for ALL exercise routines here
-
-	var exercises []*model.Exercise
-	for _, e := range ws.Exercises {
-		var sets []*model.SetEntry
-
-		for _, s := range e.Sets {
-			sets = append(sets, &model.SetEntry{
-				ID:     fmt.Sprintf("%d", s.ID),
-				Weight: float64(s.Weight),
-				Reps:   int(s.Reps),
-				Notes:  s.Notes,
-			})
-		}
-
-		exercises = append(exercises, &model.Exercise{
-			Sets: sets,
-		})
-	}
-	
-	// TODO query for workout routine 
-	wr, err := database.GetWorkoutRoutine(r.DB, fmt.Sprintf("%d", u.ID), workout.WorkoutRoutineID)
-	if err != nil {
-		return &model.WorkoutSession{}, gqlerror.Errorf("Error Adding Workout Session: %s", err.Error())
-	}
-
-	return &model.WorkoutSession{
-		ID:             fmt.Sprintf("%d", ws.ID),
-		Start:          ws.Start,
-		End:            ws.End,
-		WorkoutRoutine: &model.WorkoutRoutine{
-			ID:               fmt.Sprintf("%d", wr.ID),
-			Name:             wr.Name,
-			ExerciseRoutines: []*model.ExerciseRoutine{},
-		},
-		Exercise:       exercises,
-	}, nil
+	return fmt.Sprintf("%d", ws.ID), nil
 }
 
 // WorkoutRoutines is the resolver for the workoutRoutines field.

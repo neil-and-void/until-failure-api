@@ -116,7 +116,7 @@ type MutationResolver interface {
 	Signup(ctx context.Context, email *string, name *string, password *string, confirmPassword *string) (model.AuthResult, error)
 	RefreshAccessToken(ctx context.Context, refreshToken *string) (*model.RefreshSuccess, error)
 	CreateWorkoutRoutine(ctx context.Context, routine *model.WorkoutRoutineInput) (*model.WorkoutRoutine, error)
-	AddWorkoutSession(ctx context.Context, workout *model.WorkoutSessionInput) (*model.WorkoutSession, error)
+	AddWorkoutSession(ctx context.Context, workout *model.WorkoutSessionInput) (string, error)
 }
 type QueryResolver interface {
 	WorkoutRoutines(ctx context.Context) ([]*model.WorkoutRoutine, error)
@@ -580,7 +580,7 @@ type Mutation {
   ): AuthResult!
   refreshAccessToken(refreshToken: String): RefreshSuccess!
   createWorkoutRoutine(routine: WorkoutRoutineInput): WorkoutRoutine
-  addWorkoutSession(workout: WorkoutSessionInput): WorkoutSession
+  addWorkoutSession(workout: WorkoutSessionInput): ID!
 }
 `, BuiltIn: false},
 }
@@ -1479,11 +1479,14 @@ func (ec *executionContext) _Mutation_addWorkoutSession(ctx context.Context, fie
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.WorkoutSession)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOWorkoutSession2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSession(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_addWorkoutSession(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1493,19 +1496,7 @@ func (ec *executionContext) fieldContext_Mutation_addWorkoutSession(ctx context.
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_WorkoutSession_id(ctx, field)
-			case "start":
-				return ec.fieldContext_WorkoutSession_start(ctx, field)
-			case "end":
-				return ec.fieldContext_WorkoutSession_end(ctx, field)
-			case "workoutRoutine":
-				return ec.fieldContext_WorkoutSession_workoutRoutine(ctx, field)
-			case "exercise":
-				return ec.fieldContext_WorkoutSession_exercise(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type WorkoutSession", field.Name)
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	defer func() {
@@ -4711,6 +4702,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_addWorkoutSession(ctx, field)
 			})
 
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6067,13 +6061,6 @@ func (ec *executionContext) unmarshalOWorkoutRoutineInput2ᚖgithubᚗcomᚋneil
 	}
 	res, err := ec.unmarshalInputWorkoutRoutineInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOWorkoutSession2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSession(ctx context.Context, sel ast.SelectionSet, v *model.WorkoutSession) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._WorkoutSession(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOWorkoutSessionInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSessionInput(ctx context.Context, v interface{}) (*model.WorkoutSessionInput, error) {

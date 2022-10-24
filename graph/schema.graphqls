@@ -106,5 +106,5 @@ type Mutation {
   ): AuthResult!
   refreshAccessToken(refreshToken: String): RefreshSuccess!
   createWorkoutRoutine(routine: WorkoutRoutineInput): WorkoutRoutine
-  addWorkoutSession(workout: WorkoutSessionInput): WorkoutSession
+  addWorkoutSession(workout: WorkoutSessionInput): ID!
 }
