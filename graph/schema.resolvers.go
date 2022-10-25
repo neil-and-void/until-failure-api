@@ -70,8 +70,8 @@ func (r *mutationResolver) Signup(ctx context.Context, email *string, name *stri
 		return nil, gqlerror.Errorf("Not a valid email")
 	}
 
-	dbUser, err := database.GetUserByEmail(r.DB, *email)
 	// check if user was found from query
+	dbUser, err := database.GetUserByEmail(r.DB, *email)
 	if dbUser.ID != 0 {
 		return nil, gqlerror.Errorf("Email already exists")
 	}
@@ -174,7 +174,7 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine *mo
 func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout *model.WorkoutSessionInput) (string, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return "", gqlerror.Errorf("Error Adding Workout Session: %s", err.Error())
+		return "", gqlerror.Errorf("Error Adding Workout Session: Invalid Token")
 	}
 
 	var dbExercises []database.Exercise
@@ -189,14 +189,20 @@ func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout *model
 			})
 		}
 
+		exerciseRoutineId, err := strconv.ParseUint(e.ExerciseRoutineID, 10, 32)
+		if err != nil {
+			return "", gqlerror.Errorf("Error Adding Workout Session")
+		}
+
 		dbExercises = append(dbExercises, database.Exercise{
-			Sets: set,
+			Sets:              set,
+			ExerciseRoutineID: uint(exerciseRoutineId),
 		})
 	}
 
 	workotuRoutineID, err := strconv.ParseUint(workout.WorkoutRoutineID, 10, 64)
 	if err != nil {
-		return "", gqlerror.Errorf("Invalid Workout Routine ID")
+		return "", gqlerror.Errorf("Error Adding Workout Session: Invalid Workout Routine ID")
 	}
 
 	ws := &database.WorkoutSession{
@@ -208,10 +214,52 @@ func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout *model
 	}
 	err = database.AddWorkoutSession(r.DB, ws)
 	if err != nil {
-		return "", gqlerror.Errorf(err.Error())
+		return "", gqlerror.Errorf("Error Adding Workout Session")
 	}
 
 	return fmt.Sprintf("%d", ws.ID), nil
+}
+
+// AddExercise is the resolver for the addExercise field.
+func (r *mutationResolver) AddExercise(ctx context.Context, exercise *model.ExerciseInput, workoutSessionID *string) (string, error) {
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return "", gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
+	}
+
+	userId := fmt.Sprintf("%d", u.ID)
+	err = r.AC.CanAccessWorkoutSession(userId, *workoutSessionID)
+	if err != nil {
+		return "", gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
+	}
+
+	var setEntries []database.SetEntry
+	for _, s := range exercise.SetEntries {
+		setEntries = append(setEntries, database.SetEntry{
+			Reps: uint(s.Reps),
+			Weight: float32(s.Weight),
+			Notes: s.Notes,
+		})
+	}
+
+	workoutSessionIDUint, err := strconv.ParseUint(*workoutSessionID, 10, 32)
+	if err != nil {
+		return "", gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
+	}
+
+	exerciseRoutineID, err := strconv.ParseUint(exercise.ExerciseRoutineID, 10, 32)
+	if err != nil {
+		return "", gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
+	}
+
+	dbExercise := &database.Exercise{
+		WorkoutSessionID:  uint(workoutSessionIDUint),
+		ExerciseRoutineID: uint(exerciseRoutineID),
+		Sets:              setEntries,
+	}
+	database.AddExercise(r.DB, dbExercise, *workoutSessionID)
+
+	return fmt.Sprintf("%d", dbExercise.ID), nil
 }
 
 // WorkoutRoutines is the resolver for the workoutRoutines field.
@@ -275,6 +323,52 @@ func (r *queryResolver) ExerciseRoutines(ctx context.Context, workoutRoutineID *
 	}
 
 	return exerciseRoutines, nil
+}
+
+// WorkoutSessions is the resolver for the workoutSessions field.
+func (r *queryResolver) WorkoutSessions(ctx context.Context) ([]*model.WorkoutSession, error) {
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return []*model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Routine: %s", err.Error())
+	}
+
+	dbWorkoutSessions, err := database.GetWorkoutSessions(r.DB, fmt.Sprintf("%d", u.ID))
+	if err != nil {
+		return []*model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Sessions: %s", err.Error())
+	}
+
+	var workoutSessions []*model.WorkoutSession
+	for _, ws := range dbWorkoutSessions {
+
+		var exercise []*model.Exercise
+		for _, e := range ws.Exercises {
+
+			var setEntries []*model.SetEntry
+			for _, s := range e.Sets {
+				setEntries = append(setEntries, &model.SetEntry{
+					ID:     fmt.Sprintf("%d", s.ID),
+					Weight: float64(s.Weight),
+					Reps:   int(s.Reps),
+					Notes:  s.Notes,
+				})
+
+			}
+
+			exercise = append(exercise, &model.Exercise{
+				ID:   fmt.Sprintf("%d", e.ID),
+				Sets: setEntries,
+			})
+		}
+
+		workoutSessions = append(workoutSessions, &model.WorkoutSession{
+			ID:       fmt.Sprintf("%d", ws.ID),
+			Start:    ws.Start,
+			End:      ws.End,
+			Exercise: exercise,
+		})
+	}
+
+	return workoutSessions, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

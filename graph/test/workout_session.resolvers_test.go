@@ -1,0 +1,268 @@
+package test
+
+import (
+	"regexp"
+	"testing"
+
+	"github.com/99designs/gqlgen/client"
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/joho/godotenv"
+	"github.com/neilZon/workout-logger-api/graph"
+	"github.com/neilZon/workout-logger-api/graph/generated"
+	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
+)
+
+type AddWorkoutSessionResp struct {
+	AddWorkoutSession string 	
+}
+
+func TestWorkoutSessionResolvers(t *testing.T) {
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		panic("Error loading .env file")
+	}
+
+	ws := WorkoutSession
+	u := User
+
+	t.Run("Add Workout Session success", func(t *testing.T) {
+		mock, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
+			DB: gormDB,
+		}})))
+
+		mock.ExpectBegin()
+		const addWorkoutSessionStmnt = `INSERT INTO "workout_sessions" ("created_at","updated_at","deleted_at","start","end","workout_routine_id","user_id") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`
+		mock.ExpectQuery(regexp.QuoteMeta(addWorkoutSessionStmnt)).WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), ws.Start, ws.End, ws.WorkoutRoutineID, ws.UserID).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(ws.ID))
+		const addExerciseStmt = `INSERT INTO "exercises" ("created_at","updated_at","deleted_at","workout_session_id","exercise_routine_id") VALUES ($1,$2,$3,$4,$5),($6,$7,$8,$9,$10) ON CONFLICT ("id") DO UPDATE SET "workout_session_id"="excluded"."workout_session_id" RETURNING "id"`
+		mock.ExpectQuery(regexp.QuoteMeta(addExerciseStmt)).WithArgs(
+			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(), 
+			ws.Exercises[0].WorkoutSessionID,
+			ws.Exercises[0].ExerciseRoutineID,
+			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(), 
+			ws.Exercises[1].WorkoutSessionID,
+			ws.Exercises[1].ExerciseRoutineID,
+		).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(ws.Exercises[0].ID).AddRow(ws.Exercises[1].ID))
+		const addSetEntries = `INSERT INTO "set_entries" ("created_at","updated_at","deleted_at","weight","reps","notes","exercise_id") VALUES ($1,$2,$3,$4,$5,$6,$7),($8,$9,$10,$11,$12,$13,$14),($15,$16,$17,$18,$19,$20,$21),($22,$23,$24,$25,$26,$27,$28) ON CONFLICT ("id") DO UPDATE SET "exercise_id"="excluded"."exercise_id" RETURNING "id"`
+		mock.ExpectQuery(regexp.QuoteMeta(addSetEntries)).WithArgs(
+			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(), 
+			ws.Exercises[0].Sets[0].Weight,
+			ws.Exercises[0].Sets[0].Reps,
+			ws.Exercises[0].Sets[0].Notes,
+			ws.Exercises[0].ID,
+			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(), 
+			ws.Exercises[0].Sets[1].Weight,
+			ws.Exercises[0].Sets[1].Reps,
+			ws.Exercises[0].Sets[1].Notes,
+			ws.Exercises[0].ID,	
+			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(), 
+			ws.Exercises[1].Sets[0].Weight,
+			ws.Exercises[1].Sets[0].Reps,
+			ws.Exercises[1].Sets[0].Notes,
+			ws.Exercises[1].ID,
+			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(), 
+			ws.Exercises[1].Sets[1].Weight,
+			ws.Exercises[1].Sets[1].Reps,
+			ws.Exercises[1].Sets[1].Notes,
+			ws.Exercises[1].ID,
+		).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(ws.Exercises[0].Sets[0].ID).AddRow(ws.Exercises[0].Sets[1].ID).AddRow(ws.Exercises[1].Sets[0].ID))
+		mock.ExpectCommit()
+
+		var resp AddWorkoutSessionResp
+		c.MustPost(`
+			mutation AddWorkoutSession {
+				addWorkoutSession(workout: {
+					start: "2022-10-30T12:34:00Z",
+					workoutRoutineId: "8",
+					exercises: [
+						{
+							exerciseRoutineId: "3", 
+							setEntries: [
+								{ weight: 225, reps: 8},
+								{ weight: 225, reps: 7},
+							]
+						},
+						{
+							exerciseRoutineId: "4", 
+							setEntries: [
+								{ weight: 225, reps: 8},
+								{ weight: 225, reps: 7},
+							]
+						}
+					],
+				}) 
+			}`,
+			&resp,
+			AddContext(u),
+		)
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Add Workout Session Access Denied", func(t *testing.T) {
+		_, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
+			DB: gormDB,
+		}})))
+
+		var resp AddWorkoutSessionResp
+		err := c.Post(`
+			mutation AddWorkoutSession {
+				addWorkoutSession(workout: {
+					start: "2022-10-30T12:34:00Z",
+					workoutRoutineId: "8",
+					exercises: [
+						{
+							exerciseRoutineId: "3", 
+							setEntries: [
+								{ weight: 225, reps: 8},
+								{ weight: 225, reps: 7},
+							]
+						},
+						{
+							exerciseRoutineId: "4", 
+							setEntries: [
+								{ weight: 225, reps: 8},
+								{ weight: 225, reps: 7},
+							]
+						}
+					],
+				}) 
+			}`,
+			&resp,
+		)
+		require.EqualError(t, err, "[{\"message\":\"Error Adding Workout Session: Invalid Token\",\"path\":[\"addWorkoutSession\"]}]")
+	})
+
+	t.Run("Add Workout Session Error (invalid workout routine ID fk constraint)", func(t *testing.T) {
+		mock, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
+			DB: gormDB,
+		}})))
+
+		mock.ExpectBegin()
+		const addWorkoutSessionStmnt = `INSERT INTO "workout_sessions" ("created_at","updated_at","deleted_at","start","end","workout_routine_id","user_id") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`
+		mock.ExpectQuery(regexp.QuoteMeta(addWorkoutSessionStmnt)).WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), ws.Start, ws.End, 8789, ws.UserID).WillReturnError(gorm.ErrInvalidValue)
+		mock.ExpectRollback()
+
+		var resp AddWorkoutSessionResp
+		err := c.Post(`
+			mutation AddWorkoutSession {
+				addWorkoutSession(workout: {
+					start: "2022-10-30T12:34:00Z",
+					workoutRoutineId: "8789",
+					exercises: [
+						{
+							exerciseRoutineId: "3", 
+							setEntries: [
+								{ weight: 225, reps: 8},
+								{ weight: 225, reps: 7},
+							]
+						},
+						{
+							exerciseRoutineId: "4", 
+							setEntries: [
+								{ weight: 225, reps: 8},
+								{ weight: 225, reps: 7},
+							]
+						}
+					],
+				}) 
+			}`,	
+			&resp,
+			AddContext(u),
+		)
+		require.EqualError(t, err, "[{\"message\":\"Error Adding Workout Session\",\"path\":[\"addWorkoutSession\"]}]")	
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})	
+
+	t.Run("Add Workout Session Error (invalid exercise ID fk constraint)", func(t *testing.T) {
+		mock, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
+			DB: gormDB,
+		}})))
+
+		mock.ExpectBegin()
+		const addWorkoutSessionStmnt = `INSERT INTO "workout_sessions" ("created_at","updated_at","deleted_at","start","end","workout_routine_id","user_id") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`
+		mock.ExpectQuery(regexp.QuoteMeta(addWorkoutSessionStmnt)).WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), ws.Start, ws.End, ws.WorkoutRoutineID, ws.UserID).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(ws.ID))
+		const addExerciseStmt = `INSERT INTO "exercises" ("created_at","updated_at","deleted_at","workout_session_id","exercise_routine_id") VALUES ($1,$2,$3,$4,$5),($6,$7,$8,$9,$10) ON CONFLICT ("id") DO UPDATE SET "workout_session_id"="excluded"."workout_session_id" RETURNING "id"`
+		mock.ExpectQuery(regexp.QuoteMeta(addExerciseStmt)).WithArgs(
+			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(), 
+			ws.Exercises[0].WorkoutSessionID,
+			ws.Exercises[0].ExerciseRoutineID,
+			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(), 
+			ws.Exercises[1].WorkoutSessionID,
+			9879,
+		).WillReturnError(gorm.ErrInvalidValue)
+		mock.ExpectRollback()
+
+		var resp AddWorkoutSessionResp
+		err := c.Post(`
+			mutation AddWorkoutSession {
+				addWorkoutSession(workout: {
+					start: "2022-10-30T12:34:00Z",
+					workoutRoutineId: "8",
+					exercises: [
+						{
+							exerciseRoutineId: "3", 
+							setEntries: [
+								{ weight: 225, reps: 8},
+								{ weight: 225, reps: 7},
+							]
+						},
+						{
+							exerciseRoutineId: "9879", 
+							setEntries: [
+								{ weight: 225, reps: 8},
+								{ weight: 225, reps: 7},
+							]
+						}
+					],
+				}) 
+			}`,	
+			&resp,
+			AddContext(u),
+		)
+		require.EqualError(t, err, "[{\"message\":\"Error Adding Workout Session\",\"path\":[\"addWorkoutSession\"]}]")	
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})	
+
+	t.Run("Get Workout Session success", func(t *testing.T) {
+		
+	})
+
+	t.Run("Get Workout Session Access Denied", func(t *testing.T) {})
+
+	t.Run("Get Workout Sessions success", func(t *testing.T) {})
+
+	t.Run("Get Workout Session Access Denied", func(t *testing.T) {})
+}

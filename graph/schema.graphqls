@@ -24,13 +24,11 @@ type WorkoutSession {
   id: ID!
   start: Time!
   end: Time
-  workoutRoutine: WorkoutRoutine!
   exercise: [Exercise]!
 }
 
 type Exercise {
   id: ID!
-  exerciseRoutine: ExerciseRoutine!
   sets: [SetEntry]!
 }
 
@@ -94,6 +92,7 @@ input SetEntryInput {
 type Query {
   workoutRoutines: [WorkoutRoutine]
   exerciseRoutines(workoutRoutineId: ID): [ExerciseRoutine]
+  workoutSessions: [WorkoutSession]
 }
 
 type Mutation {
@@ -107,4 +106,5 @@ type Mutation {
   refreshAccessToken(refreshToken: String): RefreshSuccess!
   createWorkoutRoutine(routine: WorkoutRoutineInput): WorkoutRoutine
   addWorkoutSession(workout: WorkoutSessionInput): ID!
+  addExercise(exercise: ExerciseInput, workoutSessionId: ID): ID!
 }

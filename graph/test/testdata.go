@@ -67,3 +67,107 @@ var WorkoutRoutine = &database.WorkoutRoutine{
 		UpdatedAt: time.Now(),
 	},
 }
+
+var WorkoutSession = &database.WorkoutSession{
+	WorkoutRoutineID: 8,
+	UserID: 28,
+	Start: time.Date(2022, time.October, 30, 12, 34, 0, 0, time.UTC),
+	Model: gorm.Model{
+		ID:        3,
+		CreatedAt: time.Now(),
+		DeletedAt: gorm.DeletedAt{
+			Time:  time.Time{},
+			Valid: true,
+		},
+		UpdatedAt: time.Now(),
+	},
+	Exercises: []database.Exercise{
+		{
+			Model: gorm.Model{
+				ID:        44,
+				CreatedAt: time.Now(),
+				DeletedAt: gorm.DeletedAt{
+					Time:  time.Time{},
+					Valid: true,
+				},
+				UpdatedAt: time.Now(),
+			},
+			WorkoutSessionID: 3, 
+			ExerciseRoutineID: 3, 
+			Sets: []database.SetEntry{
+				{
+					Model: gorm.Model{
+						ID:        30,
+						CreatedAt: time.Now(),
+						DeletedAt: gorm.DeletedAt{
+							Time:  time.Time{},
+							Valid: true,
+						},
+						UpdatedAt: time.Now(),
+					},
+					Weight:     float32(225),
+					Reps:       uint(8),
+					ExerciseID: 44,
+				},
+				{
+					Model: gorm.Model{
+						ID:        31,
+						CreatedAt: time.Now(),
+						DeletedAt: gorm.DeletedAt{
+							Time:  time.Time{},
+							Valid: true,
+						},
+						UpdatedAt: time.Now(),
+					},
+					Weight:     float32(225),
+					Reps:       uint(7),
+					ExerciseID: 44,
+				},
+			},
+		},
+		{
+			Model: gorm.Model{
+				ID:        45,
+				CreatedAt: time.Now(),
+				DeletedAt: gorm.DeletedAt{
+					Time:  time.Time{},
+					Valid: true,
+				},
+				UpdatedAt: time.Now(),
+			},
+			WorkoutSessionID: 3, 
+			ExerciseRoutineID: 4, 
+			Sets: []database.SetEntry{
+				{
+					Model: gorm.Model{
+						ID:        32,
+						CreatedAt: time.Now(),
+						DeletedAt: gorm.DeletedAt{
+							Time:  time.Time{},
+							Valid: true,
+						},
+						UpdatedAt: time.Now(),
+					},
+					Weight:     float32(225),
+					Reps:       uint(8),
+					ExerciseID: 45,
+				},
+				{
+					Model: gorm.Model{
+						ID:        33,
+						CreatedAt: time.Now(),
+						DeletedAt: gorm.DeletedAt{
+							Time:  time.Time{},
+							Valid: true,
+						},
+						UpdatedAt: time.Now(),
+					},
+					Weight:     float32(225),
+					Reps:       uint(7),
+					ExerciseID: 45,
+				},
+			},
+		},
+	},	
+}
+

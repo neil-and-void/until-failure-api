@@ -24,9 +24,8 @@ type AuthSuccess struct {
 func (AuthSuccess) IsAuthResult() {}
 
 type Exercise struct {
-	ID              string           `json:"id"`
-	ExerciseRoutine *ExerciseRoutine `json:"exerciseRoutine"`
-	Sets            []*SetEntry      `json:"sets"`
+	ID   string      `json:"id"`
+	Sets []*SetEntry `json:"sets"`
 }
 
 type ExerciseInput struct {
@@ -82,11 +81,10 @@ type WorkoutRoutineInput struct {
 }
 
 type WorkoutSession struct {
-	ID             string          `json:"id"`
-	Start          time.Time       `json:"start"`
-	End            *time.Time      `json:"end"`
-	WorkoutRoutine *WorkoutRoutine `json:"workoutRoutine"`
-	Exercise       []*Exercise     `json:"exercise"`
+	ID       string      `json:"id"`
+	Start    time.Time   `json:"start"`
+	End      *time.Time  `json:"end"`
+	Exercise []*Exercise `json:"exercise"`
 }
 
 type WorkoutSessionInput struct {
