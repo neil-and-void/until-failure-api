@@ -24,20 +24,20 @@ import (
 )
 
 // Login is the resolver for the login field.
-func (r *mutationResolver) Login(ctx context.Context, email *string, password *string) (model.AuthResult, error) {
-	if _, err := mail.ParseAddress(*email); err != nil {
+func (r *mutationResolver) Login(ctx context.Context, email string, password string) (model.AuthResult, error) {
+	if _, err := mail.ParseAddress(email); err != nil {
 		return nil, gqlerror.Errorf("Not a valid email")
 	}
 
-	dbUser, err := database.GetUserByEmail(r.DB, *email)
+	dbUser, err := database.GetUserByEmail(r.DB, email)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, gqlerror.Errorf("Email does not exist")
 	}
 	if err != nil {
-		return nil, gqlerror.Errorf(err.Error())
+		return nil, gqlerror.Errorf("Error Logging In")
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(*password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(password)); err != nil {
 		return nil, gqlerror.Errorf("Incorrect Password")
 	}
 	c := &token.Credentials{
@@ -56,33 +56,33 @@ func (r *mutationResolver) Login(ctx context.Context, email *string, password *s
 }
 
 // Signup is the resolver for the signup field.
-func (r *mutationResolver) Signup(ctx context.Context, email *string, name *string, password *string, confirmPassword *string) (model.AuthResult, error) {
-	if *password != *confirmPassword {
+func (r *mutationResolver) Signup(ctx context.Context, email string, name string, password string, confirmPassword string) (model.AuthResult, error) {
+	if password != confirmPassword {
 		return nil, gqlerror.Errorf("Passwords don't match")
 	}
 
 	// check strength
-	if !utils.IsStrong(*password) {
+	if !utils.IsStrong(password) {
 		return nil, gqlerror.Errorf("Password needs at least 1 number and 8 - 16 characters")
 	}
 
-	if _, err := mail.ParseAddress(*email); err != nil {
+	if _, err := mail.ParseAddress(email); err != nil {
 		return nil, gqlerror.Errorf("Not a valid email")
 	}
 
 	// check if user was found from query
-	dbUser, err := database.GetUserByEmail(r.DB, *email)
+	dbUser, err := database.GetUserByEmail(r.DB, email)
 	if dbUser.ID != 0 {
 		return nil, gqlerror.Errorf("Email already exists")
 	}
 
 	// Hashing the password with the default cost of 10
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(*password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		panic(err)
 	}
 
-	u := database.User{Name: *name, Email: *email, Password: string(hashedPassword)}
+	u := database.User{Name: name, Email: email, Password: string(hashedPassword)}
 	err = r.DB.Create(&u).Error
 	if err != nil {
 		return nil, gqlerror.Errorf(err.Error())
@@ -104,9 +104,9 @@ func (r *mutationResolver) Signup(ctx context.Context, email *string, name *stri
 }
 
 // RefreshAccessToken is the resolver for the refreshAccessToken field.
-func (r *mutationResolver) RefreshAccessToken(ctx context.Context, refreshToken *string) (*model.RefreshSuccess, error) {
+func (r *mutationResolver) RefreshAccessToken(ctx context.Context, refreshToken string) (*model.RefreshSuccess, error) {
 	// read token from context
-	claims, err := token.Decode(*refreshToken, []byte(os.Getenv(config.REFRESH_SECRET)))
+	claims, err := token.Decode(refreshToken, []byte(os.Getenv(config.REFRESH_SECRET)))
 	if err != nil {
 		return nil, gqlerror.Errorf("Refresh token invalid")
 	}
@@ -126,7 +126,7 @@ func (r *mutationResolver) RefreshAccessToken(ctx context.Context, refreshToken 
 }
 
 // CreateWorkoutRoutine is the resolver for the createWorkoutRoutine field.
-func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine *model.WorkoutRoutineInput) (*model.WorkoutRoutine, error) {
+func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine model.WorkoutRoutineInput) (*model.WorkoutRoutine, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
 		return &model.WorkoutRoutine{}, gqlerror.Errorf("Error Creating Workout: %s", err.Error())
@@ -150,7 +150,7 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine *mo
 
 	res := database.CreateWorkoutRoutine(r.DB, wr)
 	if res.Error != nil {
-		return &model.WorkoutRoutine{}, gqlerror.Errorf(err.Error())
+		return &model.WorkoutRoutine{}, gqlerror.Errorf("Error Creating Workout Routine")
 	}
 
 	dbExerciseRoutines := make([]*model.ExerciseRoutine, 0)
@@ -171,7 +171,7 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine *mo
 }
 
 // AddWorkoutSession is the resolver for the addWorkoutSession field.
-func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout *model.WorkoutSessionInput) (string, error) {
+func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.WorkoutSessionInput) (string, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
 		return "", gqlerror.Errorf("Error Adding Workout Session: Invalid Token")
@@ -221,14 +221,14 @@ func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout *model
 }
 
 // AddExercise is the resolver for the addExercise field.
-func (r *mutationResolver) AddExercise(ctx context.Context, exercise *model.ExerciseInput, workoutSessionID *string) (string, error) {
+func (r *mutationResolver) AddExercise(ctx context.Context, exercise model.ExerciseInput, workoutSessionID string) (string, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
 		return "", gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
 	}
 
 	userId := fmt.Sprintf("%d", u.ID)
-	err = r.AC.CanAccessWorkoutSession(userId, *workoutSessionID)
+	err = r.AC.CanAccessWorkoutSession(userId, workoutSessionID)
 	if err != nil {
 		return "", gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
 	}
@@ -236,13 +236,13 @@ func (r *mutationResolver) AddExercise(ctx context.Context, exercise *model.Exer
 	var setEntries []database.SetEntry
 	for _, s := range exercise.SetEntries {
 		setEntries = append(setEntries, database.SetEntry{
-			Reps: uint(s.Reps),
+			Reps:   uint(s.Reps),
 			Weight: float32(s.Weight),
-			Notes: s.Notes,
+			Notes:  s.Notes,
 		})
 	}
 
-	workoutSessionIDUint, err := strconv.ParseUint(*workoutSessionID, 10, 32)
+	workoutSessionIDUint, err := strconv.ParseUint(workoutSessionID, 10, 32)
 	if err != nil {
 		return "", gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
 	}
@@ -257,7 +257,7 @@ func (r *mutationResolver) AddExercise(ctx context.Context, exercise *model.Exer
 		ExerciseRoutineID: uint(exerciseRoutineID),
 		Sets:              setEntries,
 	}
-	database.AddExercise(r.DB, dbExercise, *workoutSessionID)
+	database.AddExercise(r.DB, dbExercise, workoutSessionID)
 
 	return fmt.Sprintf("%d", dbExercise.ID), nil
 }
@@ -298,19 +298,19 @@ func (r *queryResolver) WorkoutRoutines(ctx context.Context) ([]*model.WorkoutRo
 }
 
 // ExerciseRoutines is the resolver for the exerciseRoutines field.
-func (r *queryResolver) ExerciseRoutines(ctx context.Context, workoutRoutineID *string) ([]*model.ExerciseRoutine, error) {
+func (r *queryResolver) ExerciseRoutines(ctx context.Context, workoutRoutineID string) ([]*model.ExerciseRoutine, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Workout Routine: %s", err.Error())
+		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Exercise Routine: %s", err.Error())
 	}
 
 	userId := fmt.Sprintf("%d", u.ID)
-	err = r.AC.CanAccessWorkoutRoutine(userId, *workoutRoutineID)
+	err = r.AC.CanAccessWorkoutRoutine(userId, workoutRoutineID)
 	if err != nil {
-		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Workout Routine: %s", err.Error())
+		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Exercise Routine: %s", err.Error())
 	}
 
-	erdb, err := database.GetExerciseRoutines(r.DB, *workoutRoutineID)
+	erdb, err := database.GetExerciseRoutines(r.DB, workoutRoutineID)
 
 	exerciseRoutines := make([]*model.ExerciseRoutine, 0)
 	for _, er := range erdb {
@@ -329,12 +329,12 @@ func (r *queryResolver) ExerciseRoutines(ctx context.Context, workoutRoutineID *
 func (r *queryResolver) WorkoutSessions(ctx context.Context) ([]*model.WorkoutSession, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return []*model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Routine: %s", err.Error())
+		return []*model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Sessions: Invalid Token")
 	}
 
 	dbWorkoutSessions, err := database.GetWorkoutSessions(r.DB, fmt.Sprintf("%d", u.ID))
 	if err != nil {
-		return []*model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Sessions: %s", err.Error())
+		return []*model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Sessions")
 	}
 
 	var workoutSessions []*model.WorkoutSession
@@ -361,14 +361,19 @@ func (r *queryResolver) WorkoutSessions(ctx context.Context) ([]*model.WorkoutSe
 		}
 
 		workoutSessions = append(workoutSessions, &model.WorkoutSession{
-			ID:       fmt.Sprintf("%d", ws.ID),
-			Start:    ws.Start,
-			End:      ws.End,
-			Exercise: exercise,
+			ID:        fmt.Sprintf("%d", ws.ID),
+			Start:     ws.Start,
+			End:       ws.End,
+			Exercises: exercise,
 		})
 	}
 
 	return workoutSessions, nil
+}
+
+// WorkoutSession is the resolver for the workoutSession field.
+func (r *queryResolver) WorkoutSession(ctx context.Context, workoutSessionID string) (*model.WorkoutSession, error) {
+	panic(fmt.Errorf("not implemented: WorkoutSession - workoutSession"))
 }
 
 // Mutation returns generated.MutationResolver implementation.

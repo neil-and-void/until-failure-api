@@ -81,10 +81,10 @@ type WorkoutRoutineInput struct {
 }
 
 type WorkoutSession struct {
-	ID       string      `json:"id"`
-	Start    time.Time   `json:"start"`
-	End      *time.Time  `json:"end"`
-	Exercise []*Exercise `json:"exercise"`
+	ID        string      `json:"id"`
+	Start     time.Time   `json:"start"`
+	End       *time.Time  `json:"end"`
+	Exercises []*Exercise `json:"exercises"`
 }
 
 type WorkoutSessionInput struct {

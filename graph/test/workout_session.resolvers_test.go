@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -15,7 +16,24 @@ import (
 )
 
 type AddWorkoutSessionResp struct {
-	AddWorkoutSession string 	
+	AddWorkoutSession string
+}
+
+type GetWorkoutSession struct {
+	WorkoutSessions []struct {
+		ID        string
+		Start     string
+		End       string
+		Exercises []struct {
+			ID   string
+			Sets []struct {
+				ID     string
+				Weight float32
+				Reps   int
+				Notes  string
+			}
+		}
+	}
 }
 
 func TestWorkoutSessionResolvers(t *testing.T) {
@@ -34,52 +52,56 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		}})))
 
 		mock.ExpectBegin()
+
 		const addWorkoutSessionStmnt = `INSERT INTO "workout_sessions" ("created_at","updated_at","deleted_at","start","end","workout_routine_id","user_id") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`
 		mock.ExpectQuery(regexp.QuoteMeta(addWorkoutSessionStmnt)).WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), ws.Start, ws.End, ws.WorkoutRoutineID, ws.UserID).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(ws.ID))
+
 		const addExerciseStmt = `INSERT INTO "exercises" ("created_at","updated_at","deleted_at","workout_session_id","exercise_routine_id") VALUES ($1,$2,$3,$4,$5),($6,$7,$8,$9,$10) ON CONFLICT ("id") DO UPDATE SET "workout_session_id"="excluded"."workout_session_id" RETURNING "id"`
 		mock.ExpectQuery(regexp.QuoteMeta(addExerciseStmt)).WithArgs(
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
 			ws.Exercises[0].WorkoutSessionID,
 			ws.Exercises[0].ExerciseRoutineID,
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
 			ws.Exercises[1].WorkoutSessionID,
 			ws.Exercises[1].ExerciseRoutineID,
 		).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(ws.Exercises[0].ID).AddRow(ws.Exercises[1].ID))
+
 		const addSetEntries = `INSERT INTO "set_entries" ("created_at","updated_at","deleted_at","weight","reps","notes","exercise_id") VALUES ($1,$2,$3,$4,$5,$6,$7),($8,$9,$10,$11,$12,$13,$14),($15,$16,$17,$18,$19,$20,$21),($22,$23,$24,$25,$26,$27,$28) ON CONFLICT ("id") DO UPDATE SET "exercise_id"="excluded"."exercise_id" RETURNING "id"`
 		mock.ExpectQuery(regexp.QuoteMeta(addSetEntries)).WithArgs(
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
 			ws.Exercises[0].Sets[0].Weight,
 			ws.Exercises[0].Sets[0].Reps,
 			ws.Exercises[0].Sets[0].Notes,
 			ws.Exercises[0].ID,
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
 			ws.Exercises[0].Sets[1].Weight,
 			ws.Exercises[0].Sets[1].Reps,
 			ws.Exercises[0].Sets[1].Notes,
-			ws.Exercises[0].ID,	
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
+			ws.Exercises[0].ID,
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
 			ws.Exercises[1].Sets[0].Weight,
 			ws.Exercises[1].Sets[0].Reps,
 			ws.Exercises[1].Sets[0].Notes,
 			ws.Exercises[1].ID,
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
 			ws.Exercises[1].Sets[1].Weight,
 			ws.Exercises[1].Sets[1].Reps,
 			ws.Exercises[1].Sets[1].Notes,
 			ws.Exercises[1].ID,
 		).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(ws.Exercises[0].Sets[0].ID).AddRow(ws.Exercises[0].Sets[1].ID).AddRow(ws.Exercises[1].Sets[0].ID))
+
 		mock.ExpectCommit()
 
 		var resp AddWorkoutSessionResp
@@ -158,8 +180,12 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		}})))
 
 		mock.ExpectBegin()
+
 		const addWorkoutSessionStmnt = `INSERT INTO "workout_sessions" ("created_at","updated_at","deleted_at","start","end","workout_routine_id","user_id") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`
-		mock.ExpectQuery(regexp.QuoteMeta(addWorkoutSessionStmnt)).WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), ws.Start, ws.End, 8789, ws.UserID).WillReturnError(gorm.ErrInvalidValue)
+		mock.ExpectQuery(regexp.QuoteMeta(addWorkoutSessionStmnt)).
+			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), ws.Start, ws.End, 8789, ws.UserID).
+			WillReturnError(gorm.ErrInvalidValue)
+
 		mock.ExpectRollback()
 
 		var resp AddWorkoutSessionResp
@@ -185,17 +211,17 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 						}
 					],
 				}) 
-			}`,	
+			}`,
 			&resp,
 			AddContext(u),
 		)
-		require.EqualError(t, err, "[{\"message\":\"Error Adding Workout Session\",\"path\":[\"addWorkoutSession\"]}]")	
+		require.EqualError(t, err, "[{\"message\":\"Error Adding Workout Session\",\"path\":[\"addWorkoutSession\"]}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
 		}
-	})	
+	})
 
 	t.Run("Add Workout Session Error (invalid exercise ID fk constraint)", func(t *testing.T) {
 		mock, gormDB := SetupMockDB()
@@ -204,21 +230,26 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		}})))
 
 		mock.ExpectBegin()
+
 		const addWorkoutSessionStmnt = `INSERT INTO "workout_sessions" ("created_at","updated_at","deleted_at","start","end","workout_routine_id","user_id") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`
-		mock.ExpectQuery(regexp.QuoteMeta(addWorkoutSessionStmnt)).WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), ws.Start, ws.End, ws.WorkoutRoutineID, ws.UserID).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(ws.ID))
+		mock.ExpectQuery(regexp.QuoteMeta(addWorkoutSessionStmnt)).
+			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), ws.Start, ws.End, ws.WorkoutRoutineID, ws.UserID).
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(ws.ID))
+
 		const addExerciseStmt = `INSERT INTO "exercises" ("created_at","updated_at","deleted_at","workout_session_id","exercise_routine_id") VALUES ($1,$2,$3,$4,$5),($6,$7,$8,$9,$10) ON CONFLICT ("id") DO UPDATE SET "workout_session_id"="excluded"."workout_session_id" RETURNING "id"`
 		mock.ExpectQuery(regexp.QuoteMeta(addExerciseStmt)).WithArgs(
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
 			ws.Exercises[0].WorkoutSessionID,
 			ws.Exercises[0].ExerciseRoutineID,
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
 			ws.Exercises[1].WorkoutSessionID,
 			9879,
 		).WillReturnError(gorm.ErrInvalidValue)
+
 		mock.ExpectRollback()
 
 		var resp AddWorkoutSessionResp
@@ -244,25 +275,112 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 						}
 					],
 				}) 
-			}`,	
+			}`,
 			&resp,
 			AddContext(u),
 		)
-		require.EqualError(t, err, "[{\"message\":\"Error Adding Workout Session\",\"path\":[\"addWorkoutSession\"]}]")	
+		require.EqualError(t, err, "[{\"message\":\"Error Adding Workout Session\",\"path\":[\"addWorkoutSession\"]}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
 		}
-	})	
-
-	t.Run("Get Workout Session success", func(t *testing.T) {
-		
 	})
 
-	t.Run("Get Workout Session Access Denied", func(t *testing.T) {})
+	t.Run("Get Workout Sessions success", func(t *testing.T) {
+		mock, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
+			DB: gormDB,
+		}})))
 
-	t.Run("Get Workout Sessions success", func(t *testing.T) {})
+		workoutSessionRow := sqlmock.
+			NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "start", "end", "workout_routine_id", "user_id"}).
+			AddRow(ws.ID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt, ws.Start, ws.End, ws.WorkoutRoutineID, ws.UserID)
 
-	t.Run("Get Workout Session Access Denied", func(t *testing.T) {})
+		exerciseRows := sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "workout_session_id", "exercise_routine_id"})
+		setEntryRows := sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "weight", "reps", "exercise_id"})
+		for _, e := range ws.Exercises {
+			exerciseRows.AddRow(e.ID, e.CreatedAt, e.DeletedAt, e.UpdatedAt, e.WorkoutSessionID, e.ExerciseRoutineID)
+
+			for _, s := range e.Sets {
+				setEntryRows.AddRow(s.ID, s.CreatedAt, s.DeletedAt, s.UpdatedAt, s.Weight, s.Reps, s.ExerciseID)
+			}
+		}
+
+		const getWorkoutSessions = `SELECT * FROM "workout_sessions" WHERE user_id = $1 AND "workout_sessions"."deleted_at" IS NULL`
+		mock.ExpectQuery(regexp.QuoteMeta(getWorkoutSessions)).
+			WithArgs(fmt.Sprintf("%d", u.ID)).
+			WillReturnRows(workoutSessionRow)
+
+		const getExercises = `SELECT * FROM "exercises" WHERE "exercises"."workout_session_id" = $1 AND "exercises"."deleted_at" IS NULL`
+		mock.ExpectQuery(regexp.QuoteMeta(getExercises)).
+			WithArgs(ws.ID).
+			WillReturnRows(exerciseRows)
+
+		const getSetEntries = `SELECT * FROM "set_entries" WHERE "set_entries"."exercise_id" IN ($1,$2) AND "set_entries"."deleted_at" IS NULL`
+		mock.ExpectQuery(regexp.QuoteMeta(getSetEntries)).
+			WithArgs(ws.Exercises[0].ID, ws.Exercises[1].ID).
+			WillReturnRows(setEntryRows)
+
+		var resp GetWorkoutSession
+		c.MustPost(`
+			query WorkoutSessions {
+				workoutSessions {
+					id
+					start
+					exercises {
+						sets {
+							weight
+							reps
+						}
+					}
+				}
+			}`,
+			&resp,
+			AddContext(u),
+		)
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Get Workout Sessions Access Denied", func(t *testing.T) {
+		mock, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
+			DB: gormDB,
+		}})))
+
+		var resp GetWorkoutSession
+		err := c.Post(`
+			query WorkoutSessions {
+				workoutSessions {
+					id
+					start
+					exercises {
+						sets {
+							weight
+							reps
+						}
+					}
+				}
+			}`,
+			&resp,
+		)
+		require.EqualError(t, err, "[{\"message\":\"Error Getting Workout Sessions: Invalid Token\",\"path\":[\"workoutSessions\"]}]")
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Get Workout Session Success", func(t *testing.T) {
+
+	})
+
+	t.Run("Get Workout Session Access Denied", func(t *testing.T) {
+
+	})
 }

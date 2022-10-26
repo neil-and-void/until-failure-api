@@ -50,7 +50,7 @@ func TestAccessControl(t *testing.T) {
 		err := ac.CanAccessWorkoutRoutine(userId, workoutRoutineId)
 		require.Equal(t, err.Error(), "Access Denied")
 
-		err = mock.ExpectationsWereMet() 
+		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
 		}
@@ -91,7 +91,7 @@ func TestAccessControl(t *testing.T) {
 		ac := &AccessController{DB: gormDB}
 		err := ac.CanAccessWorkoutSession(userId, workoutSessionId)
 		require.Equal(t, err.Error(), "Access Denied")
-		
+
 		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)

@@ -24,7 +24,7 @@ type WorkoutSession {
   id: ID!
   start: Time!
   end: Time
-  exercise: [Exercise]!
+  exercises: [Exercise]!
 }
 
 type Exercise {
@@ -91,20 +91,24 @@ input SetEntryInput {
 
 type Query {
   workoutRoutines: [WorkoutRoutine]
-  exerciseRoutines(workoutRoutineId: ID): [ExerciseRoutine]
+  exerciseRoutines(workoutRoutineId: ID!): [ExerciseRoutine]
   workoutSessions: [WorkoutSession]
+  workoutSession(workoutSessionId: ID!): WorkoutSession
 }
 
 type Mutation {
-  login(email: String, password: String): AuthResult!
+  login(email: String!, password: String!): AuthResult!
   signup(
-    email: String
-    name: String
-    password: String
-    confirmPassword: String
+    email: String!
+    name: String!
+    password: String!
+    confirmPassword: String!
   ): AuthResult!
-  refreshAccessToken(refreshToken: String): RefreshSuccess!
-  createWorkoutRoutine(routine: WorkoutRoutineInput): WorkoutRoutine
-  addWorkoutSession(workout: WorkoutSessionInput): ID!
-  addExercise(exercise: ExerciseInput, workoutSessionId: ID): ID!
+  refreshAccessToken(refreshToken: String!): RefreshSuccess!
+  createWorkoutRoutine(routine: WorkoutRoutineInput!): WorkoutRoutine
+  addWorkoutSession(workout: WorkoutSessionInput!): ID!
+  addExercise(exercise: ExerciseInput!, workoutSessionId: ID!): ID!
+  # appendSet(exerciseId: ID!, set: SetEntryInput): ID!
+  # updateSet(exerciseId: ID!, set: SetEntryInput): ID!
+  # deleteSet(exerciseId: ID!, setID: ID!): Int
 }

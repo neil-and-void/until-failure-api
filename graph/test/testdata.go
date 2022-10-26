@@ -70,8 +70,8 @@ var WorkoutRoutine = &database.WorkoutRoutine{
 
 var WorkoutSession = &database.WorkoutSession{
 	WorkoutRoutineID: 8,
-	UserID: 28,
-	Start: time.Date(2022, time.October, 30, 12, 34, 0, 0, time.UTC),
+	UserID:           28,
+	Start:            time.Date(2022, time.October, 30, 12, 34, 0, 0, time.UTC),
 	Model: gorm.Model{
 		ID:        3,
 		CreatedAt: time.Now(),
@@ -92,8 +92,8 @@ var WorkoutSession = &database.WorkoutSession{
 				},
 				UpdatedAt: time.Now(),
 			},
-			WorkoutSessionID: 3, 
-			ExerciseRoutineID: 3, 
+			WorkoutSessionID:  3,
+			ExerciseRoutineID: 3,
 			Sets: []database.SetEntry{
 				{
 					Model: gorm.Model{
@@ -135,8 +135,8 @@ var WorkoutSession = &database.WorkoutSession{
 				},
 				UpdatedAt: time.Now(),
 			},
-			WorkoutSessionID: 3, 
-			ExerciseRoutineID: 4, 
+			WorkoutSessionID:  3,
+			ExerciseRoutineID: 4,
 			Sets: []database.SetEntry{
 				{
 					Model: gorm.Model{
@@ -168,6 +168,5 @@ var WorkoutSession = &database.WorkoutSession{
 				},
 			},
 		},
-	},	
+	},
 }
-

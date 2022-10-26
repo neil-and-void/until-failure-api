@@ -72,7 +72,7 @@ func AddWorkoutSession(db *gorm.DB, workout *WorkoutSession) error {
 func GetWorkoutSession(db *gorm.DB, userId string, workoutSessionId string) (*WorkoutSession, error) {
 	var ws WorkoutSession
 	result := db.First(&ws, "user_id = ? AND id = ?", userId, workoutSessionId)
-	return &ws, result.Error	
+	return &ws, result.Error
 }
 
 func GetWorkoutSessions(db *gorm.DB, userId string) ([]*WorkoutSession, error) {
@@ -81,7 +81,7 @@ func GetWorkoutSessions(db *gorm.DB, userId string) ([]*WorkoutSession, error) {
 	return workoutSessions, nil
 }
 
-func AddExercise(db *gorm.DB, exercise *Exercise, workoutSessionId string) (error) {
+func AddExercise(db *gorm.DB, exercise *Exercise, workoutSessionId string) error {
 	result := db.Create(exercise)
 	return result.Error
 }

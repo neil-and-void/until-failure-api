@@ -18,7 +18,7 @@ type WorkoutRoutine struct {
 	gorm.Model
 	Name             string `gorm:"not null"`
 	ExerciseRoutines []ExerciseRoutine
-	WorkoutSessions []WorkoutSession
+	WorkoutSessions  []WorkoutSession
 	UserID           uint
 }
 
@@ -27,7 +27,7 @@ type ExerciseRoutine struct {
 	Name             string `gorm:"not null"`
 	Sets             uint   `gorm:"not null"`
 	Reps             uint   `gorm:"not null"`
-	Exercises []Exercise
+	Exercises        []Exercise
 	WorkoutRoutineID uint
 }
 
