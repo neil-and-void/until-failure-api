@@ -373,7 +373,92 @@ func (r *queryResolver) WorkoutSessions(ctx context.Context) ([]*model.WorkoutSe
 
 // WorkoutSession is the resolver for the workoutSession field.
 func (r *queryResolver) WorkoutSession(ctx context.Context, workoutSessionID string) (*model.WorkoutSession, error) {
-	panic(fmt.Errorf("not implemented: WorkoutSession - workoutSession"))
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Sessions: Invalid Token")
+	}
+
+	dbWorkoutSession, err := database.GetWorkoutSession(r.DB, fmt.Sprintf("%d", u.ID), workoutSessionID)
+	if err != nil {
+		return &model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Session")
+	}
+
+	var exercises []*model.Exercise
+	for _, e := range dbWorkoutSession.Exercises {
+
+		var setEntries []*model.SetEntry
+		for _, s := range e.Sets {
+			setEntries = append(setEntries, &model.SetEntry{
+				ID:     fmt.Sprintf("%d", s.ID),
+				Weight: float64(s.Weight),
+				Reps:   int(s.Reps),
+				Notes:  s.Notes,
+			})
+
+		}
+
+		exercises = append(exercises, &model.Exercise{
+			ID:   fmt.Sprintf("%d", e.ID),
+			Sets: setEntries,
+		})
+	}
+
+	return &model.WorkoutSession{
+		ID:        fmt.Sprintf("%d", dbWorkoutSession.ID),
+		Start:     dbWorkoutSession.Start,
+		End:       dbWorkoutSession.End,
+		Exercises: exercises,
+	}, nil
+}
+
+// Exercise is the resolver for the exercise field.
+func (r *queryResolver) Exercise(ctx context.Context, exerciseID string) (*model.Exercise, error) {
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.Exercise{}, gqlerror.Errorf("Error Getting Exercise: Invalid Token")
+	}
+
+	exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, 64)
+	if err != nil {
+		return &model.Exercise{}, gqlerror.Errorf("Error Getting Exercise: Invalid Exercise ID")
+	}
+
+	exercise := &database.Exercise{
+		Model: gorm.Model{
+			ID: uint(exerciseIDUint),
+		},
+	}
+	database.GetExercise(r.DB, exercise)
+
+	err = r.AC.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", exercise.WorkoutSessionID))
+	if err != nil {
+		return &model.Exercise{}, gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
+	}
+
+	var setEntries []*model.SetEntry
+	for _, s := range exercise.Sets {
+		setEntries = append(setEntries, &model.SetEntry{
+			ID:     fmt.Sprintf("%d", s.ID),
+			Weight: float64(s.Weight),
+			Reps:   int(s.Reps),
+			Notes:  s.Notes,
+		})
+	}
+
+	return &model.Exercise{
+		ID:   exerciseID,
+		Sets: setEntries,
+	}, nil
+}
+
+// Exercises is the resolver for the exercises field.
+func (r *queryResolver) Exercises(ctx context.Context, workoutSessionID string) ([]*model.Exercise, error) {
+	// u, err := middleware.GetUser(ctx)
+	// if err != nil {
+	// 	return []*model.Exercise{}, gqlerror.Errorf("Error Getting Exercise: Invalid Token")
+	// }
+
+	panic("what the heck")
 }
 
 // Mutation returns generated.MutationResolver implementation.
