@@ -377,10 +377,67 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 	})
 
 	t.Run("Get Workout Session Success", func(t *testing.T) {
+		mock, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
+			DB: gormDB,
+		}})))
 
+		workoutSessionRow := sqlmock.
+			NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "start", "end", "workout_routine_id", "user_id"}).
+			AddRow(ws.ID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt, ws.Start, ws.End, ws.WorkoutRoutineID, ws.UserID)
+
+		const getWorkoutSession = `SELECT * FROM "workout_sessions" WHERE (user_id = $1 AND id = $2) AND "workout_sessions"."deleted_at" IS NULL ORDER BY "workout_sessions"."id" LIMIT 1`
+		mock.ExpectQuery(regexp.QuoteMeta(getWorkoutSession)).
+			WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).
+			WillReturnRows(workoutSessionRow)
+
+		var resp GetWorkoutSession
+		err := c.Post(`
+			query WorkoutSession {
+				workoutSession(workoutSessionId: "3") {
+					id
+					start
+					exercises {
+						sets {
+							weight
+							reps
+						}
+					}
+				}
+			}`,
+			&resp,
+			AddContext(u),
+		)
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
 	})
 
 	t.Run("Get Workout Session Access Denied", func(t *testing.T) {
+		_, gormDB := SetupMockDB()
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
+			DB: gormDB,
+		}})))
 
+		var resp GetWorkoutSession
+		err := c.Post(`
+			query WorkoutSession {
+				workoutSession(workoutSessionId: "3") {
+					id
+					start
+					exercises {
+						sets {
+							weight
+							reps
+						}
+					}
+				}
+			}`,
+			&resp,
+			AddContext(u),
+		)
+		require.EqualError(t, err, "[{\"message\":\"Error Getting Workout Session\",\"path\":[\"workoutSession\"]}]")	
 	})
 }
