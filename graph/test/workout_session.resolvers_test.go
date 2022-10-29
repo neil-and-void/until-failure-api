@@ -438,6 +438,6 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 			&resp,
 			AddContext(u),
 		)
-		require.EqualError(t, err, "[{\"message\":\"Error Getting Workout Session\",\"path\":[\"workoutSession\"]}]")	
+		require.EqualError(t, err, "[{\"message\":\"Error Getting Workout Session\",\"path\":[\"workoutSession\"]}]")
 	})
 }
