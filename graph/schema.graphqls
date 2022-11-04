@@ -94,6 +94,8 @@ type Query {
   exerciseRoutines(workoutRoutineId: ID!): [ExerciseRoutine]
   workoutSessions: [WorkoutSession]
   workoutSession(workoutSessionId: ID!): WorkoutSession
+  exercise(exerciseId: ID!): Exercise
+  exercises(workoutSessionId: ID!): [Exercise]
 }
 
 type Mutation {

@@ -85,3 +85,13 @@ func AddExercise(db *gorm.DB, exercise *Exercise, workoutSessionId string) error
 	result := db.Create(exercise)
 	return result.Error
 }
+
+func GetExercise(db *gorm.DB, exercise *Exercise) error {
+	result := db.Preload("Sets").First(&exercise)
+	return result.Error
+}
+
+func GetExercises(db *gorm.DB, exercises *[]Exercise, workoutSessionId string) error {
+	result := db.Preload("Sets").Where("workout_session_id = ?", workoutSessionId).Find(&exercises)
+	return result.Error
+}
