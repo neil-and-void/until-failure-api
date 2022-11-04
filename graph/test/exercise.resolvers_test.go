@@ -402,7 +402,7 @@ func TestExerciseResolvers(t *testing.T) {
 			exerciseId,
 		)
 		err = c.Post(gqlQuery, &resp, AddContext(u))
-		require.EqualError(t, err, "[{\"message\":\"Error Adding Exercise: Access Denied\",\"path\":[\"exercise\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Error Getting Exercise: Access Denied\",\"path\":[\"exercise\"]}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
