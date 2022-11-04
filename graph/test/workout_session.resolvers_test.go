@@ -24,7 +24,9 @@ type GetWorkoutSession struct {
 		ID        string
 		Start     string
 		End       string
+		WorkoutRoutineId string
 		Exercises []struct {
+			ExerciseRoutineId string
 			ID   string
 			Sets []struct {
 				ID     string
@@ -335,8 +337,10 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 			query WorkoutSessions {
 				workoutSessions {
 					id
+					workoutRoutineId
 					start
 					exercises {
+						exerciseRoutineId
 						sets {
 							weight
 							reps
@@ -364,9 +368,11 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		err := c.Post(`
 			query WorkoutSessions {
 				workoutSessions {
+					workoutRoutineId
 					id
 					start
 					exercises {
+						exerciseRoutineId
 						sets {
 							weight
 							reps
@@ -405,7 +411,9 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 				workoutSession(workoutSessionId: "3") {
 					id
 					start
+					workoutRoutineId
 					exercises {
+						exerciseRoutineId
 						sets {
 							weight
 							reps
@@ -435,7 +443,9 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 				workoutSession(workoutSessionId: "3") {
 					id
 					start
+					workoutRoutineId
 					exercises {
+						exerciseRoutineId
 						sets {
 							weight
 							reps

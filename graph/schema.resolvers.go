@@ -216,7 +216,7 @@ func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.
 		dbExercises = append(dbExercises, database.Exercise{
 			Sets:              set,
 			ExerciseRoutineID: uint(exerciseRoutineId),
-			Notes: e.Notes,
+			Notes:             e.Notes,
 		})
 	}
 
@@ -282,7 +282,7 @@ func (r *mutationResolver) AddExercise(ctx context.Context, workoutSessionID str
 		WorkoutSessionID:  uint(workoutSessionIDUint),
 		ExerciseRoutineID: uint(exerciseRoutineID),
 		Sets:              setEntries,
-		Notes: exercise.Notes,
+		Notes:             exercise.Notes,
 	}
 
 	err = database.AddExercise(r.DB, dbExercise, workoutSessionID)
@@ -291,6 +291,11 @@ func (r *mutationResolver) AddExercise(ctx context.Context, workoutSessionID str
 	}
 
 	return fmt.Sprintf("%d", dbExercise.ID), nil
+}
+
+// UpdateExercise is the resolver for the updateExercise field.
+func (r *mutationResolver) UpdateExercise(ctx context.Context, exerciseID string, exercise model.ExerciseInput) (string, error) {
+	panic(fmt.Errorf("not implemented: UpdateExercise - updateExercise"))
 }
 
 // DeleteExercise is the resolver for the deleteExercise field.
@@ -304,7 +309,7 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *m
 }
 
 // UpdateSet is the resolver for the updateSet field.
-func (r *mutationResolver) UpdateSet(ctx context.Context, exerciseID string, set *model.SetEntryInput) (string, error) {
+func (r *mutationResolver) UpdateSet(ctx context.Context, setID string, set model.UpdateSetEntryInput) (string, error) {
 	panic(fmt.Errorf("not implemented: UpdateSet - updateSet"))
 }
 
@@ -405,17 +410,19 @@ func (r *queryResolver) WorkoutSessions(ctx context.Context) ([]*model.WorkoutSe
 			}
 
 			exercise = append(exercise, &model.Exercise{
-				ID:   fmt.Sprintf("%d", e.ID),
-				Sets: setEntries,
-				Notes: e.Notes,
+				ID:                fmt.Sprintf("%d", e.ID),
+				Sets:              setEntries,
+				Notes:             e.Notes,
+				ExerciseRoutineID: fmt.Sprintf("%d", e.ExerciseRoutineID),
 			})
 		}
 
 		workoutSessions = append(workoutSessions, &model.WorkoutSession{
-			ID:        fmt.Sprintf("%d", ws.ID),
-			Start:     ws.Start,
-			End:       ws.End,
-			Exercises: exercise,
+			ID:               fmt.Sprintf("%d", ws.ID),
+			Start:            ws.Start,
+			End:              ws.End,
+			WorkoutRoutineID: fmt.Sprintf("%d", ws.WorkoutRoutineID),
+			Exercises:        exercise,
 		})
 	}
 
@@ -448,17 +455,19 @@ func (r *queryResolver) WorkoutSession(ctx context.Context, workoutSessionID str
 		}
 
 		exercises = append(exercises, &model.Exercise{
-			ID:   fmt.Sprintf("%d", e.ID),
-			Sets: setEntries,
-			Notes: e.Notes,
+			ID:                fmt.Sprintf("%d", e.ID),
+			ExerciseRoutineID: fmt.Sprintf("%d", e.ExerciseRoutineID),
+			Sets:              setEntries,
+			Notes:             e.Notes,
 		})
 	}
 
 	return &model.WorkoutSession{
-		ID:        fmt.Sprintf("%d", dbWorkoutSession.ID),
-		Start:     dbWorkoutSession.Start,
-		End:       dbWorkoutSession.End,
-		Exercises: exercises,
+		ID:               fmt.Sprintf("%d", dbWorkoutSession.ID),
+		Start:            dbWorkoutSession.Start,
+		End:              dbWorkoutSession.End,
+		WorkoutRoutineID: fmt.Sprintf("%d", dbWorkoutSession.WorkoutRoutineID),
+		Exercises:        exercises,
 	}, nil
 }
 
@@ -499,9 +508,10 @@ func (r *queryResolver) Exercise(ctx context.Context, exerciseID string) (*model
 	}
 
 	return &model.Exercise{
-		ID:   exerciseID,
-		Sets: setEntries,
-		Notes: exercise.Notes,
+		ID:                exerciseID,
+		Sets:              setEntries,
+		Notes:             exercise.Notes,
+		ExerciseRoutineID: fmt.Sprintf("%d", exercise.ExerciseRoutineID),
 	}, nil
 }
 
@@ -536,9 +546,10 @@ func (r *queryResolver) Exercises(ctx context.Context, workoutSessionID string) 
 		}
 
 		exercises = append(exercises, &model.Exercise{
-			ID:   fmt.Sprintf("%d", e.ID),
-			Sets: setEntries,
-			Notes: e.Notes,
+			ID:                fmt.Sprintf("%d", e.ID),
+			Sets:              setEntries,
+			Notes:             e.Notes,
+			ExerciseRoutineID: fmt.Sprintf("%d", e.ExerciseRoutineID),
 		})
 	}
 	return exercises, nil
