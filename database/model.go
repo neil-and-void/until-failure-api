@@ -44,6 +44,7 @@ type Exercise struct {
 	gorm.Model
 	WorkoutSessionID  uint
 	ExerciseRoutineID uint
+	Notes      		  *string `gorm:"size:512"`
 	Sets              []SetEntry
 }
 
@@ -51,6 +52,5 @@ type SetEntry struct {
 	gorm.Model
 	Weight     float32 `gorm:"not null" sql:"type:decimal(10,2);"`
 	Reps       uint    `gorm:"not null"`
-	Notes      *string `gorm:"size:512"`
 	ExerciseID uint
 }

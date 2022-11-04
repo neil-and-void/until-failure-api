@@ -68,6 +68,9 @@ var WorkoutRoutine = &database.WorkoutRoutine{
 	},
 }
 
+var noteOne = "This is a note"
+var noteTwo = "This is another note"
+
 var WorkoutSession = &database.WorkoutSession{
 	WorkoutRoutineID: 8,
 	UserID:           28,
@@ -92,6 +95,7 @@ var WorkoutSession = &database.WorkoutSession{
 				},
 				UpdatedAt: time.Now(),
 			},
+			Notes: &noteOne,
 			WorkoutSessionID:  3,
 			ExerciseRoutineID: 3,
 			Sets: []database.SetEntry{
@@ -137,6 +141,7 @@ var WorkoutSession = &database.WorkoutSession{
 			},
 			WorkoutSessionID:  3,
 			ExerciseRoutineID: 4,
+			Notes: &noteTwo,
 			Sets: []database.SetEntry{
 				{
 					Model: gorm.Model{

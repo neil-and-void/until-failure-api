@@ -27,8 +27,8 @@ type GetExercisesResp struct {
 			ID     string
 			Weight float32
 			Reps   int
-			Notes  string
 		}
+		Notes  string
 	}
 }
 
@@ -39,8 +39,8 @@ type GetExerciseResp struct {
 			ID     string
 			Weight float32
 			Reps   int
-			Notes  string
 		}
+		Notes  string
 	}
 }
 
@@ -71,17 +71,16 @@ func TestExerciseResolvers(t *testing.T) {
 
 		mock.ExpectBegin()
 
-		const createExerciseStmnt = `INSERT INTO "exercises" ("created_at","updated_at","deleted_at","workout_session_id","exercise_routine_id") VALUES ($1,$2,$3,$4,$5) RETURNING "id"`
-		mock.ExpectQuery(regexp.QuoteMeta(createExerciseStmnt)).WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), e.WorkoutSessionID, e.ExerciseRoutineID).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(e.ID))
+		const createExerciseStmnt = `INSERT INTO "exercises" ("created_at","updated_at","deleted_at","workout_session_id","exercise_routine_id","notes") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "id"`
+		mock.ExpectQuery(regexp.QuoteMeta(createExerciseStmnt)).WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), e.WorkoutSessionID, e.ExerciseRoutineID, e.Notes).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(e.ID))
 
-		const creatSetStmnt = `INSERT INTO "set_entries" ("created_at","updated_at","deleted_at","weight","reps","notes","exercise_id") VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT ("id") DO UPDATE SET "exercise_id"="excluded"."exercise_id" RETURNING "id"`
+		const creatSetStmnt = `INSERT INTO "set_entries" ("created_at","updated_at","deleted_at","weight","reps","exercise_id") VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT ("id") DO UPDATE SET "exercise_id"="excluded"."exercise_id" RETURNING "id"`
 		mock.ExpectQuery(regexp.QuoteMeta(creatSetStmnt)).WithArgs(
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			e.Sets[0].Weight,
 			e.Sets[0].Reps,
-			e.Sets[0].Notes,
 			e.Sets[0].ExerciseID).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(e.Sets[0].ID))
 
 		mock.ExpectCommit()
@@ -93,8 +92,9 @@ func TestExerciseResolvers(t *testing.T) {
 					exercise: {
 						exerciseRoutineId: "3"
 						setEntries: [{ weight: 225, reps: 8 }]
+						notes: "This is a note"
 					}
-					workoutSessionId: "3"
+					workoutSessionId: "3",
 				)
 			}`,
 			&resp,
@@ -123,9 +123,10 @@ func TestExerciseResolvers(t *testing.T) {
 				addExercise(
 					exercise: {
 						exerciseRoutineId: "3"
-						setEntries: [{ weight: 225, reps: 8 }]
+						setEntries: [{ weight: 225, reps: 8 }],
+						notes: "This is a note"
 					}
-					workoutSessionId: "3"
+					workoutSessionId: "3",
 				)
 			}`,
 			&resp,
@@ -151,8 +152,9 @@ func TestExerciseResolvers(t *testing.T) {
 					exercise: {
 						exerciseRoutineId: "3"
 						setEntries: [{ weight: 225, reps: 8 }]
+						notes: "This is a note"
 					}
-					workoutSessionId: "%d"
+					workoutSessionId: "%d",
 				)
 			}`,
 			workoutSessionId,
@@ -203,6 +205,7 @@ func TestExerciseResolvers(t *testing.T) {
 						weight
 						reps
 					}
+					notes
 				}
 			}`,
 			ws.ID,
@@ -231,6 +234,7 @@ func TestExerciseResolvers(t *testing.T) {
 						weight
 						reps
 					}
+					notes
 				}
 			}`,
 			ws.ID,
@@ -263,6 +267,7 @@ func TestExerciseResolvers(t *testing.T) {
 						weight
 						reps
 					}
+					notes
 				}
 			}`,
 			ws.ID,
@@ -315,6 +320,7 @@ func TestExerciseResolvers(t *testing.T) {
 						weight
 						reps
 					}
+					notes
 				}
 			}`,
 			e.ID,
@@ -343,6 +349,7 @@ func TestExerciseResolvers(t *testing.T) {
 						weight
 						reps
 					}
+					notes
 				}
 			}`,
 			e.ID,
@@ -389,6 +396,7 @@ func TestExerciseResolvers(t *testing.T) {
 						weight
 						reps
 					}
+					notes
 				}
 			}`,
 			exerciseId,

@@ -170,6 +170,26 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine mod
 	}, nil
 }
 
+// UpdateWorkoutRoutine is the resolver for the updateWorkoutRoutine field.
+func (r *mutationResolver) UpdateWorkoutRoutine(ctx context.Context, workoutRoutineID string, updateWorkoutRoutineInput model.UpdateWorkoutRoutineInput) (*model.WorkoutRoutine, error) {
+	panic(fmt.Errorf("not implemented: UpdateWorkoutRoutine - updateWorkoutRoutine"))
+}
+
+// DeleteWorkoutRoutine is the resolver for the deleteWorkoutRoutine field.
+func (r *mutationResolver) DeleteWorkoutRoutine(ctx context.Context, workoutRoutineID string) (string, error) {
+	panic(fmt.Errorf("not implemented: DeleteWorkoutRoutine - deleteWorkoutRoutine"))
+}
+
+// UpdateExerciseRoutine is the resolver for the updateExerciseRoutine field.
+func (r *mutationResolver) UpdateExerciseRoutine(ctx context.Context, exerciseRoutineID string, updateExerciseRoutineInput model.UpdateExerciseRoutineInput) (*model.ExerciseRoutine, error) {
+	panic(fmt.Errorf("not implemented: UpdateExerciseRoutine - updateExerciseRoutine"))
+}
+
+// DeleteExerciseRoutine is the resolver for the deleteExerciseRoutine field.
+func (r *mutationResolver) DeleteExerciseRoutine(ctx context.Context, exerciseRoutineID string) (string, error) {
+	panic(fmt.Errorf("not implemented: DeleteExerciseRoutine - deleteExerciseRoutine"))
+}
+
 // AddWorkoutSession is the resolver for the addWorkoutSession field.
 func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.WorkoutSessionInput) (string, error) {
 	u, err := middleware.GetUser(ctx)
@@ -185,7 +205,6 @@ func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.
 			set = append(set, database.SetEntry{
 				Weight: float32(s.Weight),
 				Reps:   uint(s.Reps),
-				Notes:  s.Notes,
 			})
 		}
 
@@ -197,6 +216,7 @@ func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.
 		dbExercises = append(dbExercises, database.Exercise{
 			Sets:              set,
 			ExerciseRoutineID: uint(exerciseRoutineId),
+			Notes: e.Notes,
 		})
 	}
 
@@ -220,8 +240,13 @@ func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.
 	return fmt.Sprintf("%d", ws.ID), nil
 }
 
+// UpdateWorkoutSession is the resolver for the updateWorkoutSession field.
+func (r *mutationResolver) UpdateWorkoutSession(ctx context.Context, workoutSessionID string, updateWorkoutSessionInput model.UpdateWorkoutSessionInput) (*model.WorkoutSession, error) {
+	panic(fmt.Errorf("not implemented: UpdateWorkoutSession - updateWorkoutSession"))
+}
+
 // AddExercise is the resolver for the addExercise field.
-func (r *mutationResolver) AddExercise(ctx context.Context, exercise model.ExerciseInput, workoutSessionID string) (string, error) {
+func (r *mutationResolver) AddExercise(ctx context.Context, workoutSessionID string, exercise model.ExerciseInput) (string, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
 		return "", gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
@@ -240,7 +265,6 @@ func (r *mutationResolver) AddExercise(ctx context.Context, exercise model.Exerc
 		setEntries = append(setEntries, database.SetEntry{
 			Reps:   uint(s.Reps),
 			Weight: float32(s.Weight),
-			Notes:  s.Notes,
 		})
 	}
 
@@ -258,6 +282,7 @@ func (r *mutationResolver) AddExercise(ctx context.Context, exercise model.Exerc
 		WorkoutSessionID:  uint(workoutSessionIDUint),
 		ExerciseRoutineID: uint(exerciseRoutineID),
 		Sets:              setEntries,
+		Notes: exercise.Notes,
 	}
 
 	err = database.AddExercise(r.DB, dbExercise, workoutSessionID)
@@ -266,6 +291,26 @@ func (r *mutationResolver) AddExercise(ctx context.Context, exercise model.Exerc
 	}
 
 	return fmt.Sprintf("%d", dbExercise.ID), nil
+}
+
+// DeleteExercise is the resolver for the deleteExercise field.
+func (r *mutationResolver) DeleteExercise(ctx context.Context, exerciseRoutineID string) (string, error) {
+	panic(fmt.Errorf("not implemented: DeleteExercise - deleteExercise"))
+}
+
+// AddSet is the resolver for the addSet field.
+func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *model.SetEntryInput) (string, error) {
+	panic(fmt.Errorf("not implemented: AddSet - addSet"))
+}
+
+// UpdateSet is the resolver for the updateSet field.
+func (r *mutationResolver) UpdateSet(ctx context.Context, exerciseID string, set *model.SetEntryInput) (string, error) {
+	panic(fmt.Errorf("not implemented: UpdateSet - updateSet"))
+}
+
+// DeleteSet is the resolver for the deleteSet field.
+func (r *mutationResolver) DeleteSet(ctx context.Context, setID string) (*int, error) {
+	panic(fmt.Errorf("not implemented: DeleteSet - deleteSet"))
 }
 
 // WorkoutRoutines is the resolver for the workoutRoutines field.
@@ -355,7 +400,6 @@ func (r *queryResolver) WorkoutSessions(ctx context.Context) ([]*model.WorkoutSe
 					ID:     fmt.Sprintf("%d", s.ID),
 					Weight: float64(s.Weight),
 					Reps:   int(s.Reps),
-					Notes:  s.Notes,
 				})
 
 			}
@@ -363,6 +407,7 @@ func (r *queryResolver) WorkoutSessions(ctx context.Context) ([]*model.WorkoutSe
 			exercise = append(exercise, &model.Exercise{
 				ID:   fmt.Sprintf("%d", e.ID),
 				Sets: setEntries,
+				Notes: e.Notes,
 			})
 		}
 
@@ -398,7 +443,6 @@ func (r *queryResolver) WorkoutSession(ctx context.Context, workoutSessionID str
 				ID:     fmt.Sprintf("%d", s.ID),
 				Weight: float64(s.Weight),
 				Reps:   int(s.Reps),
-				Notes:  s.Notes,
 			})
 
 		}
@@ -406,6 +450,7 @@ func (r *queryResolver) WorkoutSession(ctx context.Context, workoutSessionID str
 		exercises = append(exercises, &model.Exercise{
 			ID:   fmt.Sprintf("%d", e.ID),
 			Sets: setEntries,
+			Notes: e.Notes,
 		})
 	}
 
@@ -450,13 +495,13 @@ func (r *queryResolver) Exercise(ctx context.Context, exerciseID string) (*model
 			ID:     fmt.Sprintf("%d", s.ID),
 			Weight: float64(s.Weight),
 			Reps:   int(s.Reps),
-			Notes:  s.Notes,
 		})
 	}
 
 	return &model.Exercise{
 		ID:   exerciseID,
 		Sets: setEntries,
+		Notes: exercise.Notes,
 	}, nil
 }
 
@@ -487,13 +532,13 @@ func (r *queryResolver) Exercises(ctx context.Context, workoutSessionID string) 
 				ID:     fmt.Sprintf("%d", s.ID),
 				Weight: float64(s.Weight),
 				Reps:   int(s.Reps),
-				Notes:  s.Notes,
 			})
 		}
 
 		exercises = append(exercises, &model.Exercise{
 			ID:   fmt.Sprintf("%d", e.ID),
 			Sets: setEntries,
+			Notes: e.Notes,
 		})
 	}
 	return exercises, nil

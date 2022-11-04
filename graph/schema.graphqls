@@ -30,13 +30,13 @@ type WorkoutSession {
 type Exercise {
   id: ID!
   sets: [SetEntry]!
+  notes: String
 }
 
 type SetEntry {
   id: ID!
   weight: Float!
   reps: Int!
-  notes: String
 }
 
 type AuthError {
@@ -63,6 +63,17 @@ input WorkoutRoutineInput {
   exerciseRoutines: [ExerciseRoutineInput]
 }
 
+input UpdateWorkoutRoutineInput {
+  name: String
+  exerciseRoutines: [ExerciseRoutineInput]
+}
+
+input UpdateExerciseRoutineInput {
+  name: String
+  sets: Int
+  reps: Int
+}
+
 input ExerciseRoutineInput {
   name: String!
   sets: Int!
@@ -76,15 +87,20 @@ input WorkoutSessionInput {
   exercises: [ExerciseInput]
 }
 
+input UpdateWorkoutSessionInput {
+  start: Time
+  end: Time
+}
+
 input ExerciseInput {
   exerciseRoutineId: ID!
+  notes: String
   setEntries: [SetEntryInput]
 }
 
 input SetEntryInput {
   weight: Float!
   reps: Int!
-  notes: String
 }
 
 ### END INPUTS ###
@@ -107,10 +123,25 @@ type Mutation {
     confirmPassword: String!
   ): AuthResult!
   refreshAccessToken(refreshToken: String!): RefreshSuccess!
-  createWorkoutRoutine(routine: WorkoutRoutineInput!): WorkoutRoutine
+  createWorkoutRoutine(routine: WorkoutRoutineInput!): WorkoutRoutine!
+  updateWorkoutRoutine(
+    workoutRoutineId: ID!
+    updateWorkoutRoutineInput: UpdateWorkoutRoutineInput!
+  ): WorkoutRoutine!
+  deleteWorkoutRoutine(workoutRoutineId: ID!): ID!
+  updateExerciseRoutine(
+    exerciseRoutineId: ID!
+    updateExerciseRoutineInput: UpdateExerciseRoutineInput!
+  ): ExerciseRoutine!
+  deleteExerciseRoutine(exerciseRoutineId: ID!): ID!
   addWorkoutSession(workout: WorkoutSessionInput!): ID!
-  addExercise(exercise: ExerciseInput!, workoutSessionId: ID!): ID!
-  # appendSet(exerciseId: ID!, set: SetEntryInput): ID!
-  # updateSet(exerciseId: ID!, set: SetEntryInput): ID!
-  # deleteSet(exerciseId: ID!, setID: ID!): Int
+  updateWorkoutSession(
+    workoutSessionId: ID!
+    updateWorkoutSessionInput: UpdateWorkoutSessionInput!
+  ): WorkoutSession!
+  addExercise(workoutSessionId: ID!, exercise: ExerciseInput!): ID!
+  deleteExercise(exerciseRoutineId: ID!): ID!
+  addSet(exerciseId: ID!, set: SetEntryInput): ID!
+  updateSet(exerciseId: ID!, set: SetEntryInput): ID!
+  deleteSet(setID: ID!): Int
 }

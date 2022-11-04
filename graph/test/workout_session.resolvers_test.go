@@ -56,49 +56,47 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		const addWorkoutSessionStmnt = `INSERT INTO "workout_sessions" ("created_at","updated_at","deleted_at","start","end","workout_routine_id","user_id") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`
 		mock.ExpectQuery(regexp.QuoteMeta(addWorkoutSessionStmnt)).WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), ws.Start, ws.End, ws.WorkoutRoutineID, ws.UserID).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(ws.ID))
 
-		const addExerciseStmt = `INSERT INTO "exercises" ("created_at","updated_at","deleted_at","workout_session_id","exercise_routine_id") VALUES ($1,$2,$3,$4,$5),($6,$7,$8,$9,$10) ON CONFLICT ("id") DO UPDATE SET "workout_session_id"="excluded"."workout_session_id" RETURNING "id"`
+		const addExerciseStmt = `INSERT INTO "exercises" ("created_at","updated_at","deleted_at","workout_session_id","exercise_routine_id","notes") VALUES ($1,$2,$3,$4,$5,$6),($7,$8,$9,$10,$11,$12) ON CONFLICT ("id") DO UPDATE SET "workout_session_id"="excluded"."workout_session_id" RETURNING "id"`
 		mock.ExpectQuery(regexp.QuoteMeta(addExerciseStmt)).WithArgs(
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			ws.Exercises[0].WorkoutSessionID,
 			ws.Exercises[0].ExerciseRoutineID,
+			ws.Exercises[0].Notes,
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			ws.Exercises[1].WorkoutSessionID,
 			ws.Exercises[1].ExerciseRoutineID,
+			ws.Exercises[1].Notes,
 		).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(ws.Exercises[0].ID).AddRow(ws.Exercises[1].ID))
 
-		const addSetEntries = `INSERT INTO "set_entries" ("created_at","updated_at","deleted_at","weight","reps","notes","exercise_id") VALUES ($1,$2,$3,$4,$5,$6,$7),($8,$9,$10,$11,$12,$13,$14),($15,$16,$17,$18,$19,$20,$21),($22,$23,$24,$25,$26,$27,$28) ON CONFLICT ("id") DO UPDATE SET "exercise_id"="excluded"."exercise_id" RETURNING "id"`
+		const addSetEntries = `INSERT INTO "set_entries" ("created_at","updated_at","deleted_at","weight","reps","exercise_id") VALUES ($1,$2,$3,$4,$5,$6),($7,$8,$9,$10,$11,$12),($13,$14,$15,$16,$17,$18),($19,$20,$21,$22,$23,$24) ON CONFLICT ("id") DO UPDATE SET "exercise_id"="excluded"."exercise_id" RETURNING "id"`
 		mock.ExpectQuery(regexp.QuoteMeta(addSetEntries)).WithArgs(
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			ws.Exercises[0].Sets[0].Weight,
 			ws.Exercises[0].Sets[0].Reps,
-			ws.Exercises[0].Sets[0].Notes,
 			ws.Exercises[0].ID,
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			ws.Exercises[0].Sets[1].Weight,
 			ws.Exercises[0].Sets[1].Reps,
-			ws.Exercises[0].Sets[1].Notes,
 			ws.Exercises[0].ID,
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			ws.Exercises[1].Sets[0].Weight,
 			ws.Exercises[1].Sets[0].Reps,
-			ws.Exercises[1].Sets[0].Notes,
 			ws.Exercises[1].ID,
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			ws.Exercises[1].Sets[1].Weight,
 			ws.Exercises[1].Sets[1].Reps,
-			ws.Exercises[1].Sets[1].Notes,
 			ws.Exercises[1].ID,
 		).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(ws.Exercises[0].Sets[0].ID).AddRow(ws.Exercises[0].Sets[1].ID).AddRow(ws.Exercises[1].Sets[0].ID))
 
@@ -116,14 +114,16 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 							setEntries: [
 								{ weight: 225, reps: 8},
 								{ weight: 225, reps: 7},
-							]
+							],
+							notes: "This is a note"
 						},
 						{
 							exerciseRoutineId: "4", 
 							setEntries: [
 								{ weight: 225, reps: 8},
 								{ weight: 225, reps: 7},
-							]
+							],
+							notes: "This is another note"
 						}
 					],
 				}) 
@@ -156,14 +156,16 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 							setEntries: [
 								{ weight: 225, reps: 8},
 								{ weight: 225, reps: 7},
-							]
+							],
+							notes: "This is a note"
 						},
 						{
 							exerciseRoutineId: "4", 
 							setEntries: [
 								{ weight: 225, reps: 8},
 								{ weight: 225, reps: 7},
-							]
+							],
+							notes: "This is another note"
 						}
 					],
 				}) 
@@ -200,14 +202,16 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 							setEntries: [
 								{ weight: 225, reps: 8},
 								{ weight: 225, reps: 7},
-							]
+							],
+							notes: "This is a note"
 						},
 						{
 							exerciseRoutineId: "4", 
 							setEntries: [
 								{ weight: 225, reps: 8},
 								{ weight: 225, reps: 7},
-							]
+							],
+							notes: "This is another note"
 						}
 					],
 				}) 
@@ -236,18 +240,20 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), ws.Start, ws.End, ws.WorkoutRoutineID, ws.UserID).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(ws.ID))
 
-		const addExerciseStmt = `INSERT INTO "exercises" ("created_at","updated_at","deleted_at","workout_session_id","exercise_routine_id") VALUES ($1,$2,$3,$4,$5),($6,$7,$8,$9,$10) ON CONFLICT ("id") DO UPDATE SET "workout_session_id"="excluded"."workout_session_id" RETURNING "id"`
+		const addExerciseStmt = `INSERT INTO "exercises" ("created_at","updated_at","deleted_at","workout_session_id","exercise_routine_id","notes") VALUES ($1,$2,$3,$4,$5,$6),($7,$8,$9,$10,$11,$12) ON CONFLICT ("id") DO UPDATE SET "workout_session_id"="excluded"."workout_session_id" RETURNING "id"`
 		mock.ExpectQuery(regexp.QuoteMeta(addExerciseStmt)).WithArgs(
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			ws.Exercises[0].WorkoutSessionID,
 			ws.Exercises[0].ExerciseRoutineID,
+			ws.Exercises[0].Notes,
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			ws.Exercises[1].WorkoutSessionID,
 			9879,
+			ws.Exercises[1].Notes,
 		).WillReturnError(gorm.ErrInvalidValue)
 
 		mock.ExpectRollback()
@@ -264,14 +270,16 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 							setEntries: [
 								{ weight: 225, reps: 8},
 								{ weight: 225, reps: 7},
-							]
+							],
+							notes: "This is a note"
 						},
 						{
 							exerciseRoutineId: "9879", 
 							setEntries: [
 								{ weight: 225, reps: 8},
 								{ weight: 225, reps: 7},
-							]
+							],
+							notes: "This is another note"
 						}
 					],
 				}) 
