@@ -55,7 +55,7 @@ func TestExerciseResolvers(t *testing.T) {
 	u := User
 	ws := WorkoutSession
 	e := WorkoutSession.Exercises[0]
-	
+
 	t.Run("Add Exercise Success", func(t *testing.T) {
 		mock, gormDB := SetupMockDB()
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
@@ -76,10 +76,10 @@ func TestExerciseResolvers(t *testing.T) {
 
 		const creatSetStmnt = `INSERT INTO "set_entries" ("created_at","updated_at","deleted_at","weight","reps","notes","exercise_id") VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT ("id") DO UPDATE SET "exercise_id"="excluded"."exercise_id" RETURNING "id"`
 		mock.ExpectQuery(regexp.QuoteMeta(creatSetStmnt)).WithArgs(
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
-			e.Sets[0].Weight, 
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			e.Sets[0].Weight,
 			e.Sets[0].Reps,
 			e.Sets[0].Notes,
 			e.Sets[0].ExerciseID).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(e.Sets[0].ID))
@@ -158,7 +158,7 @@ func TestExerciseResolvers(t *testing.T) {
 			workoutSessionId,
 		)
 		err = c.Post(gqlMutation, &resp, AddContext(u))
-		require.EqualError(t, err, "[{\"message\":\"Error Adding Exercise: Access Denied\",\"path\":[\"addExercise\"]}]")	
+		require.EqualError(t, err, "[{\"message\":\"Error Adding Exercise: Access Denied\",\"path\":[\"addExercise\"]}]")
 	})
 
 	t.Run("Get Exercises Success", func(t *testing.T) {
@@ -204,7 +204,7 @@ func TestExerciseResolvers(t *testing.T) {
 						reps
 					}
 				}
-			}`, 
+			}`,
 			ws.ID,
 		)
 		c.MustPost(gqlQuery, &resp, AddContext(u))
@@ -241,7 +241,7 @@ func TestExerciseResolvers(t *testing.T) {
 		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
-		}	
+		}
 	})
 
 	t.Run("Get Exercises Access Denied", func(t *testing.T) {
@@ -273,9 +273,9 @@ func TestExerciseResolvers(t *testing.T) {
 		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
-		}		
+		}
 	})
-	
+
 	t.Run("Get Exercise Success", func(t *testing.T) {
 		mock, gormDB := SetupMockDB()
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
@@ -347,7 +347,7 @@ func TestExerciseResolvers(t *testing.T) {
 			}`,
 			e.ID,
 		)
-		err := c.Post(gqlQuery, &resp)	
+		err := c.Post(gqlQuery, &resp)
 		require.EqualError(t, err, "[{\"message\":\"Error Getting Exercise: Invalid Token\",\"path\":[\"exercise\"]}]")
 	})
 
@@ -402,4 +402,3 @@ func TestExerciseResolvers(t *testing.T) {
 		}
 	})
 }
-

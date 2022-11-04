@@ -474,7 +474,7 @@ func (r *queryResolver) Exercises(ctx context.Context, workoutSessionID string) 
 
 	var dbExercises []database.Exercise
 	err = database.GetExercises(r.DB, &dbExercises, workoutSessionID)
-	if err != nil { 
+	if err != nil {
 		return []*model.Exercise{}, gqlerror.Errorf("Error Getting Exercises")
 	}
 
