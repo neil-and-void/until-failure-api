@@ -490,12 +490,12 @@ func (r *queryResolver) Exercise(ctx context.Context, exerciseID string) (*model
 	}
 	err = database.GetExercise(r.DB, exercise)
 	if err != nil {
-		return &model.Exercise{}, gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
+		return &model.Exercise{}, gqlerror.Errorf("Error Getting Exercise: %s", err.Error())
 	}
 
 	err = r.AC.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", exercise.WorkoutSessionID))
 	if err != nil {
-		return &model.Exercise{}, gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
+		return &model.Exercise{}, gqlerror.Errorf("Error Getting Exercise: %s", err.Error())
 	}
 
 	var setEntries []*model.SetEntry
