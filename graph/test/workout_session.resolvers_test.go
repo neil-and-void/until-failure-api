@@ -138,7 +138,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		}
 	})
 
-	t.Run("Add Workout Session Access Denied", func(t *testing.T) {
+	t.Run("Add Workout Session Access Invalid Token", func(t *testing.T) {
 		_, gormDB := SetupMockDB()
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 			DB: gormDB,
@@ -354,7 +354,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		}
 	})
 
-	t.Run("Get Workout Sessions Access Denied", func(t *testing.T) {
+	t.Run("Get Workout Sessions Invalid Token", func(t *testing.T) {
 		mock, gormDB := SetupMockDB()
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 			DB: gormDB,
@@ -423,7 +423,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		}
 	})
 
-	t.Run("Get Workout Session Access Denied", func(t *testing.T) {
+	t.Run("Get Workout Session Invalid Token", func(t *testing.T) {
 		_, gormDB := SetupMockDB()
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 			DB: gormDB,
@@ -444,8 +444,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 				}
 			}`,
 			&resp,
-			AddContext(u),
 		)
-		require.EqualError(t, err, "[{\"message\":\"Error Getting Workout Session\",\"path\":[\"workoutSession\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Error Getting Workout Sessions: Invalid Token\",\"path\":[\"workoutSession\"]}]")
 	})
 }
