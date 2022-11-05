@@ -6,17 +6,18 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/neilZon/workout-logger-api/graph/test"
+	"github.com/neilZon/workout-logger-api/graph/test/helpers"
+	"github.com/neilZon/workout-logger-api/graph/test/testdata"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
 
 func TestAccessControl(t *testing.T) {
-	wr := test.WorkoutRoutine
-	ws := test.WorkoutSession
+	wr := testdata.WorkoutRoutine
+	ws := testdata.WorkoutSession
 
 	t.Run("Test Can Access Workout Routine Success", func(t *testing.T) {
-		mock, gormDB := test.SetupMockDB()
+		mock, gormDB := helpers.SetupMockDB()
 
 		userId := fmt.Sprintf("%d", wr.UserID)
 		workoutRoutineId := fmt.Sprintf("%d", wr.ID)
@@ -39,12 +40,12 @@ func TestAccessControl(t *testing.T) {
 	})
 
 	t.Run("Test Can Access Workout Routine Denied", func(t *testing.T) {
-		mock, gormDB := test.SetupMockDB()
+		mock, gormDB := helpers.SetupMockDB()
 
 		userId := fmt.Sprintf("%d", wr.UserID)
 		workoutRoutineId := fmt.Sprintf("%d", wr.ID)
 
-		mock.ExpectQuery(regexp.QuoteMeta(test.WorkoutRoutineAccessQuery)).WithArgs(userId, workoutRoutineId).WillReturnError(gorm.ErrRecordNotFound)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(userId, workoutRoutineId).WillReturnError(gorm.ErrRecordNotFound)
 
 		ac := &AccessController{DB: gormDB}
 		err := ac.CanAccessWorkoutRoutine(userId, workoutRoutineId)
@@ -57,7 +58,7 @@ func TestAccessControl(t *testing.T) {
 	})
 
 	t.Run("Test Can Access Workout Session Success", func(t *testing.T) {
-		mock, gormDB := test.SetupMockDB()
+		mock, gormDB := helpers.SetupMockDB()
 
 		userId := fmt.Sprintf("%d", ws.UserID)
 		workoutSessionId := fmt.Sprintf("%d", ws.ID)
@@ -80,7 +81,7 @@ func TestAccessControl(t *testing.T) {
 	})
 
 	t.Run("Test Can Access Workout Session Denied", func(t *testing.T) {
-		mock, gormDB := test.SetupMockDB()
+		mock, gormDB := helpers.SetupMockDB()
 
 		userId := fmt.Sprintf("%d", ws.UserID)
 		workoutSessionId := fmt.Sprintf("%d", ws.ID)

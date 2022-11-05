@@ -5,13 +5,11 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/99designs/gqlgen/client"
-	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/joho/godotenv"
-	"github.com/neilZon/workout-logger-api/accesscontrol"
-	"github.com/neilZon/workout-logger-api/graph"
-	"github.com/neilZon/workout-logger-api/graph/generated"
+	"github.com/neilZon/workout-logger-api/accesscontroller/accesscontrol"
+	"github.com/neilZon/workout-logger-api/graph/test/helpers"
+	"github.com/neilZon/workout-logger-api/graph/test/testdata"
 )
 
 type AddSetEntryResp struct {
@@ -34,17 +32,15 @@ func TestSetEntryResolvers(t *testing.T) {
 		panic("Error loading .env file")
 	}
 
-	u := User
-	e := WorkoutSession.Exercises[0]
-	ws := WorkoutSession
-	s := WorkoutSession.Exercises[0].Sets[0]
+	u := testdata.User
+	e := testdata.WorkoutSession.Exercises[0]
+	ws := testdata.WorkoutSession
+	s := testdata.WorkoutSession.Exercises[0].Sets[0]
 
 	t.Run("Add Set Entry Success", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-			AC: &accesscontrol.AccessController{DB: gormDB},
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		exerciseRow := sqlmock.
 			NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "workout_session_id", "exercise_routine_id"}).
@@ -66,7 +62,7 @@ func TestSetEntryResolvers(t *testing.T) {
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
 		mock.ExpectBegin()
 		addSetEntriesQuery := `INSERT INTO "set_entries" ("created_at","updated_at","deleted_at","weight","reps","exercise_id") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "id"`
@@ -82,7 +78,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			AddContext(u),
+			helpers.AddContext(u),
 		)
 
 		err := mock.ExpectationsWereMet()
@@ -92,11 +88,9 @@ func TestSetEntryResolvers(t *testing.T) {
 	})
 	
 	t.Run("Get Set Entries Success", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-			AC: &accesscontrol.AccessController{DB: gormDB},
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		exerciseRow := sqlmock.
 			NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "workout_session_id", "exercise_routine_id"}).
@@ -118,7 +112,7 @@ func TestSetEntryResolvers(t *testing.T) {
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
 		var resp GetSetEntriesResp
 		c.MustPost(`
@@ -131,7 +125,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			AddContext(u),
+			helpers.AddContext(u),
 		)
 
 		err := mock.ExpectationsWereMet()

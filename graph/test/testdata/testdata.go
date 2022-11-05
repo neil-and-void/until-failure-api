@@ -1,4 +1,4 @@
-package test
+package testdata
 
 import (
 	"time"
@@ -7,6 +7,7 @@ import (
 	"github.com/neilZon/workout-logger-api/config"
 	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/token"
+
 	"gorm.io/gorm"
 )
 

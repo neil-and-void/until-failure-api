@@ -253,7 +253,7 @@ func (r *mutationResolver) AddExercise(ctx context.Context, workoutSessionID str
 	}
 
 	userId := fmt.Sprintf("%d", u.ID)
-	err = r.AC.CanAccessWorkoutSession(userId, workoutSessionID)
+	err = r.ACS.CanAccessWorkoutSession(userId, workoutSessionID)
 	if err != nil {
 		return "", gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
 	}
@@ -324,7 +324,7 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *m
 		return "", gqlerror.Errorf("Error Adding Set %s", err)
 	}
 	
-	err = r.AC.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", exercise.WorkoutSessionID))
+	err = r.ACS.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", exercise.WorkoutSessionID))
 	if err != nil {
 		return "", gqlerror.Errorf("Error Adding Set: Access Denied")
 	}
@@ -396,7 +396,7 @@ func (r *queryResolver) ExerciseRoutines(ctx context.Context, workoutRoutineID s
 	}
 
 	userId := fmt.Sprintf("%d", u.ID)
-	err = r.AC.CanAccessWorkoutRoutine(userId, workoutRoutineID)
+	err = r.ACS.CanAccessWorkoutRoutine(userId, workoutRoutineID)
 	if err != nil {
 		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Exercise Routine: %s", err.Error())
 	}
@@ -529,7 +529,7 @@ func (r *queryResolver) Exercise(ctx context.Context, exerciseID string) (*model
 		return &model.Exercise{}, gqlerror.Errorf("Error Getting Exercise: %s", err.Error())
 	}
 
-	err = r.AC.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", exercise.WorkoutSessionID))
+	err = r.ACS.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", exercise.WorkoutSessionID))
 	if err != nil {
 		return &model.Exercise{}, gqlerror.Errorf("Error Getting Exercise: %s", err.Error())
 	}
@@ -558,7 +558,7 @@ func (r *queryResolver) Exercises(ctx context.Context, workoutSessionID string) 
 		return []*model.Exercise{}, gqlerror.Errorf("Error Getting Exercises: Invalid Token")
 	}
 
-	err = r.AC.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), workoutSessionID)
+	err = r.ACS.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), workoutSessionID)
 	if err != nil {
 		return []*model.Exercise{}, gqlerror.Errorf("Error Getting Exercises: %s", err.Error())
 	}
@@ -612,7 +612,7 @@ func (r *queryResolver) Sets(ctx context.Context, exerciseID string) ([]*model.S
 		return []*model.SetEntry{}, gqlerror.Errorf("Error Getting Sets")
 	}
 
-	err = r.AC.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", exercise.WorkoutSessionID))
+	err = r.ACS.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", exercise.WorkoutSessionID))
 	if err != nil {
 		return []*model.SetEntry{}, gqlerror.Errorf("Error Getting Sets: Access Denied")
 	}

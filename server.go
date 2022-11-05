@@ -10,7 +10,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/joho/godotenv"
-	"github.com/neilZon/workout-logger-api/accesscontrol"
+	"github.com/neilZon/workout-logger-api/accesscontroller/accesscontrol"
 	db "github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph"
 	"github.com/neilZon/workout-logger-api/graph/generated"
@@ -39,7 +39,7 @@ func main() {
 
 	client := generated.Config{Resolvers: &graph.Resolver{
 		DB: db,
-		AC: accesscontrol.NewAccessController(db),
+		ACS: accesscontrol.NewAccessControllerService(db),
 	}}
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(client))

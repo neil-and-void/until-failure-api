@@ -3,9 +3,12 @@ package accesscontrol
 import (
 	"errors"
 
+	"github.com/neilZon/workout-logger-api/accesscontroller"
 	"github.com/neilZon/workout-logger-api/database"
 	"gorm.io/gorm"
 )
+
+
 
 type AccessController struct {
 	DB *gorm.DB
@@ -36,7 +39,7 @@ func (ac *AccessController) CanAccessWorkoutSession(userId string, workoutSessio
 	return nil
 }
 
-func NewAccessController(db *gorm.DB) *AccessController {
+func NewAccessControllerService(db *gorm.DB) accesscontroller.AccessControllerService {
 	return &AccessController{
 		DB: db,
 	}

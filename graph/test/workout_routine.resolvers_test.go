@@ -8,9 +8,12 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/joho/godotenv"
+	"github.com/neilZon/workout-logger-api/accesscontroller/accesscontrol"
 	"github.com/neilZon/workout-logger-api/graph"
 	"github.com/neilZon/workout-logger-api/graph/generated"
 	"github.com/neilZon/workout-logger-api/graph/model"
+	"github.com/neilZon/workout-logger-api/graph/test/helpers"
+	"github.com/neilZon/workout-logger-api/graph/test/testdata"
 	"github.com/stretchr/testify/require"
 )
 
@@ -38,14 +41,13 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 		panic("Error loading .env file")
 	}
 
-	wr := WorkoutRoutine
-	u := User
+	wr := testdata.WorkoutRoutine
+	u := testdata.User
 
 	t.Run("Create workout routine success", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		mock.ExpectBegin()
 		const createWorkoutRoutineStmnt = `INSERT INTO "workout_routines" ("created_at","updated_at","deleted_at","name","user_id") VALUES ($1,$2,$3,$4,$5) RETURNING "id"`
@@ -95,7 +97,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			}
 		  }`,
 			&resp,
-			AddContext(u))
+			helpers.AddContext(u))
 		err = mock.ExpectationsWereMet() // make sure all expectations were met
 		if err != nil {
 			panic(err)
@@ -103,7 +105,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 	})
 
 	t.Run("Create workout routine invalid data", func(t *testing.T) {
-		_, gormDB := SetupMockDB()
+		_, gormDB := helpers.SetupMockDB()
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 			DB: gormDB,
 		}})))
@@ -124,12 +126,12 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			}
 		  }`,
 			&resp,
-			AddContext(u))
+			helpers.AddContext(u))
 		require.EqualError(t, err, "[{\"message\":\"Invalid Routine Name Length\",\"path\":[\"createWorkoutRoutine\"]}]")
 	})
 
 	t.Run("Create workout routine no token", func(t *testing.T) {
-		_, gormDB := SetupMockDB()
+		_, gormDB := helpers.SetupMockDB()
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 			DB: gormDB,
 		}})))
@@ -154,10 +156,9 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 	})
 
 	t.Run("Get Workout Routines Success", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		workoutRoutineRow := sqlmock.
 			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at"}).
@@ -177,7 +178,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			}
 		}`,
 			&resp,
-			AddContext(u))
+			helpers.AddContext(u))
 		err = mock.ExpectationsWereMet() // make sure all expectations were met
 		if err != nil {
 			panic(err)
@@ -185,7 +186,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 	})
 
 	t.Run("Get Workout Routine No Token", func(t *testing.T) {
-		_, gormDB := SetupMockDB()
+		_, gormDB := helpers.SetupMockDB()
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 			DB: gormDB,
 		}})))

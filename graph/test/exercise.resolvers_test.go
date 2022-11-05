@@ -5,13 +5,11 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/99designs/gqlgen/client"
-	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/joho/godotenv"
-	"github.com/neilZon/workout-logger-api/accesscontrol"
-	"github.com/neilZon/workout-logger-api/graph"
-	"github.com/neilZon/workout-logger-api/graph/generated"
+	"github.com/neilZon/workout-logger-api/accesscontroller/accesscontrol"
+	"github.com/neilZon/workout-logger-api/graph/test/helpers"
+	"github.com/neilZon/workout-logger-api/graph/test/testdata"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
@@ -52,21 +50,19 @@ func TestExerciseResolvers(t *testing.T) {
 		panic("Error loading .env file")
 	}
 
-	u := User
-	ws := WorkoutSession
-	e := WorkoutSession.Exercises[0]
+	u := testdata.User
+	ws := testdata.WorkoutSession
+	e := testdata.WorkoutSession.Exercises[0]
 
 	t.Run("Add Exercise Success", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-			AC: &accesscontrol.AccessController{DB: gormDB},
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
 		mock.ExpectBegin()
 
@@ -97,7 +93,7 @@ func TestExerciseResolvers(t *testing.T) {
 				)
 			}`,
 			&resp,
-			AddContext(u),
+			helpers.AddContext(u),
 		)
 
 		err = mock.ExpectationsWereMet()
@@ -110,11 +106,9 @@ func TestExerciseResolvers(t *testing.T) {
 	t.Run("Add Exercise Foreign Key Error", func(t *testing.T) {})
 
 	t.Run("Add Exercise Invalid Token", func(t *testing.T) {
-		_, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-			AC: &accesscontrol.AccessController{DB: gormDB},
-		}})))
+		_, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		var resp AddExerciseResp
 		err = c.Post(`
@@ -134,14 +128,12 @@ func TestExerciseResolvers(t *testing.T) {
 	})
 
 	t.Run("Add Exercise Access Denied", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-			AC: &accesscontrol.AccessController{DB: gormDB},
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		workoutSessionId := 1233
-		mock.ExpectQuery(regexp.QuoteMeta(WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", 1233)).WillReturnError(gorm.ErrRecordNotFound)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", 1233)).WillReturnError(gorm.ErrRecordNotFound)
 
 		var resp AddExerciseResp
 		gqlMutation := fmt.Sprintf(`
@@ -157,21 +149,19 @@ func TestExerciseResolvers(t *testing.T) {
 			}`,
 			workoutSessionId,
 		)
-		err = c.Post(gqlMutation, &resp, AddContext(u))
+		err = c.Post(gqlMutation, &resp, helpers.AddContext(u))
 		require.EqualError(t, err, "[{\"message\":\"Error Adding Exercise: Access Denied\",\"path\":[\"addExercise\"]}]")
 	})
 
 	t.Run("Get Exercises Success", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-			AC: &accesscontrol.AccessController{DB: gormDB},
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
 		exerciseRows := sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "workout_session_id", "exercise_routine_id"})
 		setEntryRows := sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "weight", "reps", "exercise_id"})
@@ -207,7 +197,7 @@ func TestExerciseResolvers(t *testing.T) {
 			}`,
 			ws.ID,
 		)
-		c.MustPost(gqlQuery, &resp, AddContext(u))
+		c.MustPost(gqlQuery, &resp, helpers.AddContext(u))
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -216,11 +206,9 @@ func TestExerciseResolvers(t *testing.T) {
 	})
 
 	t.Run("Get Exercises Invalid Token", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-			AC: &accesscontrol.AccessController{DB: gormDB},
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		var resp GetExerciseResp
 		gqlQuery := fmt.Sprintf(`	
@@ -246,13 +234,11 @@ func TestExerciseResolvers(t *testing.T) {
 	})
 
 	t.Run("Get Exercises Access Denied", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-			AC: &accesscontrol.AccessController{DB: gormDB},
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
-		mock.ExpectQuery(regexp.QuoteMeta(WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnError(gorm.ErrRecordNotFound)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnError(gorm.ErrRecordNotFound)
 
 		var resp GetExerciseResp
 		gqlQuery := fmt.Sprintf(`	
@@ -268,7 +254,7 @@ func TestExerciseResolvers(t *testing.T) {
 			}`,
 			ws.ID,
 		)
-		err = c.Post(gqlQuery, &resp, AddContext(u))
+		err = c.Post(gqlQuery, &resp, helpers.AddContext(u))
 		require.EqualError(t, err, "[{\"message\":\"Error Getting Exercises: Access Denied\",\"path\":[\"exercises\"]}]")
 
 		err = mock.ExpectationsWereMet()
@@ -278,11 +264,9 @@ func TestExerciseResolvers(t *testing.T) {
 	})
 
 	t.Run("Get Exercise Success", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-			AC: &accesscontrol.AccessController{DB: gormDB},
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		exerciseRow := sqlmock.
 			NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "workout_session_id", "exercise_routine_id"}).
@@ -304,7 +288,7 @@ func TestExerciseResolvers(t *testing.T) {
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
 		var resp GetExerciseResp
 		gqlQuery := fmt.Sprintf(`	
@@ -320,7 +304,7 @@ func TestExerciseResolvers(t *testing.T) {
 			}`,
 			e.ID,
 		)
-		c.MustPost(gqlQuery, &resp, AddContext(u))
+		c.MustPost(gqlQuery, &resp, helpers.AddContext(u))
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -329,11 +313,9 @@ func TestExerciseResolvers(t *testing.T) {
 	})
 
 	t.Run("Get Exercise Invalid Token", func(t *testing.T) {
-		_, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-			AC: &accesscontrol.AccessController{DB: gormDB},
-		}})))
+		_, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(db)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		var resp GetExerciseResp
 		gqlQuery := fmt.Sprintf(`	
@@ -354,11 +336,9 @@ func TestExerciseResolvers(t *testing.T) {
 	})
 
 	t.Run("Get Exercise Access Denied", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-			AC: &accesscontrol.AccessController{DB: gormDB},
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		exerciseId := 788
 
@@ -379,7 +359,7 @@ func TestExerciseResolvers(t *testing.T) {
 			WithArgs(ws.Exercises[0].ID).
 			WillReturnRows(setEntryRows)
 
-		mock.ExpectQuery(regexp.QuoteMeta(WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnError(gorm.ErrRecordNotFound)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnError(gorm.ErrRecordNotFound)
 
 		var resp GetExerciseResp
 		gqlQuery := fmt.Sprintf(`	
@@ -395,7 +375,7 @@ func TestExerciseResolvers(t *testing.T) {
 			}`,
 			exerciseId,
 		)
-		err = c.Post(gqlQuery, &resp, AddContext(u))
+		err = c.Post(gqlQuery, &resp, helpers.AddContext(u))
 		require.EqualError(t, err, "[{\"message\":\"Error Getting Exercise: Access Denied\",\"path\":[\"exercise\"]}]")
 
 		err = mock.ExpectationsWereMet()

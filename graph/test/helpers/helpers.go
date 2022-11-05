@@ -1,10 +1,14 @@
-package test
+package helpers
 
 import (
 	"context"
 
 	"github.com/99designs/gqlgen/client"
+	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/neilZon/workout-logger-api/accesscontroller"
+	"github.com/neilZon/workout-logger-api/graph"
+	"github.com/neilZon/workout-logger-api/graph/generated"
 	"github.com/neilZon/workout-logger-api/middleware"
 	"github.com/neilZon/workout-logger-api/token"
 	"gorm.io/driver/postgres"
@@ -15,7 +19,7 @@ const WorkoutRoutineAccessQuery = `SELECT * FROM "workout_routines" WHERE (user_
 const WorkoutSessionAccessQuery = `SELECT * FROM "workout_sessions" WHERE (user_id = $1 AND id = $2) AND "workout_sessions"."deleted_at" IS NULL ORDER BY "workout_sessions"."id" LIMIT 1`
 
 func SetupMockDB() (sqlmock.Sqlmock, *gorm.DB) {
-	mockDb, mock, err := sqlmock.New() // mock sql.DB
+	mockDb, mock, err := sqlmock.New()
 	if err != nil {
 		panic(err)
 	}
@@ -25,6 +29,13 @@ func SetupMockDB() (sqlmock.Sqlmock, *gorm.DB) {
 	}), &gorm.Config{})
 
 	return mock, gormDB
+}
+
+func NewGqlClient(gormDB *gorm.DB, acs accesscontroller.AccessControllerService) (*client.Client) {
+	return client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
+		DB: gormDB,
+		ACS: acs,
+	}})))
 }
 
 func AddContext(u *token.Claims) client.Option {

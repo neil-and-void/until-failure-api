@@ -9,10 +9,12 @@ import (
 
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/neilZon/workout-logger-api/accesscontroller/accesscontrol"
 	"github.com/neilZon/workout-logger-api/config"
 	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph"
 	"github.com/neilZon/workout-logger-api/graph/generated"
+	"github.com/neilZon/workout-logger-api/graph/test/helpers"
 	"github.com/neilZon/workout-logger-api/token"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -50,10 +52,9 @@ func TestAuthResolvers(t *testing.T) {
 	}
 
 	t.Run("Login resolver success", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)	
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		userRow := sqlmock.
 			NewRows([]string{"id", "name", "email", "password", "created_at", "deleted_at", "updated_at"}).
@@ -90,10 +91,9 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Login resolver wrong password", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		rows := sqlmock.
 			NewRows([]string{"id", "name", "email", "password", "created_at", "deleted_at", "updated_at"}).
@@ -128,10 +128,9 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Login resolver email not found", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		const userQuery = `SELECT * FROM "users" WHERE email = $1 AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1`
 		mock.ExpectQuery(regexp.QuoteMeta(userQuery)).WithArgs("notexistingemail@test.com").WillReturnError(gorm.ErrRecordNotFound)
@@ -159,10 +158,9 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Login resolver not an email", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		// empty response struct since we know we are going to return an error
 		var resp struct{}
@@ -187,10 +185,9 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Signup resolver success", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		nullUser := sqlmock.
 			NewRows([]string{"id", "name", "email", "password", "created_at", "deleted_at", "updated_at"}).
@@ -235,10 +232,9 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Signup resolver with email already exists", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		userRow := sqlmock.
 			NewRows([]string{"id", "name", "email", "password", "created_at", "deleted_at", "updated_at"}).
@@ -266,10 +262,9 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Signup resolver with invalid email", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		// empty response struct since we know we are going to return an error
 		var resp struct{}
@@ -296,10 +291,9 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Signup resolver with confirm not match password", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		// empty response struct since we know we are going to return an error
 		var resp struct{}
@@ -326,10 +320,9 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Signup resolver weak password no number", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		// empty response struct since we know we are going to return an error
 		var resp struct{}
@@ -356,10 +349,9 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Signup resolver weak password length", func(t *testing.T) {
-		mock, gormDB := SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-		}})))
+		mock, gormDB := helpers.SetupMockDB()
+		ac := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, ac)
 
 		// empty response struct since we know we are going to return an error
 		var resp struct{}
@@ -386,7 +378,7 @@ func TestAuthResolvers(t *testing.T) {
 	})
 
 	t.Run("Refresh resolver refreshes access token", func(t *testing.T) {
-		_, gormDB := SetupMockDB()
+		_, gormDB := helpers.SetupMockDB()
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 			DB: gormDB,
 		}})))

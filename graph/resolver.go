@@ -1,7 +1,7 @@
 package graph
 
 import (
-	"github.com/neilZon/workout-logger-api/accesscontrol"
+	"github.com/neilZon/workout-logger-api/accesscontroller"
 	"gorm.io/gorm"
 )
 
@@ -11,5 +11,5 @@ import (
 
 type Resolver struct {
 	DB *gorm.DB
-	AC *accesscontrol.AccessController
+	ACS accesscontroller.AccessControllerService
 }
