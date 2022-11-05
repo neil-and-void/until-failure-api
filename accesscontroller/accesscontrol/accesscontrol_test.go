@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/neilZon/workout-logger-api/graph/test/helpers"
-	"github.com/neilZon/workout-logger-api/graph/test/testdata"
+	"github.com/neilZon/workout-logger-api/e2e/testdata"
+	"github.com/neilZon/workout-logger-api/helpers"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )

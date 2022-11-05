@@ -31,11 +31,16 @@ func SetupMockDB() (sqlmock.Sqlmock, *gorm.DB) {
 	return mock, gormDB
 }
 
-func NewGqlClient(gormDB *gorm.DB, acs accesscontroller.AccessControllerService) *client.Client {
-	return client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
+func NewGqlServer(gormDB *gorm.DB, acs accesscontroller.AccessControllerService) (*handler.Server) {
+	return handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 		DB:  gormDB,
 		ACS: acs,
-	}})))
+	}}))
+}
+
+func NewGqlClient(gormDB *gorm.DB, acs accesscontroller.AccessControllerService) *client.Client {
+	srv := NewGqlServer(gormDB, acs)
+	return client.New(srv)
 }
 
 func AddContext(u *token.Claims) client.Option {

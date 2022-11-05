@@ -8,8 +8,8 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/joho/godotenv"
 	"github.com/neilZon/workout-logger-api/accesscontroller/accesscontrol"
-	"github.com/neilZon/workout-logger-api/graph/test/helpers"
-	"github.com/neilZon/workout-logger-api/graph/test/testdata"
+	"github.com/neilZon/workout-logger-api/e2e/testdata"
+	"github.com/neilZon/workout-logger-api/helpers"
 )
 
 type AddSetEntryResp struct {
@@ -39,8 +39,8 @@ func TestSetEntryResolvers(t *testing.T) {
 
 	t.Run("Add Set Entry Success", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		exerciseRow := sqlmock.
 			NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "workout_session_id", "exercise_routine_id"}).
@@ -89,8 +89,8 @@ func TestSetEntryResolvers(t *testing.T) {
 
 	t.Run("Get Set Entries Success", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		exerciseRow := sqlmock.
 			NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "workout_session_id", "exercise_routine_id"}).

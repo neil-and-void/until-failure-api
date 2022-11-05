@@ -7,13 +7,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/joho/godotenv"
 	"github.com/neilZon/workout-logger-api/accesscontroller/accesscontrol"
 	db "github.com/neilZon/workout-logger-api/database"
-	"github.com/neilZon/workout-logger-api/graph"
-	"github.com/neilZon/workout-logger-api/graph/generated"
+	"github.com/neilZon/workout-logger-api/helpers"
 	"github.com/neilZon/workout-logger-api/middleware"
 	"github.com/rs/cors"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -37,12 +35,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	client := generated.Config{Resolvers: &graph.Resolver{
-		DB:  db,
-		ACS: accesscontrol.NewAccessControllerService(db),
-	}}
-
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(client))
+	acs := accesscontrol.NewAccessControllerService(db)
+	srv := helpers.NewGqlServer(db, acs)
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
 		// notify bug tracker...maybe? idk too much mone˜
 		if err != nil {

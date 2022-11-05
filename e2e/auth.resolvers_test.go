@@ -14,7 +14,7 @@ import (
 	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph"
 	"github.com/neilZon/workout-logger-api/graph/generated"
-	"github.com/neilZon/workout-logger-api/graph/test/helpers"
+	"github.com/neilZon/workout-logger-api/helpers"
 	"github.com/neilZon/workout-logger-api/token"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -53,8 +53,8 @@ func TestAuthResolvers(t *testing.T) {
 
 	t.Run("Login resolver success", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		userRow := sqlmock.
 			NewRows([]string{"id", "name", "email", "password", "created_at", "deleted_at", "updated_at"}).
@@ -92,8 +92,8 @@ func TestAuthResolvers(t *testing.T) {
 
 	t.Run("Login resolver wrong password", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		rows := sqlmock.
 			NewRows([]string{"id", "name", "email", "password", "created_at", "deleted_at", "updated_at"}).
@@ -129,8 +129,8 @@ func TestAuthResolvers(t *testing.T) {
 
 	t.Run("Login resolver email not found", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		const userQuery = `SELECT * FROM "users" WHERE email = $1 AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1`
 		mock.ExpectQuery(regexp.QuoteMeta(userQuery)).WithArgs("notexistingemail@test.com").WillReturnError(gorm.ErrRecordNotFound)
@@ -159,8 +159,8 @@ func TestAuthResolvers(t *testing.T) {
 
 	t.Run("Login resolver not an email", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		// empty response struct since we know we are going to return an error
 		var resp struct{}
@@ -186,8 +186,8 @@ func TestAuthResolvers(t *testing.T) {
 
 	t.Run("Signup resolver success", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		nullUser := sqlmock.
 			NewRows([]string{"id", "name", "email", "password", "created_at", "deleted_at", "updated_at"}).
@@ -233,8 +233,8 @@ func TestAuthResolvers(t *testing.T) {
 
 	t.Run("Signup resolver with email already exists", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		userRow := sqlmock.
 			NewRows([]string{"id", "name", "email", "password", "created_at", "deleted_at", "updated_at"}).
@@ -263,8 +263,8 @@ func TestAuthResolvers(t *testing.T) {
 
 	t.Run("Signup resolver with invalid email", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		// empty response struct since we know we are going to return an error
 		var resp struct{}
@@ -292,8 +292,8 @@ func TestAuthResolvers(t *testing.T) {
 
 	t.Run("Signup resolver with confirm not match password", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		// empty response struct since we know we are going to return an error
 		var resp struct{}
@@ -321,8 +321,8 @@ func TestAuthResolvers(t *testing.T) {
 
 	t.Run("Signup resolver weak password no number", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		// empty response struct since we know we are going to return an error
 		var resp struct{}
@@ -350,8 +350,8 @@ func TestAuthResolvers(t *testing.T) {
 
 	t.Run("Signup resolver weak password length", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		// empty response struct since we know we are going to return an error
 		var resp struct{}

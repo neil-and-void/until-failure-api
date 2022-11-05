@@ -8,8 +8,8 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/joho/godotenv"
 	"github.com/neilZon/workout-logger-api/accesscontroller/accesscontrol"
-	"github.com/neilZon/workout-logger-api/graph/test/helpers"
-	"github.com/neilZon/workout-logger-api/graph/test/testdata"
+	"github.com/neilZon/workout-logger-api/e2e/testdata"
+	"github.com/neilZon/workout-logger-api/helpers"
 	"gorm.io/gorm"
 )
 
@@ -36,8 +36,8 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 
 	t.Run("Get Exercise Routine Success", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		workoutRoutineRow := sqlmock.
 			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at"}).
@@ -62,8 +62,8 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 
 	t.Run("Get Exercise Routine Access Denied", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", 1234)).WillReturnError(gorm.ErrRecordNotFound)
 

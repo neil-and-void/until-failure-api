@@ -10,10 +10,10 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/joho/godotenv"
 	"github.com/neilZon/workout-logger-api/accesscontroller/accesscontrol"
+	"github.com/neilZon/workout-logger-api/e2e/testdata"
 	"github.com/neilZon/workout-logger-api/graph"
 	"github.com/neilZon/workout-logger-api/graph/generated"
-	"github.com/neilZon/workout-logger-api/graph/test/helpers"
-	"github.com/neilZon/workout-logger-api/graph/test/testdata"
+	"github.com/neilZon/workout-logger-api/helpers"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
@@ -54,8 +54,8 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 
 	t.Run("Add Workout Session success", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(db)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(db)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		mock.ExpectBegin()
 
@@ -183,8 +183,8 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 
 	t.Run("Add Workout Session Error (invalid workout routine ID fk constraint)", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		mock.ExpectBegin()
 
@@ -234,8 +234,8 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 
 	t.Run("Add Workout Session Error (invalid exercise ID fk constraint)", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		mock.ExpectBegin()
 
@@ -301,8 +301,8 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 
 	t.Run("Get Workout Sessions success", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "start", "end", "workout_routine_id", "user_id"}).
@@ -361,8 +361,8 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 
 	t.Run("Get Workout Sessions Invalid Token", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		var resp GetWorkoutSession
 		err := c.Post(`
@@ -392,8 +392,8 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 
 	t.Run("Get Workout Session Success", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, ac)
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "start", "end", "workout_routine_id", "user_id"}).
