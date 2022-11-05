@@ -69,10 +69,9 @@ func AddWorkoutSession(db *gorm.DB, workout *WorkoutSession) error {
 	return result.Error
 }
 
-func GetWorkoutSession(db *gorm.DB, userId string, workoutSessionId string) (*WorkoutSession, error) {
-	var ws WorkoutSession
-	result := db.First(&ws, "user_id = ? AND id = ?", userId, workoutSessionId)
-	return &ws, result.Error
+func GetWorkoutSession(db *gorm.DB, userId string, workoutSessionId string, ws *WorkoutSession) ( error) {
+	result := db.First(ws, "user_id = ? AND id = ?", userId, workoutSessionId)
+	return result.Error
 }
 
 func GetWorkoutSessions(db *gorm.DB, userId string) ([]*WorkoutSession, error) {
@@ -87,11 +86,25 @@ func AddExercise(db *gorm.DB, exercise *Exercise, workoutSessionId string) error
 }
 
 func GetExercise(db *gorm.DB, exercise *Exercise) error {
-	result := db.Preload("Sets").First(&exercise)
+	result := db.Preload("Sets").First(exercise)
 	return result.Error
 }
 
 func GetExercises(db *gorm.DB, exercises *[]Exercise, workoutSessionId string) error {
 	result := db.Preload("Sets").Where("workout_session_id = ?", workoutSessionId).Find(&exercises)
 	return result.Error
+}
+
+func AddSet(db *gorm.DB, set *SetEntry) error {
+	result := db.Create(set)
+	return result.Error
+}
+
+func GetSets(db *gorm.DB, s *[]SetEntry, exerciseId string) error {
+	result := db.Where("exercise_id = ?", exerciseId).Find(&s)
+	return result.Error
+}
+
+func UpdateSet(db *gorm.DB, set *SetEntry) error {
+	return nil
 }

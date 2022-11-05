@@ -123,6 +123,7 @@ type Query {
   workoutSession(workoutSessionId: ID!): WorkoutSession
   exercise(exerciseId: ID!): Exercise
   exercises(workoutSessionId: ID!): [Exercise]
+  sets(exerciseId: ID!): [SetEntry]
 }
 
 type Mutation {

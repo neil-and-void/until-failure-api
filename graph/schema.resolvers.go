@@ -305,7 +305,42 @@ func (r *mutationResolver) DeleteExercise(ctx context.Context, exerciseRoutineID
 
 // AddSet is the resolver for the addSet field.
 func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *model.SetEntryInput) (string, error) {
-	panic(fmt.Errorf("not implemented: AddSet - addSet"))
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return "", gqlerror.Errorf("Error Adding Set: %s", err.Error())
+	}
+
+	exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, 64)
+	if err != nil {
+		return "", gqlerror.Errorf("Error Adding Set: Invalid Exercise ID")
+	}
+	exercise := database.Exercise{
+		Model: gorm.Model{
+			ID: uint(exerciseIDUint),
+		},
+	}
+	err = database.GetExercise(r.DB, &exercise)
+	if err != nil {
+		return "", gqlerror.Errorf("Error Adding Set %s", err)
+	}
+	
+	err = r.AC.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", exercise.WorkoutSessionID))
+	if err != nil {
+		return "", gqlerror.Errorf("Error Adding Set: Access Denied")
+	}
+
+	dbSet := database.SetEntry{
+		ExerciseID: uint(exerciseIDUint),
+		Weight:     float32(set.Weight),
+		Reps:       uint(set.Reps),
+	}
+	err = database.AddSet(r.DB, &dbSet)
+	if err != nil {
+		fmt.Println(err.Error())
+		return "", gqlerror.Errorf("Error Adding Set")
+	}
+
+	return fmt.Sprintf("%d", dbSet.ID), nil
 }
 
 // UpdateSet is the resolver for the updateSet field.
@@ -436,7 +471,8 @@ func (r *queryResolver) WorkoutSession(ctx context.Context, workoutSessionID str
 		return &model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Sessions: Invalid Token")
 	}
 
-	dbWorkoutSession, err := database.GetWorkoutSession(r.DB, fmt.Sprintf("%d", u.ID), workoutSessionID)
+	var dbWorkoutSession database.WorkoutSession
+	err = database.GetWorkoutSession(r.DB, fmt.Sprintf("%d", u.ID), workoutSessionID, &dbWorkoutSession)
 	if err != nil {
 		return &model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Session")
 	}
@@ -553,6 +589,44 @@ func (r *queryResolver) Exercises(ctx context.Context, workoutSessionID string) 
 		})
 	}
 	return exercises, nil
+}
+
+// Sets is the resolver for the sets field.
+func (r *queryResolver) Sets(ctx context.Context, exerciseID string) ([]*model.SetEntry, error) {
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return []*model.SetEntry{}, gqlerror.Errorf("Error Getting Sets: %s", err.Error())
+	}
+
+	exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, 64)
+	if err != nil {
+		return []*model.SetEntry{}, gqlerror.Errorf("Error Getting Sets: Invalid Exercise ID")
+	}
+	exercise := database.Exercise{
+		Model: gorm.Model{
+			ID: uint(exerciseIDUint),
+		},
+	}
+	err = database.GetExercise(r.DB, &exercise)
+	if err != nil {
+		return []*model.SetEntry{}, gqlerror.Errorf("Error Getting Sets")
+	}
+
+	err = r.AC.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", exercise.WorkoutSessionID))
+	if err != nil {
+		return []*model.SetEntry{}, gqlerror.Errorf("Error Getting Sets: Access Denied")
+	}
+
+	var sets []*model.SetEntry
+	for _, s := range exercise.Sets {
+		sets = append(sets, &model.SetEntry{
+			ID:     fmt.Sprintf("%d", s.ID),
+			Reps:   int(s.Reps),
+			Weight: float64(s.Weight),
+		})
+	}
+
+	return sets, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
