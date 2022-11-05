@@ -24,7 +24,8 @@ func (ac *AccessController) CanAccessWorkoutRoutine(userId string, workoutRoutin
 }
 
 func (ac *AccessController) CanAccessWorkoutSession(userId string, workoutSessionId string) error {
-	_, err := database.GetWorkoutSession(ac.DB, userId, workoutSessionId)
+	var ws database.WorkoutSession
+	err := database.GetWorkoutSession(ac.DB, userId, workoutSessionId, &ws)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return errors.New("Access Denied")
 	}
