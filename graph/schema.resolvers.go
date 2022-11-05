@@ -321,6 +321,7 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *m
 	}
 	err = database.GetExercise(r.DB, &exercise)
 	if err != nil {
+		fmt.Println("bruhhh", err)
 		return "", gqlerror.Errorf("Error Adding Set %s", err)
 	}
 
@@ -336,7 +337,7 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *m
 	}
 	err = database.AddSet(r.DB, &dbSet)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("why nor teurn error",err.Error())
 		return "", gqlerror.Errorf("Error Adding Set")
 	}
 
