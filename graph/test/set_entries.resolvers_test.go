@@ -58,7 +58,7 @@ func TestSetEntryResolvers(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta(getSetEntries)).
 			WithArgs(e.ID).
 			WillReturnRows(setEntryRows)
-	
+
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
@@ -70,7 +70,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), s.Weight, s.Reps, s.ExerciseID).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(s.ID))
 		mock.ExpectCommit()
-	
+
 		var resp AddSetEntryResp
 		c.MustPost(`
 			mutation AddSet {
@@ -86,7 +86,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			panic(err)
 		}
 	})
-	
+
 	t.Run("Get Set Entries Success", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
 		ac := accesscontrol.NewAccessControllerService(gormDB)

@@ -53,7 +53,7 @@ func TestAuthResolvers(t *testing.T) {
 
 	t.Run("Login resolver success", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
-		ac := accesscontrol.NewAccessControllerService(gormDB)	
+		ac := accesscontrol.NewAccessControllerService(gormDB)
 		c := helpers.NewGqlClient(gormDB, ac)
 
 		userRow := sqlmock.

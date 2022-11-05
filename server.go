@@ -38,7 +38,7 @@ func main() {
 	}
 
 	client := generated.Config{Resolvers: &graph.Resolver{
-		DB: db,
+		DB:  db,
 		ACS: accesscontrol.NewAccessControllerService(db),
 	}}
 

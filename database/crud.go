@@ -69,7 +69,7 @@ func AddWorkoutSession(db *gorm.DB, workout *WorkoutSession) error {
 	return result.Error
 }
 
-func GetWorkoutSession(db *gorm.DB, userId string, workoutSessionId string, ws *WorkoutSession) ( error) {
+func GetWorkoutSession(db *gorm.DB, userId string, workoutSessionId string, ws *WorkoutSession) error {
 	result := db.First(ws, "user_id = ? AND id = ?", userId, workoutSessionId)
 	return result.Error
 }

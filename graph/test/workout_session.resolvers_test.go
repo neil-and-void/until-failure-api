@@ -24,14 +24,14 @@ type AddWorkoutSessionResp struct {
 
 type GetWorkoutSession struct {
 	WorkoutSessions []struct {
-		ID        string
-		Start     string
-		End       string
+		ID               string
+		Start            string
+		End              string
 		WorkoutRoutineId string
-		Exercises []struct {
+		Exercises        []struct {
 			ExerciseRoutineId string
-			ID   string
-			Sets []struct {
+			ID                string
+			Sets              []struct {
 				ID     string
 				Weight float32
 				Reps   int

@@ -8,8 +8,6 @@ import (
 	"gorm.io/gorm"
 )
 
-
-
 type AccessController struct {
 	DB *gorm.DB
 }

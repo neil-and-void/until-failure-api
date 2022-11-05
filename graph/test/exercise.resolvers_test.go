@@ -26,7 +26,7 @@ type GetExercisesResp struct {
 			Weight float32
 			Reps   int
 		}
-		Notes  string
+		Notes string
 	}
 }
 
@@ -38,7 +38,7 @@ type GetExerciseResp struct {
 			Weight float32
 			Reps   int
 		}
-		Notes  string
+		Notes string
 	}
 }
 

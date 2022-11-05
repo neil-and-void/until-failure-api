@@ -31,9 +31,9 @@ func SetupMockDB() (sqlmock.Sqlmock, *gorm.DB) {
 	return mock, gormDB
 }
 
-func NewGqlClient(gormDB *gorm.DB, acs accesscontroller.AccessControllerService) (*client.Client) {
+func NewGqlClient(gormDB *gorm.DB, acs accesscontroller.AccessControllerService) *client.Client {
 	return client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-		DB: gormDB,
+		DB:  gormDB,
 		ACS: acs,
 	}})))
 }

@@ -323,7 +323,7 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *m
 	if err != nil {
 		return "", gqlerror.Errorf("Error Adding Set %s", err)
 	}
-	
+
 	err = r.ACS.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", exercise.WorkoutSessionID))
 	if err != nil {
 		return "", gqlerror.Errorf("Error Adding Set: Access Denied")

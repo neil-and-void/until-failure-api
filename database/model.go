@@ -44,7 +44,7 @@ type Exercise struct {
 	gorm.Model
 	WorkoutSessionID  uint
 	ExerciseRoutineID uint
-	Notes      		  *string `gorm:"size:512"`
+	Notes             *string `gorm:"size:512"`
 	Sets              []SetEntry
 }
 
