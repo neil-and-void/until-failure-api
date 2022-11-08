@@ -79,7 +79,7 @@ type ComplexityRoot struct {
 		Login                 func(childComplexity int, email string, password string) int
 		RefreshAccessToken    func(childComplexity int, refreshToken string) int
 		Signup                func(childComplexity int, email string, name string, password string, confirmPassword string) int
-		UpdateExercise        func(childComplexity int, exerciseID string, exercise model.ExerciseInput) int
+		UpdateExercise        func(childComplexity int, exerciseID string, exercise model.UpdateExerciseInput) int
 		UpdateExerciseRoutine func(childComplexity int, exerciseRoutineID string, updateExerciseRoutineInput model.UpdateExerciseRoutineInput) int
 		UpdateSet             func(childComplexity int, setID string, set model.UpdateSetEntryInput) int
 		UpdateWorkoutRoutine  func(childComplexity int, workoutRoutineID string, updateWorkoutRoutineInput model.UpdateWorkoutRoutineInput) int
@@ -107,8 +107,8 @@ type ComplexityRoot struct {
 	}
 
 	UpdatedExercise struct {
-		ExerciseRoutineID func(childComplexity int) int
-		Notes             func(childComplexity int) int
+		ID    func(childComplexity int) int
+		Notes func(childComplexity int) int
 	}
 
 	User struct {
@@ -144,7 +144,7 @@ type MutationResolver interface {
 	AddWorkoutSession(ctx context.Context, workout model.WorkoutSessionInput) (string, error)
 	UpdateWorkoutSession(ctx context.Context, workoutSessionID string, updateWorkoutSessionInput model.UpdateWorkoutSessionInput) (*model.WorkoutSession, error)
 	AddExercise(ctx context.Context, workoutSessionID string, exercise model.ExerciseInput) (string, error)
-	UpdateExercise(ctx context.Context, exerciseID string, exercise model.ExerciseInput) (*model.UpdatedExercise, error)
+	UpdateExercise(ctx context.Context, exerciseID string, exercise model.UpdateExerciseInput) (*model.UpdatedExercise, error)
 	DeleteExercise(ctx context.Context, exerciseRoutineID string) (string, error)
 	AddSet(ctx context.Context, exerciseID string, set *model.SetEntryInput) (string, error)
 	UpdateSet(ctx context.Context, setID string, set model.UpdateSetEntryInput) (*model.SetEntry, error)
@@ -394,7 +394,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateExercise(childComplexity, args["exerciseId"].(string), args["exercise"].(model.ExerciseInput)), true
+		return e.complexity.Mutation.UpdateExercise(childComplexity, args["exerciseId"].(string), args["exercise"].(model.UpdateExerciseInput)), true
 
 	case "Mutation.updateExerciseRoutine":
 		if e.complexity.Mutation.UpdateExerciseRoutine == nil {
@@ -546,12 +546,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SetEntry.Weight(childComplexity), true
 
-	case "UpdatedExercise.exerciseRoutineId":
-		if e.complexity.UpdatedExercise.ExerciseRoutineID == nil {
+	case "UpdatedExercise.id":
+		if e.complexity.UpdatedExercise.ID == nil {
 			break
 		}
 
-		return e.complexity.UpdatedExercise.ExerciseRoutineID(childComplexity), true
+		return e.complexity.UpdatedExercise.ID(childComplexity), true
 
 	case "UpdatedExercise.notes":
 		if e.complexity.UpdatedExercise.Notes == nil {
@@ -753,7 +753,7 @@ type Exercise {
 }
 
 type UpdatedExercise {
-  exerciseRoutineId: ID!
+  id: ID!
   notes: String!
 }
 
@@ -823,7 +823,7 @@ input ExerciseInput {
 }
 
 input UpdateExerciseInput {
-  notes: String
+  notes: String!
 }
 
 input SetEntryInput {
@@ -878,7 +878,10 @@ type Mutation {
   ): WorkoutSession!
 
   addExercise(workoutSessionId: ID!, exercise: ExerciseInput!): ID!
-  updateExercise(exerciseId: ID!, exercise: ExerciseInput!): UpdatedExercise!
+  updateExercise(
+    exerciseId: ID!
+    exercise: UpdateExerciseInput!
+  ): UpdatedExercise!
   deleteExercise(exerciseRoutineId: ID!): ID!
 
   addSet(exerciseId: ID!, set: SetEntryInput): ID!
@@ -1148,10 +1151,10 @@ func (ec *executionContext) field_Mutation_updateExercise_args(ctx context.Conte
 		}
 	}
 	args["exerciseId"] = arg0
-	var arg1 model.ExerciseInput
+	var arg1 model.UpdateExerciseInput
 	if tmp, ok := rawArgs["exercise"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("exercise"))
-		arg1, err = ec.unmarshalNExerciseInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseInput(ctx, tmp)
+		arg1, err = ec.unmarshalNUpdateExerciseInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUpdateExerciseInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2510,7 +2513,7 @@ func (ec *executionContext) _Mutation_updateExercise(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateExercise(rctx, fc.Args["exerciseId"].(string), fc.Args["exercise"].(model.ExerciseInput))
+		return ec.resolvers.Mutation().UpdateExercise(rctx, fc.Args["exerciseId"].(string), fc.Args["exercise"].(model.UpdateExerciseInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2535,8 +2538,8 @@ func (ec *executionContext) fieldContext_Mutation_updateExercise(ctx context.Con
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "exerciseRoutineId":
-				return ec.fieldContext_UpdatedExercise_exerciseRoutineId(ctx, field)
+			case "id":
+				return ec.fieldContext_UpdatedExercise_id(ctx, field)
 			case "notes":
 				return ec.fieldContext_UpdatedExercise_notes(ctx, field)
 			}
@@ -3502,8 +3505,8 @@ func (ec *executionContext) fieldContext_SetEntry_reps(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _UpdatedExercise_exerciseRoutineId(ctx context.Context, field graphql.CollectedField, obj *model.UpdatedExercise) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpdatedExercise_exerciseRoutineId(ctx, field)
+func (ec *executionContext) _UpdatedExercise_id(ctx context.Context, field graphql.CollectedField, obj *model.UpdatedExercise) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UpdatedExercise_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3516,7 +3519,7 @@ func (ec *executionContext) _UpdatedExercise_exerciseRoutineId(ctx context.Conte
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ExerciseRoutineID, nil
+		return obj.ID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3533,7 +3536,7 @@ func (ec *executionContext) _UpdatedExercise_exerciseRoutineId(ctx context.Conte
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UpdatedExercise_exerciseRoutineId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UpdatedExercise_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UpdatedExercise",
 		Field:      field,
@@ -6003,7 +6006,7 @@ func (ec *executionContext) unmarshalInputUpdateExerciseInput(ctx context.Contex
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
-			it.Notes, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			it.Notes, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6878,9 +6881,9 @@ func (ec *executionContext) _UpdatedExercise(ctx context.Context, sel ast.Select
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("UpdatedExercise")
-		case "exerciseRoutineId":
+		case "id":
 
-			out.Values[i] = ec._UpdatedExercise_exerciseRoutineId(ctx, field, obj)
+			out.Values[i] = ec._UpdatedExercise_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -7576,6 +7579,11 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNUpdateExerciseInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUpdateExerciseInput(ctx context.Context, v interface{}) (model.UpdateExerciseInput, error) {
+	res, err := ec.unmarshalInputUpdateExerciseInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNUpdateExerciseRoutineInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUpdateExerciseRoutineInput(ctx context.Context, v interface{}) (model.UpdateExerciseRoutineInput, error) {

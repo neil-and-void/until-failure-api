@@ -96,6 +96,11 @@ func GetExercises(db *gorm.DB, exercises *[]Exercise, workoutSessionId string) e
 	return result.Error
 }
 
+func UpdateExercise(db *gorm.DB, exerciseId string, updatedExercise *Exercise) error {
+	result := db.Model(updatedExercise).Clauses(clause.Returning{}).Where("id = ?", exerciseId).Updates(updatedExercise)
+	return result.Error
+}
+
 func AddSet(db *gorm.DB, set *SetEntry) error {
 	result := db.Create(set)
 	return result.Error

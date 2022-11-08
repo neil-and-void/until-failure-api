@@ -294,8 +294,40 @@ func (r *mutationResolver) AddExercise(ctx context.Context, workoutSessionID str
 }
 
 // UpdateExercise is the resolver for the updateExercise field.
-func (r *mutationResolver) UpdateExercise(ctx context.Context, exerciseID string, exercise model.ExerciseInput) (*model.UpdatedExercise, error) {
-	panic(fmt.Errorf("not implemented: UpdateExercise - updateExercise"))
+func (r *mutationResolver) UpdateExercise(ctx context.Context, exerciseID string, exercise model.UpdateExerciseInput) (*model.UpdatedExercise, error) {
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.UpdatedExercise{}, gqlerror.Errorf("Error Updating Exercise: Invalid Token")
+	}
+
+	exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, strconv.IntSize)
+	dbExercise := database.Exercise{
+		Model: gorm.Model{
+			ID: uint(exerciseIDUint),
+		},
+	}
+	err = database.GetExercise(r.DB, &dbExercise)
+	if err != nil {
+		return &model.UpdatedExercise{}, gqlerror.Errorf("Error Updating Exercise")
+	}
+
+	err = r.ACS.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", dbExercise.WorkoutSessionID))
+	if err != nil {
+		return &model.UpdatedExercise{}, gqlerror.Errorf("Error Updating Exercise: Access Denied")
+	}
+
+	updatedExercise := database.Exercise{
+		Notes: &exercise.Notes,
+	}
+	err = database.UpdateExercise(r.DB, exerciseID, &updatedExercise)
+	if err != nil {
+		return &model.UpdatedExercise{}, gqlerror.Errorf("Error Updating Exercise")
+	}
+
+	return &model.UpdatedExercise{
+		ID:    exerciseID,
+		Notes: *updatedExercise.Notes,
+	}, nil
 }
 
 // DeleteExercise is the resolver for the deleteExercise field.
@@ -383,7 +415,7 @@ func (r *mutationResolver) UpdateSet(ctx context.Context, setID string, set mode
 	}
 
 	updatedSet := database.SetEntry{
-		Reps: reps,
+		Reps:   reps,
 		Weight: weight,
 	}
 	err = database.UpdateSet(r.DB, setID, &updatedSet)

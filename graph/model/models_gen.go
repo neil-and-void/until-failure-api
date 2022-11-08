@@ -65,7 +65,7 @@ type SetEntryInput struct {
 }
 
 type UpdateExerciseInput struct {
-	Notes *string `json:"notes"`
+	Notes string `json:"notes"`
 }
 
 type UpdateExerciseRoutineInput struct {
@@ -90,8 +90,8 @@ type UpdateWorkoutSessionInput struct {
 }
 
 type UpdatedExercise struct {
-	ExerciseRoutineID string `json:"exerciseRoutineId"`
-	Notes             string `json:"notes"`
+	ID    string `json:"id"`
+	Notes string `json:"notes"`
 }
 
 type User struct {

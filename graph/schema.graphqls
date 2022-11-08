@@ -36,7 +36,7 @@ type Exercise {
 }
 
 type UpdatedExercise {
-  exerciseRoutineId: ID!
+  id: ID!
   notes: String!
 }
 
@@ -106,7 +106,7 @@ input ExerciseInput {
 }
 
 input UpdateExerciseInput {
-  notes: String
+  notes: String!
 }
 
 input SetEntryInput {
@@ -161,7 +161,10 @@ type Mutation {
   ): WorkoutSession!
 
   addExercise(workoutSessionId: ID!, exercise: ExerciseInput!): ID!
-  updateExercise(exerciseId: ID!, exercise: ExerciseInput!): UpdatedExercise!
+  updateExercise(
+    exerciseId: ID!
+    exercise: UpdateExerciseInput!
+  ): UpdatedExercise!
   deleteExercise(exerciseRoutineId: ID!): ID!
 
   addSet(exerciseId: ID!, set: SetEntryInput): ID!
