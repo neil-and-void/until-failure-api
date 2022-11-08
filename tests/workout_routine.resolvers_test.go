@@ -9,11 +9,11 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/joho/godotenv"
 	"github.com/neilZon/workout-logger-api/accesscontroller/accesscontrol"
-	"github.com/neilZon/workout-logger-api/e2e/testdata"
 	"github.com/neilZon/workout-logger-api/graph"
 	"github.com/neilZon/workout-logger-api/graph/generated"
 	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/helpers"
+	"github.com/neilZon/workout-logger-api/tests/testdata"
 	"github.com/stretchr/testify/require"
 )
 

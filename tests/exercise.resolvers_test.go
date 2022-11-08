@@ -8,8 +8,8 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/joho/godotenv"
 	"github.com/neilZon/workout-logger-api/accesscontroller/accesscontrol"
-	"github.com/neilZon/workout-logger-api/e2e/testdata"
 	"github.com/neilZon/workout-logger-api/helpers"
+	"github.com/neilZon/workout-logger-api/tests/testdata"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
