@@ -44,7 +44,7 @@ type GetExerciseResp struct {
 
 type UpdateExerciseResp struct {
 	UpdateExercise struct {
-		ID string
+		ID    string
 		Notes string
 	}
 }
@@ -391,7 +391,6 @@ func TestExerciseResolvers(t *testing.T) {
 		}
 	})
 
-
 	t.Run("Update Exercise Success", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
 		acs := accesscontrol.NewAccessControllerService(gormDB)
@@ -419,7 +418,7 @@ func TestExerciseResolvers(t *testing.T) {
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)			
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
 		mock.ExpectBegin()
 		updateExerciseStmt := `UPDATE "exercises" SET "updated_at"=$1,"notes"=$2 WHERE id = $3 AND "exercises"."deleted_at" IS NULL RETURNING *`
@@ -436,7 +435,7 @@ func TestExerciseResolvers(t *testing.T) {
 					notes
 				}
 			}`,
-			e.ID, 
+			e.ID,
 			updatedNote,
 		)
 		c.MustPost(gqlQuery, &resp, helpers.AddContext(u))
@@ -453,7 +452,7 @@ func TestExerciseResolvers(t *testing.T) {
 		c := helpers.NewGqlClient(gormDB, acs)
 
 		updatedNote := "BLAH"
-	
+
 		var resp UpdateExerciseResp
 		gqlQuery := fmt.Sprintf(`	
 			mutation UpdateExercise {
@@ -462,7 +461,7 @@ func TestExerciseResolvers(t *testing.T) {
 					notes
 				}
 			}`,
-			e.ID, 
+			e.ID,
 			updatedNote,
 		)
 		err := c.Post(gqlQuery, &resp)
@@ -499,7 +498,7 @@ func TestExerciseResolvers(t *testing.T) {
 			WillReturnRows(setEntryRows)
 
 		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnError(gorm.ErrRecordNotFound)
-		
+
 		var resp UpdateExerciseResp
 		gqlQuery := fmt.Sprintf(`	
 			mutation UpdateExercise {
@@ -508,7 +507,7 @@ func TestExerciseResolvers(t *testing.T) {
 					notes
 				}
 			}`,
-			e.ID, 
+			e.ID,
 			updatedNote,
 		)
 		err := c.Post(gqlQuery, &resp, helpers.AddContext(u))
@@ -547,7 +546,7 @@ func TestExerciseResolvers(t *testing.T) {
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)			
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
 		mock.ExpectBegin()
 		updateExerciseStmt := `UPDATE "exercises" SET "updated_at"=$1,"notes"=$2 WHERE id = $3 AND "exercises"."deleted_at" IS NULL RETURNING *`
@@ -555,7 +554,7 @@ func TestExerciseResolvers(t *testing.T) {
 			WithArgs(sqlmock.AnyArg(), updatedNote, fmt.Sprintf("%d", e.ID)).
 			WillReturnError(gorm.ErrInvalidTransaction)
 		mock.ExpectRollback()
-		
+
 		var resp UpdateExerciseResp
 		gqlQuery := fmt.Sprintf(`	
 			mutation UpdateExercise {
@@ -564,7 +563,7 @@ func TestExerciseResolvers(t *testing.T) {
 					notes
 				}
 			}`,
-			e.ID, 
+			e.ID,
 			updatedNote,
 		)
 		err := c.Post(gqlQuery, &resp, helpers.AddContext(u))

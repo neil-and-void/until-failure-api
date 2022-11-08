@@ -111,7 +111,7 @@ func GetSets(db *gorm.DB, s *[]SetEntry, exerciseId string) error {
 	return result.Error
 }
 
-func GetSet(db *gorm.DB, s *SetEntry, setId string) (error) {
+func GetSet(db *gorm.DB, s *SetEntry, setId string) error {
 	result := db.Where("id = ?", setId).Find(s)
 	return result.Error
 }

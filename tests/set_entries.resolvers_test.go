@@ -31,8 +31,8 @@ type UpdateSetResp struct {
 		ID     string
 		Weight float32
 		Reps   int
-	}	
-} 
+	}
+}
 
 type DeleteSetResp struct {
 	DeleteSet int
@@ -538,7 +538,6 @@ func TestSetEntryResolvers(t *testing.T) {
 		)
 		require.EqualError(t, err, "[{\"message\":\"Error Updating Set\",\"path\":[\"updateSet\"]}]")
 
-
 		err := mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
@@ -615,7 +614,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			&resp,
 		)
 		require.EqualError(t, err, "[{\"message\":\"Error Deleting Routine: Invalid Token\",\"path\":[\"deleteSet\"]}]")
-	
+
 		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
@@ -666,6 +665,6 @@ func TestSetEntryResolvers(t *testing.T) {
 		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
-		}	
+		}
 	})
 }
