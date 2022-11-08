@@ -245,6 +245,11 @@ func (r *mutationResolver) UpdateWorkoutSession(ctx context.Context, workoutSess
 	panic(fmt.Errorf("not implemented: UpdateWorkoutSession - updateWorkoutSession"))
 }
 
+// DeleteWorkoutSession is the resolver for the deleteWorkoutSession field.
+func (r *mutationResolver) DeleteWorkoutSession(ctx context.Context, workoutSessionID string) (int, error) {
+	panic(fmt.Errorf("not implemented: DeleteWorkoutSession - deleteWorkoutSession"))
+}
+
 // AddExercise is the resolver for the addExercise field.
 func (r *mutationResolver) AddExercise(ctx context.Context, workoutSessionID string, exercise model.ExerciseInput) (string, error) {
 	u, err := middleware.GetUser(ctx)

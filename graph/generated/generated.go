@@ -76,6 +76,7 @@ type ComplexityRoot struct {
 		DeleteExerciseRoutine func(childComplexity int, exerciseRoutineID string) int
 		DeleteSet             func(childComplexity int, setID string) int
 		DeleteWorkoutRoutine  func(childComplexity int, workoutRoutineID string) int
+		DeleteWorkoutSession  func(childComplexity int, workoutSessionID string) int
 		Login                 func(childComplexity int, email string, password string) int
 		RefreshAccessToken    func(childComplexity int, refreshToken string) int
 		Signup                func(childComplexity int, email string, name string, password string, confirmPassword string) int
@@ -143,6 +144,7 @@ type MutationResolver interface {
 	DeleteExerciseRoutine(ctx context.Context, exerciseRoutineID string) (string, error)
 	AddWorkoutSession(ctx context.Context, workout model.WorkoutSessionInput) (string, error)
 	UpdateWorkoutSession(ctx context.Context, workoutSessionID string, updateWorkoutSessionInput model.UpdateWorkoutSessionInput) (*model.WorkoutSession, error)
+	DeleteWorkoutSession(ctx context.Context, workoutSessionID string) (int, error)
 	AddExercise(ctx context.Context, workoutSessionID string, exercise model.ExerciseInput) (string, error)
 	UpdateExercise(ctx context.Context, exerciseID string, exercise model.UpdateExerciseInput) (*model.UpdatedExercise, error)
 	DeleteExercise(ctx context.Context, exerciseRoutineID string) (string, error)
@@ -347,6 +349,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteWorkoutRoutine(childComplexity, args["workoutRoutineId"].(string)), true
+
+	case "Mutation.deleteWorkoutSession":
+		if e.complexity.Mutation.DeleteWorkoutSession == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteWorkoutSession_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteWorkoutSession(childComplexity, args["workoutSessionId"].(string)), true
 
 	case "Mutation.login":
 		if e.complexity.Mutation.Login == nil {
@@ -876,7 +890,9 @@ type Mutation {
     workoutSessionId: ID!
     updateWorkoutSessionInput: UpdateWorkoutSessionInput!
   ): WorkoutSession!
+  deleteWorkoutSession(workoutSessionId: ID!): Int!
 
+  # addImpromptuExercise(workoutSession, exerciseRoutine:{sets, reps, name, workoutRoutineId}) for later
   addExercise(workoutSessionId: ID!, exercise: ExerciseInput!): ID!
   updateExercise(
     exerciseId: ID!
@@ -1031,6 +1047,21 @@ func (ec *executionContext) field_Mutation_deleteWorkoutRoutine_args(ctx context
 		}
 	}
 	args["workoutRoutineId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteWorkoutSession_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["workoutSessionId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workoutSessionId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["workoutSessionId"] = arg0
 	return args, nil
 }
 
@@ -2438,6 +2469,61 @@ func (ec *executionContext) fieldContext_Mutation_updateWorkoutSession(ctx conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_updateWorkoutSession_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteWorkoutSession(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteWorkoutSession(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteWorkoutSession(rctx, fc.Args["workoutSessionId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteWorkoutSession(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteWorkoutSession_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -6549,6 +6635,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateWorkoutSession(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteWorkoutSession":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteWorkoutSession(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
