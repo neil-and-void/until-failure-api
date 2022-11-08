@@ -2,6 +2,7 @@ package database
 
 import (
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // User
@@ -105,6 +106,12 @@ func GetSets(db *gorm.DB, s *[]SetEntry, exerciseId string) error {
 	return result.Error
 }
 
-func UpdateSet(db *gorm.DB, set *SetEntry) error {
-	return nil
+func GetSet(db *gorm.DB, s *SetEntry, setId string) (error) {
+	result := db.Where("id = ?", setId).Find(s)
+	return result.Error
+}
+
+func UpdateSet(db *gorm.DB, setID string, updatedSet *SetEntry) error {
+	result := db.Model(updatedSet).Clauses(clause.Returning{}).Where("id = ?", setID).Updates(updatedSet)
+	return result.Error
 }

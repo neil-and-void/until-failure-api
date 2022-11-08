@@ -89,6 +89,11 @@ type UpdateWorkoutSessionInput struct {
 	End   *time.Time `json:"end"`
 }
 
+type UpdatedExercise struct {
+	ExerciseRoutineID string `json:"exerciseRoutineId"`
+	Notes             string `json:"notes"`
+}
+
 type User struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`

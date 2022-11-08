@@ -35,6 +35,11 @@ type Exercise {
   notes: String
 }
 
+type UpdatedExercise {
+  exerciseRoutineId: ID!
+  notes: String!
+}
+
 type SetEntry {
   id: ID!
   weight: Float!
@@ -156,10 +161,10 @@ type Mutation {
   ): WorkoutSession!
 
   addExercise(workoutSessionId: ID!, exercise: ExerciseInput!): ID!
-  updateExercise(exerciseId: ID!, exercise: ExerciseInput!): ID!
+  updateExercise(exerciseId: ID!, exercise: ExerciseInput!): UpdatedExercise!
   deleteExercise(exerciseRoutineId: ID!): ID!
 
   addSet(exerciseId: ID!, set: SetEntryInput): ID!
-  updateSet(setID: ID!, set: UpdateSetEntryInput!): ID!
-  deleteSet(setID: ID!): Int
+  updateSet(setID: ID!, set: UpdateSetEntryInput!): SetEntry!
+  deleteSet(setID: ID!): Int!
 }

@@ -294,7 +294,7 @@ func (r *mutationResolver) AddExercise(ctx context.Context, workoutSessionID str
 }
 
 // UpdateExercise is the resolver for the updateExercise field.
-func (r *mutationResolver) UpdateExercise(ctx context.Context, exerciseID string, exercise model.ExerciseInput) (string, error) {
+func (r *mutationResolver) UpdateExercise(ctx context.Context, exerciseID string, exercise model.ExerciseInput) (*model.UpdatedExercise, error) {
 	panic(fmt.Errorf("not implemented: UpdateExercise - updateExercise"))
 }
 
@@ -337,7 +337,7 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *m
 	}
 	err = database.AddSet(r.DB, &dbSet)
 	if err != nil {
-		fmt.Println("why nor teurn error",err.Error())
+		fmt.Println("why nor teurn error", err.Error())
 		return "", gqlerror.Errorf("Error Adding Set")
 	}
 
@@ -345,12 +345,61 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *m
 }
 
 // UpdateSet is the resolver for the updateSet field.
-func (r *mutationResolver) UpdateSet(ctx context.Context, setID string, set model.UpdateSetEntryInput) (string, error) {
-	panic(fmt.Errorf("not implemented: UpdateSet - updateSet"))
+func (r *mutationResolver) UpdateSet(ctx context.Context, setID string, set model.UpdateSetEntryInput) (*model.SetEntry, error) {
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.SetEntry{}, gqlerror.Errorf("Error Updating Set: Invalid Token")
+	}
+
+	var setEntry database.SetEntry
+	err = database.GetSet(r.DB, &setEntry, setID)
+	if err != nil {
+		return &model.SetEntry{}, gqlerror.Errorf("Error Updating Set")
+	}
+
+	exercise := database.Exercise{
+		Model: gorm.Model{
+			ID: setEntry.ExerciseID,
+		},
+	}
+	err = database.GetExercise(r.DB, &exercise)
+	if err != nil {
+		return &model.SetEntry{}, gqlerror.Errorf("Error Updating Set")
+	}
+
+	err = r.ACS.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", exercise.WorkoutSessionID))
+	if err != nil {
+		return &model.SetEntry{}, gqlerror.Errorf("Error Updating Set: Access Denied")
+	}
+
+	// check optional inputs
+	var reps uint
+	if set.Reps != nil {
+		reps = uint(*set.Reps)
+	}
+	var weight float32
+	if set.Weight != nil {
+		weight = float32(*set.Weight)
+	}
+
+	updatedSet := database.SetEntry{
+		Reps: reps,
+		Weight: weight,
+	}
+	err = database.UpdateSet(r.DB, setID, &updatedSet)
+	if err != nil {
+		return &model.SetEntry{}, gqlerror.Errorf("Error Updating Set")
+	}
+
+	return &model.SetEntry{
+		ID:     fmt.Sprintf("%d", updatedSet.ID),
+		Weight: float64(updatedSet.Weight),
+		Reps:   int(updatedSet.Reps),
+	}, nil
 }
 
 // DeleteSet is the resolver for the deleteSet field.
-func (r *mutationResolver) DeleteSet(ctx context.Context, setID string) (*int, error) {
+func (r *mutationResolver) DeleteSet(ctx context.Context, setID string) (int, error) {
 	panic(fmt.Errorf("not implemented: DeleteSet - deleteSet"))
 }
 
