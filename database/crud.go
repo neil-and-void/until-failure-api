@@ -115,3 +115,8 @@ func UpdateSet(db *gorm.DB, setID string, updatedSet *SetEntry) error {
 	result := db.Model(updatedSet).Clauses(clause.Returning{}).Where("id = ?", setID).Updates(updatedSet)
 	return result.Error
 }
+
+func DeleteSet(db *gorm.DB, setID string) error {
+	result := db.Where("id = ?", setID).Delete(&SetEntry{})
+	return result.Error
+}
