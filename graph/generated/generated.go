@@ -72,7 +72,7 @@ type ComplexityRoot struct {
 		AddSet                func(childComplexity int, exerciseID string, set *model.SetEntryInput) int
 		AddWorkoutSession     func(childComplexity int, workout model.WorkoutSessionInput) int
 		CreateWorkoutRoutine  func(childComplexity int, routine model.WorkoutRoutineInput) int
-		DeleteExercise        func(childComplexity int, exerciseRoutineID string) int
+		DeleteExercise        func(childComplexity int, exerciseID string) int
 		DeleteExerciseRoutine func(childComplexity int, exerciseRoutineID string) int
 		DeleteSet             func(childComplexity int, setID string) int
 		DeleteWorkoutRoutine  func(childComplexity int, workoutRoutineID string) int
@@ -147,7 +147,7 @@ type MutationResolver interface {
 	DeleteWorkoutSession(ctx context.Context, workoutSessionID string) (int, error)
 	AddExercise(ctx context.Context, workoutSessionID string, exercise model.ExerciseInput) (string, error)
 	UpdateExercise(ctx context.Context, exerciseID string, exercise model.UpdateExerciseInput) (*model.UpdatedExercise, error)
-	DeleteExercise(ctx context.Context, exerciseRoutineID string) (string, error)
+	DeleteExercise(ctx context.Context, exerciseID string) (string, error)
 	AddSet(ctx context.Context, exerciseID string, set *model.SetEntryInput) (string, error)
 	UpdateSet(ctx context.Context, setID string, set model.UpdateSetEntryInput) (*model.SetEntry, error)
 	DeleteSet(ctx context.Context, setID string) (int, error)
@@ -312,7 +312,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteExercise(childComplexity, args["exerciseRoutineId"].(string)), true
+		return e.complexity.Mutation.DeleteExercise(childComplexity, args["exerciseId"].(string)), true
 
 	case "Mutation.deleteExerciseRoutine":
 		if e.complexity.Mutation.DeleteExerciseRoutine == nil {
@@ -336,7 +336,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteSet(childComplexity, args["setID"].(string)), true
+		return e.complexity.Mutation.DeleteSet(childComplexity, args["setId"].(string)), true
 
 	case "Mutation.deleteWorkoutRoutine":
 		if e.complexity.Mutation.DeleteWorkoutRoutine == nil {
@@ -432,7 +432,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateSet(childComplexity, args["setID"].(string), args["set"].(model.UpdateSetEntryInput)), true
+		return e.complexity.Mutation.UpdateSet(childComplexity, args["setId"].(string), args["set"].(model.UpdateSetEntryInput)), true
 
 	case "Mutation.updateWorkoutRoutine":
 		if e.complexity.Mutation.UpdateWorkoutRoutine == nil {
@@ -898,11 +898,11 @@ type Mutation {
     exerciseId: ID!
     exercise: UpdateExerciseInput!
   ): UpdatedExercise!
-  deleteExercise(exerciseRoutineId: ID!): ID!
+  deleteExercise(exerciseId: ID!): ID!
 
   addSet(exerciseId: ID!, set: SetEntryInput): ID!
-  updateSet(setID: ID!, set: UpdateSetEntryInput!): SetEntry!
-  deleteSet(setID: ID!): Int!
+  updateSet(setId: ID!, set: UpdateSetEntryInput!): SetEntry!
+  deleteSet(setId: ID!): Int!
 }
 `, BuiltIn: false},
 }
@@ -1009,14 +1009,14 @@ func (ec *executionContext) field_Mutation_deleteExercise_args(ctx context.Conte
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["exerciseRoutineId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("exerciseRoutineId"))
+	if tmp, ok := rawArgs["exerciseId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("exerciseId"))
 		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["exerciseRoutineId"] = arg0
+	args["exerciseId"] = arg0
 	return args, nil
 }
 
@@ -1024,14 +1024,14 @@ func (ec *executionContext) field_Mutation_deleteSet_args(ctx context.Context, r
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["setID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("setID"))
+	if tmp, ok := rawArgs["setId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("setId"))
 		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["setID"] = arg0
+	args["setId"] = arg0
 	return args, nil
 }
 
@@ -1198,14 +1198,14 @@ func (ec *executionContext) field_Mutation_updateSet_args(ctx context.Context, r
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["setID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("setID"))
+	if tmp, ok := rawArgs["setId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("setId"))
 		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["setID"] = arg0
+	args["setId"] = arg0
 	var arg1 model.UpdateSetEntryInput
 	if tmp, ok := rawArgs["set"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("set"))
@@ -2660,7 +2660,7 @@ func (ec *executionContext) _Mutation_deleteExercise(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteExercise(rctx, fc.Args["exerciseRoutineId"].(string))
+		return ec.resolvers.Mutation().DeleteExercise(rctx, fc.Args["exerciseId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2770,7 +2770,7 @@ func (ec *executionContext) _Mutation_updateSet(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateSet(rctx, fc.Args["setID"].(string), fc.Args["set"].(model.UpdateSetEntryInput))
+		return ec.resolvers.Mutation().UpdateSet(rctx, fc.Args["setId"].(string), fc.Args["set"].(model.UpdateSetEntryInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2833,7 +2833,7 @@ func (ec *executionContext) _Mutation_deleteSet(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteSet(rctx, fc.Args["setID"].(string))
+		return ec.resolvers.Mutation().DeleteSet(rctx, fc.Args["setId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

@@ -167,9 +167,9 @@ type Mutation {
     exerciseId: ID!
     exercise: UpdateExerciseInput!
   ): UpdatedExercise!
-  deleteExercise(exerciseRoutineId: ID!): ID!
+  deleteExercise(exerciseId: ID!): ID!
 
   addSet(exerciseId: ID!, set: SetEntryInput): ID!
-  updateSet(setID: ID!, set: UpdateSetEntryInput!): SetEntry!
-  deleteSet(setID: ID!): Int!
+  updateSet(setId: ID!, set: UpdateSetEntryInput!): SetEntry!
+  deleteSet(setId: ID!): Int!
 }

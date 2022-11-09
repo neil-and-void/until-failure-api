@@ -336,8 +336,23 @@ func (r *mutationResolver) UpdateExercise(ctx context.Context, exerciseID string
 }
 
 // DeleteExercise is the resolver for the deleteExercise field.
-func (r *mutationResolver) DeleteExercise(ctx context.Context, exerciseRoutineID string) (string, error) {
-	panic(fmt.Errorf("not implemented: DeleteExercise - deleteExercise"))
+func (r *mutationResolver) DeleteExercise(ctx context.Context, exerciseID string) (string, error) {
+	// u, err := middleware.GetUser(ctx)
+	// if err != nil {
+	// 	return "", gqlerror.Errorf("Error Adding Set: %s", err.Error())
+	// }
+
+	// exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, strconv.IntSize)
+	// dbExercise := database.Exercise{
+	// 	Model: gorm.Model{
+	// 		ID: uint(exerciseIDUint),
+	// 	},
+	// }
+	// err = database.GetExercise(r.DB, &dbExercise)
+	// if err != nil {
+	// 	return &model.UpdatedExercise{}, gqlerror.Errorf("Error Updating Exercise")
+	// }
+	panic("j")
 }
 
 // AddSet is the resolver for the addSet field.
@@ -382,14 +397,14 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *m
 }
 
 // UpdateSet is the resolver for the updateSet field.
-func (r *mutationResolver) UpdateSet(ctx context.Context, setID string, set model.UpdateSetEntryInput) (*model.SetEntry, error) {
+func (r *mutationResolver) UpdateSet(ctx context.Context, setId string, set model.UpdateSetEntryInput) (*model.SetEntry, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
 		return &model.SetEntry{}, gqlerror.Errorf("Error Updating Set: Invalid Token")
 	}
 
 	var setEntry database.SetEntry
-	err = database.GetSet(r.DB, &setEntry, setID)
+	err = database.GetSet(r.DB, &setEntry, setId)
 	if err != nil {
 		return &model.SetEntry{}, gqlerror.Errorf("Error Updating Set")
 	}
@@ -423,7 +438,7 @@ func (r *mutationResolver) UpdateSet(ctx context.Context, setID string, set mode
 		Reps:   reps,
 		Weight: weight,
 	}
-	err = database.UpdateSet(r.DB, setID, &updatedSet)
+	err = database.UpdateSet(r.DB, setId, &updatedSet)
 	if err != nil {
 		return &model.SetEntry{}, gqlerror.Errorf("Error Updating Set")
 	}
@@ -436,14 +451,14 @@ func (r *mutationResolver) UpdateSet(ctx context.Context, setID string, set mode
 }
 
 // DeleteSet is the resolver for the deleteSet field.
-func (r *mutationResolver) DeleteSet(ctx context.Context, setID string) (int, error) {
+func (r *mutationResolver) DeleteSet(ctx context.Context, setId string) (int, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
 		return 0, gqlerror.Errorf("Error Deleting Routine: Invalid Token")
 	}
 
 	var setEntry database.SetEntry
-	err = database.GetSet(r.DB, &setEntry, setID)
+	err = database.GetSet(r.DB, &setEntry, setId)
 	if err != nil {
 		return 0, gqlerror.Errorf("Error Deleting Set")
 	}
@@ -463,7 +478,7 @@ func (r *mutationResolver) DeleteSet(ctx context.Context, setID string) (int, er
 		return 0, gqlerror.Errorf("Error Deleting Set: Access Denied")
 	}
 
-	err = database.DeleteSet(r.DB, setID)
+	err = database.DeleteSet(r.DB, setId)
 	if err != nil {
 		return 0, gqlerror.Errorf("Error Deleting Set")
 	}

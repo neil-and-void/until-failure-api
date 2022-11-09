@@ -390,7 +390,7 @@ func TestSetEntryResolvers(t *testing.T) {
 		var resp UpdateSetResp
 		c.MustPost(`
 			mutation UpdateSet {
-				updateSet(setID: "30", set: { weight: 225.0 }) {
+				updateSet(setId: "30", set: { weight: 225.0 }) {
 					id
 					weight
 					reps
@@ -415,7 +415,7 @@ func TestSetEntryResolvers(t *testing.T) {
 		var resp UpdateSetResp
 		err := c.Post(`
 			mutation UpdateSet {
-				updateSet(setID: "30", set: { weight: 225.0 }) {
+				updateSet(setId: "30", set: { weight: 225.0 }) {
 					id
 					weight
 					reps
@@ -465,7 +465,7 @@ func TestSetEntryResolvers(t *testing.T) {
 		var resp UpdateSetResp
 		err := c.Post(`
 			mutation UpdateSet {
-				updateSet(setID: "30", set: { weight: 225.0 }) {
+				updateSet(setId: "30", set: { weight: 225.0 }) {
 					id
 					weight
 					reps
@@ -526,7 +526,7 @@ func TestSetEntryResolvers(t *testing.T) {
 		var resp UpdateSetResp
 		err = c.Post(`
 			mutation UpdateSet {
-				updateSet(setID: "30", set: { weight: 225.0 }) {
+				updateSet(setId: "30", set: { weight: 225.0 }) {
 					id
 					weight
 					reps
@@ -587,7 +587,7 @@ func TestSetEntryResolvers(t *testing.T) {
 		var resp DeleteSetResp
 		c.MustPost(`
 			mutation DeleteSet {
-				deleteSet(setID: "30") 
+				deleteSet(setId: "30") 
 			}
 			`,
 			&resp,
@@ -608,7 +608,7 @@ func TestSetEntryResolvers(t *testing.T) {
 		var resp DeleteSetResp
 		err := c.Post(`
 			mutation DeleteSet {
-				deleteSet(setID: "30") 
+				deleteSet(setId: "30") 
 			}
 			`,
 			&resp,
@@ -654,7 +654,7 @@ func TestSetEntryResolvers(t *testing.T) {
 		var resp DeleteSetResp
 		err := c.Post(`
 			mutation DeleteSet {
-				deleteSet(setID: "30") 
+				deleteSet(setId: "30") 
 			}
 			`,
 			&resp,
