@@ -113,27 +113,22 @@ func GetExerciseRoutines(db *gorm.DB, workoutRoutineId string) ([]ExerciseRoutin
 }
 
 func GetExerciseRoutine(db *gorm.DB, exerciseRoutineId string, er *ExerciseRoutine) error {
-	result := db.Where("id = ?", exerciseRoutineId).First(er)
+	result := db.Model(ExerciseRoutine{}).Where("id = ?", exerciseRoutineId).First(er)
 	return result.Error
 }
 
 func DeleteExerciseRoutine(db *gorm.DB, exerciseRoutineId string) error {
 	tx := db.Begin()
-	if tx.Where("id = ?", exerciseRoutineId).Delete(&ExerciseRoutine{}); tx.Error != nil {
+	if err := tx.Where("id = ?", exerciseRoutineId).Delete(&ExerciseRoutine{}).Error; err != nil {
 		tx.Rollback()
-		return tx.Error	
-	}
-
-	if tx.Where("id = ?", exerciseRoutineId).Delete(&ExerciseRoutine{}); tx.Error != nil {
-		tx.Rollback()
-		return tx.Error	
+		return err
 	}
 
 	// Cascade exercises
 	var exercises []*Exercise
-	if tx.Clauses(clause.Returning{}).Where("exercise_routine_id = ?", exerciseRoutineId).Delete(&exercises); tx.Error != nil {
+	if err := tx.Clauses(clause.Returning{}).Where("exercise_routine_id = ?", exerciseRoutineId).Delete(&exercises).Error; err != nil {
 		tx.Rollback()
-		return tx.Error	
+		return err
 	}
 	var exerciseIds []string
 	for _, e := range exercises {
@@ -141,9 +136,9 @@ func DeleteExerciseRoutine(db *gorm.DB, exerciseRoutineId string) error {
 	}
 
 	// Cascade sets
-	if tx.Where("exercise_id IN ?", exerciseIds).Delete(&SetEntry{}); tx.Error != nil {
+	if err := tx.Where("exercise_id IN ?", exerciseIds).Delete(&SetEntry{}).Error; err != nil {
 		tx.Rollback()
-		return tx.Error	
+		return err
 	}
 
 	return tx.Commit().Error
@@ -214,15 +209,15 @@ func UpdateExercise(db *gorm.DB, exerciseId string, updatedExercise *Exercise) e
 
 func DeleteExercise(db *gorm.DB, exerciseId string) error {
 	tx := db.Begin()
-	if tx.Where("id = ?", exerciseId).Delete(&Exercise{}); tx.Error != nil {
+	if err := tx.Where("id = ?", exerciseId).Delete(&Exercise{}).Error; err != nil {
 		tx.Rollback()
-		return tx.Error
+		return err
 	}
 
 	// cascade delete on set entry table
-	if tx.Where("exercise_id = ?", exerciseId).Delete(&SetEntry{}); tx.Error != nil {
+	if err := tx.Where("exercise_id = ?", exerciseId).Delete(&SetEntry{}).Error; err != nil {
 		tx.Rollback()
-		return tx.Error
+		return err
 	}
 
 	return tx.Commit().Error

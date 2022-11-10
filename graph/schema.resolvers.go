@@ -205,19 +205,19 @@ func (r *mutationResolver) UpdateExerciseRoutine(ctx context.Context, exerciseRo
 func (r *mutationResolver) DeleteExerciseRoutine(ctx context.Context, exerciseRoutineID string) (int, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return 0, gqlerror.Errorf("Error Adding Workout Session: Invalid Token")
+		return 0, gqlerror.Errorf("Error Deleting Exercise Routine: Invalid Token")
 	}
 
-	var exerciseRoutine database.ExerciseRoutine
+	exerciseRoutine := database.ExerciseRoutine{}
 	err = database.GetExerciseRoutine(r.DB, exerciseRoutineID, &exerciseRoutine)
 	if err != nil {
 		return 0, gqlerror.Errorf("Error Deleting Exercise Routine")
 	} 
 	
 	userId := fmt.Sprintf("%d", u.ID)
-	err = r.ACS.CanAccessWorkoutRoutine(userId, fmt.Sprintf("%d", exerciseRoutine.ID))
+	err = r.ACS.CanAccessWorkoutRoutine(userId, fmt.Sprintf("%d", exerciseRoutine.WorkoutRoutineID))
 	if err != nil {
-		return 0, gqlerror.Errorf("Error Deleting Exercise Routine")
+		return 0, gqlerror.Errorf("Error Deleting Exercise Routine: Access Denied")
 	}
 
 	err = database.DeleteExerciseRoutine(r.DB, exerciseRoutineID)
@@ -438,7 +438,6 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *m
 	}
 	err = database.GetExercise(r.DB, &exercise)
 	if err != nil {
-		fmt.Println("bruhhh", err)
 		return "", gqlerror.Errorf("Error Adding Set %s", err)
 	}
 
@@ -454,7 +453,6 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *m
 	}
 	err = database.AddSet(r.DB, &dbSet)
 	if err != nil {
-		fmt.Println("why nor teurn error", err.Error())
 		return "", gqlerror.Errorf("Error Adding Set")
 	}
 
@@ -596,10 +594,13 @@ func (r *queryResolver) ExerciseRoutines(ctx context.Context, workoutRoutineID s
 	userId := fmt.Sprintf("%d", u.ID)
 	err = r.ACS.CanAccessWorkoutRoutine(userId, workoutRoutineID)
 	if err != nil {
-		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Exercise Routine: %s", err.Error())
+		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Exercise Routine: Access Denied")
 	}
 
 	erdb, err := database.GetExerciseRoutines(r.DB, workoutRoutineID)
+	if err != nil {
+		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Exercise Routine")
+	}
 
 	exerciseRoutines := make([]*model.ExerciseRoutine, 0)
 	for _, er := range erdb {
