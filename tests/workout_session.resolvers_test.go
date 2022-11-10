@@ -44,7 +44,7 @@ type GetWorkoutSession struct {
 func TestWorkoutSessionResolvers(t *testing.T) {
 	t.Parallel()
 
-	err := godotenv.Load("../../.env")
+	err := godotenv.Load("../.env")
 	if err != nil {
 		panic("Error loading .env file")
 	}
@@ -454,5 +454,8 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 			&resp,
 		)
 		require.EqualError(t, err, "[{\"message\":\"Error Getting Workout Sessions: Invalid Token\",\"path\":[\"workoutSession\"]}]")
+	})
+
+	t.Run("Delete Workout Session Success", func(t *testing.T) {
 	})
 }

@@ -36,7 +36,7 @@ type GetWorkoutRoutineResp struct {
 func TestWorkoutRoutineResolvers(t *testing.T) {
 	t.Parallel()
 
-	err := godotenv.Load("../../.env")
+	err := godotenv.Load("../.env")
 	if err != nil {
 		panic("Error loading .env file")
 	}
@@ -200,5 +200,9 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 		}`,
 			&resp)
 		require.EqualError(t, err, "[{\"message\":\"Error Getting Workout Routine: Invalid Token\",\"path\":[\"workoutRoutines\"]}]")
+	})
+
+	t.Run("Delete Workout Routine Success", func(t *testing.T) {
+
 	})
 }
