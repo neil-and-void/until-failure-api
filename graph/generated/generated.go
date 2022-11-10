@@ -139,15 +139,15 @@ type MutationResolver interface {
 	RefreshAccessToken(ctx context.Context, refreshToken string) (*model.RefreshSuccess, error)
 	CreateWorkoutRoutine(ctx context.Context, routine model.WorkoutRoutineInput) (*model.WorkoutRoutine, error)
 	UpdateWorkoutRoutine(ctx context.Context, workoutRoutineID string, updateWorkoutRoutineInput model.UpdateWorkoutRoutineInput) (*model.WorkoutRoutine, error)
-	DeleteWorkoutRoutine(ctx context.Context, workoutRoutineID string) (string, error)
+	DeleteWorkoutRoutine(ctx context.Context, workoutRoutineID string) (int, error)
 	UpdateExerciseRoutine(ctx context.Context, exerciseRoutineID string, updateExerciseRoutineInput model.UpdateExerciseRoutineInput) (*model.ExerciseRoutine, error)
-	DeleteExerciseRoutine(ctx context.Context, exerciseRoutineID string) (string, error)
+	DeleteExerciseRoutine(ctx context.Context, exerciseRoutineID string) (int, error)
 	AddWorkoutSession(ctx context.Context, workout model.WorkoutSessionInput) (string, error)
 	UpdateWorkoutSession(ctx context.Context, workoutSessionID string, updateWorkoutSessionInput model.UpdateWorkoutSessionInput) (*model.WorkoutSession, error)
 	DeleteWorkoutSession(ctx context.Context, workoutSessionID string) (int, error)
 	AddExercise(ctx context.Context, workoutSessionID string, exercise model.ExerciseInput) (string, error)
 	UpdateExercise(ctx context.Context, exerciseID string, exercise model.UpdateExerciseInput) (*model.UpdatedExercise, error)
-	DeleteExercise(ctx context.Context, exerciseID string) (string, error)
+	DeleteExercise(ctx context.Context, exerciseID string) (int, error)
 	AddSet(ctx context.Context, exerciseID string, set *model.SetEntryInput) (string, error)
 	UpdateSet(ctx context.Context, setID string, set model.UpdateSetEntryInput) (*model.SetEntry, error)
 	DeleteSet(ctx context.Context, setID string) (int, error)
@@ -877,13 +877,13 @@ type Mutation {
     workoutRoutineId: ID!
     updateWorkoutRoutineInput: UpdateWorkoutRoutineInput!
   ): WorkoutRoutine!
-  deleteWorkoutRoutine(workoutRoutineId: ID!): ID!
+  deleteWorkoutRoutine(workoutRoutineId: ID!): Int!
 
   updateExerciseRoutine(
     exerciseRoutineId: ID!
     updateExerciseRoutineInput: UpdateExerciseRoutineInput!
   ): ExerciseRoutine!
-  deleteExerciseRoutine(exerciseRoutineId: ID!): ID!
+  deleteExerciseRoutine(exerciseRoutineId: ID!): Int!
 
   addWorkoutSession(workout: WorkoutSessionInput!): ID!
   updateWorkoutSession(
@@ -898,7 +898,7 @@ type Mutation {
     exerciseId: ID!
     exercise: UpdateExerciseInput!
   ): UpdatedExercise!
-  deleteExercise(exerciseId: ID!): ID!
+  deleteExercise(exerciseId: ID!): Int!
 
   addSet(exerciseId: ID!, set: SetEntryInput): ID!
   updateSet(setId: ID!, set: UpdateSetEntryInput!): SetEntry!
@@ -2204,9 +2204,9 @@ func (ec *executionContext) _Mutation_deleteWorkoutRoutine(ctx context.Context, 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_deleteWorkoutRoutine(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2216,7 +2216,7 @@ func (ec *executionContext) fieldContext_Mutation_deleteWorkoutRoutine(ctx conte
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	defer func() {
@@ -2324,9 +2324,9 @@ func (ec *executionContext) _Mutation_deleteExerciseRoutine(ctx context.Context,
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_deleteExerciseRoutine(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2336,7 +2336,7 @@ func (ec *executionContext) fieldContext_Mutation_deleteExerciseRoutine(ctx cont
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	defer func() {
@@ -2672,9 +2672,9 @@ func (ec *executionContext) _Mutation_deleteExercise(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_deleteExercise(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2684,7 +2684,7 @@ func (ec *executionContext) fieldContext_Mutation_deleteExercise(ctx context.Con
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	defer func() {

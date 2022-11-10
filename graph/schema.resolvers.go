@@ -176,8 +176,24 @@ func (r *mutationResolver) UpdateWorkoutRoutine(ctx context.Context, workoutRout
 }
 
 // DeleteWorkoutRoutine is the resolver for the deleteWorkoutRoutine field.
-func (r *mutationResolver) DeleteWorkoutRoutine(ctx context.Context, workoutRoutineID string) (string, error) {
-	panic(fmt.Errorf("not implemented: DeleteWorkoutRoutine - deleteWorkoutRoutine"))
+func (r *mutationResolver) DeleteWorkoutRoutine(ctx context.Context, workoutRoutineID string) (int, error) {
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return 0, gqlerror.Errorf("Error Adding Workout Session: Invalid Token")
+	}
+	
+	userId := fmt.Sprintf("%d", u.ID)
+	err = r.ACS.CanAccessWorkoutRoutine(userId, workoutRoutineID)
+	if err != nil {
+		return 0, gqlerror.Errorf("Error Deleting Exercise Routine")
+	}
+
+	err = database.DeleteWorkoutRoutine(r.DB, workoutRoutineID)
+	if err != nil {
+		return 0, gqlerror.Errorf("Error Deleting Exercise Routine")
+	}
+
+	return 1, nil
 }
 
 // UpdateExerciseRoutine is the resolver for the updateExerciseRoutine field.
@@ -186,8 +202,30 @@ func (r *mutationResolver) UpdateExerciseRoutine(ctx context.Context, exerciseRo
 }
 
 // DeleteExerciseRoutine is the resolver for the deleteExerciseRoutine field.
-func (r *mutationResolver) DeleteExerciseRoutine(ctx context.Context, exerciseRoutineID string) (string, error) {
-	panic(fmt.Errorf("not implemented: DeleteExerciseRoutine - deleteExerciseRoutine"))
+func (r *mutationResolver) DeleteExerciseRoutine(ctx context.Context, exerciseRoutineID string) (int, error) {
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return 0, gqlerror.Errorf("Error Adding Workout Session: Invalid Token")
+	}
+
+	var exerciseRoutine database.ExerciseRoutine
+	err = database.GetExerciseRoutine(r.DB, exerciseRoutineID, &exerciseRoutine)
+	if err != nil {
+		return 0, gqlerror.Errorf("Error Deleting Exercise Routine")
+	} 
+	
+	userId := fmt.Sprintf("%d", u.ID)
+	err = r.ACS.CanAccessWorkoutRoutine(userId, fmt.Sprintf("%d", exerciseRoutine.ID))
+	if err != nil {
+		return 0, gqlerror.Errorf("Error Deleting Exercise Routine")
+	}
+
+	err = database.DeleteExerciseRoutine(r.DB, exerciseRoutineID)
+	if err != nil {
+		return 0, gqlerror.Errorf("Error Deleting Exercise Routine")
+	}
+
+	return 1, nil
 }
 
 // AddWorkoutSession is the resolver for the addWorkoutSession field.
@@ -247,7 +285,23 @@ func (r *mutationResolver) UpdateWorkoutSession(ctx context.Context, workoutSess
 
 // DeleteWorkoutSession is the resolver for the deleteWorkoutSession field.
 func (r *mutationResolver) DeleteWorkoutSession(ctx context.Context, workoutSessionID string) (int, error) {
-	panic(fmt.Errorf("not implemented: DeleteWorkoutSession - deleteWorkoutSession"))
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return 0, gqlerror.Errorf("Error Deleting Workout Session: Invalid Token")
+	}
+
+	userId := fmt.Sprintf("%d", u.ID)
+	err = r.ACS.CanAccessWorkoutSession(userId, workoutSessionID)
+	if err != nil {
+		return 0, gqlerror.Errorf("Error Adding Exercise: Access Denied")
+	}
+
+	err = database.DeleteWorkoutSession(r.DB, workoutSessionID)
+	if err != nil {
+		return 0, gqlerror.Errorf("Error Deleting Workout Session")	
+	}
+
+	return 1, nil
 }
 
 // AddExercise is the resolver for the addExercise field.
@@ -336,23 +390,34 @@ func (r *mutationResolver) UpdateExercise(ctx context.Context, exerciseID string
 }
 
 // DeleteExercise is the resolver for the deleteExercise field.
-func (r *mutationResolver) DeleteExercise(ctx context.Context, exerciseID string) (string, error) {
-	// u, err := middleware.GetUser(ctx)
-	// if err != nil {
-	// 	return "", gqlerror.Errorf("Error Adding Set: %s", err.Error())
-	// }
+func (r *mutationResolver) DeleteExercise(ctx context.Context, exerciseID string) (int, error) {
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return 0, gqlerror.Errorf("Error Deleting Exercise: Invalid Token")
+	}
 
-	// exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, strconv.IntSize)
-	// dbExercise := database.Exercise{
-	// 	Model: gorm.Model{
-	// 		ID: uint(exerciseIDUint),
-	// 	},
-	// }
-	// err = database.GetExercise(r.DB, &dbExercise)
-	// if err != nil {
-	// 	return &model.UpdatedExercise{}, gqlerror.Errorf("Error Updating Exercise")
-	// }
-	panic("j")
+	exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, strconv.IntSize)
+	dbExercise := database.Exercise{
+		Model: gorm.Model{
+			ID: uint(exerciseIDUint),
+		},
+	}
+	err = database.GetExercise(r.DB, &dbExercise)
+	if err != nil {
+		return 0, gqlerror.Errorf("Error Deleting Exercise")
+	}
+
+	err = r.ACS.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", dbExercise.WorkoutSessionID))
+	if err != nil {
+		return 0, gqlerror.Errorf("Error Deleting Exercise: Access Denied")
+	}
+
+	err = database.DeleteExercise(r.DB, exerciseID)
+	if err != nil {
+		return 0, gqlerror.Errorf("Error Deleting Exercise")
+	}
+
+	return 1, nil
 }
 
 // AddSet is the resolver for the addSet field.
@@ -397,14 +462,14 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *m
 }
 
 // UpdateSet is the resolver for the updateSet field.
-func (r *mutationResolver) UpdateSet(ctx context.Context, setId string, set model.UpdateSetEntryInput) (*model.SetEntry, error) {
+func (r *mutationResolver) UpdateSet(ctx context.Context, setID string, set model.UpdateSetEntryInput) (*model.SetEntry, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
 		return &model.SetEntry{}, gqlerror.Errorf("Error Updating Set: Invalid Token")
 	}
 
 	var setEntry database.SetEntry
-	err = database.GetSet(r.DB, &setEntry, setId)
+	err = database.GetSet(r.DB, &setEntry, setID)
 	if err != nil {
 		return &model.SetEntry{}, gqlerror.Errorf("Error Updating Set")
 	}
@@ -438,7 +503,7 @@ func (r *mutationResolver) UpdateSet(ctx context.Context, setId string, set mode
 		Reps:   reps,
 		Weight: weight,
 	}
-	err = database.UpdateSet(r.DB, setId, &updatedSet)
+	err = database.UpdateSet(r.DB, setID, &updatedSet)
 	if err != nil {
 		return &model.SetEntry{}, gqlerror.Errorf("Error Updating Set")
 	}
@@ -451,14 +516,14 @@ func (r *mutationResolver) UpdateSet(ctx context.Context, setId string, set mode
 }
 
 // DeleteSet is the resolver for the deleteSet field.
-func (r *mutationResolver) DeleteSet(ctx context.Context, setId string) (int, error) {
+func (r *mutationResolver) DeleteSet(ctx context.Context, setID string) (int, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
 		return 0, gqlerror.Errorf("Error Deleting Routine: Invalid Token")
 	}
 
 	var setEntry database.SetEntry
-	err = database.GetSet(r.DB, &setEntry, setId)
+	err = database.GetSet(r.DB, &setEntry, setID)
 	if err != nil {
 		return 0, gqlerror.Errorf("Error Deleting Set")
 	}
@@ -478,7 +543,7 @@ func (r *mutationResolver) DeleteSet(ctx context.Context, setId string) (int, er
 		return 0, gqlerror.Errorf("Error Deleting Set: Access Denied")
 	}
 
-	err = database.DeleteSet(r.DB, setId)
+	err = database.DeleteSet(r.DB, setID)
 	if err != nil {
 		return 0, gqlerror.Errorf("Error Deleting Set")
 	}

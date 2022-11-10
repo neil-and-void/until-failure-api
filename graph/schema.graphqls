@@ -146,13 +146,13 @@ type Mutation {
     workoutRoutineId: ID!
     updateWorkoutRoutineInput: UpdateWorkoutRoutineInput!
   ): WorkoutRoutine!
-  deleteWorkoutRoutine(workoutRoutineId: ID!): ID!
+  deleteWorkoutRoutine(workoutRoutineId: ID!): Int!
 
   updateExerciseRoutine(
     exerciseRoutineId: ID!
     updateExerciseRoutineInput: UpdateExerciseRoutineInput!
   ): ExerciseRoutine!
-  deleteExerciseRoutine(exerciseRoutineId: ID!): ID!
+  deleteExerciseRoutine(exerciseRoutineId: ID!): Int!
 
   addWorkoutSession(workout: WorkoutSessionInput!): ID!
   updateWorkoutSession(
@@ -167,7 +167,7 @@ type Mutation {
     exerciseId: ID!
     exercise: UpdateExerciseInput!
   ): UpdatedExercise!
-  deleteExercise(exerciseId: ID!): ID!
+  deleteExercise(exerciseId: ID!): Int!
 
   addSet(exerciseId: ID!, set: SetEntryInput): ID!
   updateSet(setId: ID!, set: UpdateSetEntryInput!): SetEntry!

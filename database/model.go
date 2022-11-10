@@ -45,7 +45,7 @@ type Exercise struct {
 	WorkoutSessionID  uint
 	ExerciseRoutineID uint
 	Notes             *string `gorm:"size:512"`
-	Sets              []SetEntry
+	Sets              []SetEntry `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }
 
 type SetEntry struct {
