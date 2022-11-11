@@ -181,7 +181,7 @@ func (r *mutationResolver) DeleteWorkoutRoutine(ctx context.Context, workoutRout
 	if err != nil {
 		return 0, gqlerror.Errorf("Error Deleting Workout Routine: Invalid Token")
 	}
-	
+
 	userId := fmt.Sprintf("%d", u.ID)
 	err = r.ACS.CanAccessWorkoutRoutine(userId, workoutRoutineID)
 	if err != nil {
@@ -194,6 +194,11 @@ func (r *mutationResolver) DeleteWorkoutRoutine(ctx context.Context, workoutRout
 	}
 
 	return 1, nil
+}
+
+// AddExerciseRoutine is the resolver for the addExerciseRoutine field.
+func (r *mutationResolver) AddExerciseRoutine(ctx context.Context, workoutRoutineID string, exerciseRoutine model.ExerciseRoutineInput) (string, error) {
+	panic(fmt.Errorf("not implemented: AddExerciseRoutine - addExerciseRoutine"))
 }
 
 // UpdateExerciseRoutine is the resolver for the updateExerciseRoutine field.
@@ -212,8 +217,8 @@ func (r *mutationResolver) DeleteExerciseRoutine(ctx context.Context, exerciseRo
 	err = database.GetExerciseRoutine(r.DB, exerciseRoutineID, &exerciseRoutine)
 	if err != nil {
 		return 0, gqlerror.Errorf("Error Deleting Exercise Routine")
-	} 
-	
+	}
+
 	userId := fmt.Sprintf("%d", u.ID)
 	err = r.ACS.CanAccessWorkoutRoutine(userId, fmt.Sprintf("%d", exerciseRoutine.WorkoutRoutineID))
 	if err != nil {
@@ -298,7 +303,7 @@ func (r *mutationResolver) DeleteWorkoutSession(ctx context.Context, workoutSess
 
 	err = database.DeleteWorkoutSession(r.DB, workoutSessionID)
 	if err != nil {
-		return 0, gqlerror.Errorf("Error Deleting Workout Session")	
+		return 0, gqlerror.Errorf("Error Deleting Workout Session")
 	}
 
 	return 1, nil

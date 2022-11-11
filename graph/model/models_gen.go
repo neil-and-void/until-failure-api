@@ -80,8 +80,7 @@ type UpdateSetEntryInput struct {
 }
 
 type UpdateWorkoutRoutineInput struct {
-	Name             *string                 `json:"name"`
-	ExerciseRoutines []*ExerciseRoutineInput `json:"exerciseRoutines"`
+	Name *string `json:"name"`
 }
 
 type UpdateWorkoutSessionInput struct {

@@ -69,6 +69,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		AddExercise           func(childComplexity int, workoutSessionID string, exercise model.ExerciseInput) int
+		AddExerciseRoutine    func(childComplexity int, workoutRoutineID string, exerciseRoutine model.ExerciseRoutineInput) int
 		AddSet                func(childComplexity int, exerciseID string, set *model.SetEntryInput) int
 		AddWorkoutSession     func(childComplexity int, workout model.WorkoutSessionInput) int
 		CreateWorkoutRoutine  func(childComplexity int, routine model.WorkoutRoutineInput) int
@@ -140,6 +141,7 @@ type MutationResolver interface {
 	CreateWorkoutRoutine(ctx context.Context, routine model.WorkoutRoutineInput) (*model.WorkoutRoutine, error)
 	UpdateWorkoutRoutine(ctx context.Context, workoutRoutineID string, updateWorkoutRoutineInput model.UpdateWorkoutRoutineInput) (*model.WorkoutRoutine, error)
 	DeleteWorkoutRoutine(ctx context.Context, workoutRoutineID string) (int, error)
+	AddExerciseRoutine(ctx context.Context, workoutRoutineID string, exerciseRoutine model.ExerciseRoutineInput) (string, error)
 	UpdateExerciseRoutine(ctx context.Context, exerciseRoutineID string, updateExerciseRoutineInput model.UpdateExerciseRoutineInput) (*model.ExerciseRoutine, error)
 	DeleteExerciseRoutine(ctx context.Context, exerciseRoutineID string) (int, error)
 	AddWorkoutSession(ctx context.Context, workout model.WorkoutSessionInput) (string, error)
@@ -265,6 +267,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AddExercise(childComplexity, args["workoutSessionId"].(string), args["exercise"].(model.ExerciseInput)), true
+
+	case "Mutation.addExerciseRoutine":
+		if e.complexity.Mutation.AddExerciseRoutine == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addExerciseRoutine_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddExerciseRoutine(childComplexity, args["workoutRoutineId"].(string), args["exerciseRoutine"].(model.ExerciseRoutineInput)), true
 
 	case "Mutation.addSet":
 		if e.complexity.Mutation.AddSet == nil {
@@ -803,7 +817,6 @@ input WorkoutRoutineInput {
 
 input UpdateWorkoutRoutineInput {
   name: String
-  exerciseRoutines: [ExerciseRoutineInput]
 }
 
 input UpdateExerciseRoutineInput {
@@ -879,6 +892,10 @@ type Mutation {
   ): WorkoutRoutine!
   deleteWorkoutRoutine(workoutRoutineId: ID!): Int!
 
+  addExerciseRoutine(
+    workoutRoutineId: ID!
+    exerciseRoutine: ExerciseRoutineInput!
+  ): ID!
   updateExerciseRoutine(
     exerciseRoutineId: ID!
     updateExerciseRoutineInput: UpdateExerciseRoutineInput!
@@ -911,6 +928,30 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_addExerciseRoutine_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["workoutRoutineId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workoutRoutineId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["workoutRoutineId"] = arg0
+	var arg1 model.ExerciseRoutineInput
+	if tmp, ok := rawArgs["exerciseRoutine"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("exerciseRoutine"))
+		arg1, err = ec.unmarshalNExerciseRoutineInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutineInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["exerciseRoutine"] = arg1
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_addExercise_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -2227,6 +2268,61 @@ func (ec *executionContext) fieldContext_Mutation_deleteWorkoutRoutine(ctx conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deleteWorkoutRoutine_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_addExerciseRoutine(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_addExerciseRoutine(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddExerciseRoutine(rctx, fc.Args["workoutRoutineId"].(string), fc.Args["exerciseRoutine"].(model.ExerciseRoutineInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_addExerciseRoutine(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_addExerciseRoutine_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -6189,7 +6285,7 @@ func (ec *executionContext) unmarshalInputUpdateWorkoutRoutineInput(ctx context.
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "exerciseRoutines"}
+	fieldsInOrder := [...]string{"name"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -6201,14 +6297,6 @@ func (ec *executionContext) unmarshalInputUpdateWorkoutRoutineInput(ctx context.
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "exerciseRoutines":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("exerciseRoutines"))
-			it.ExerciseRoutines, err = ec.unmarshalOExerciseRoutineInput2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutineInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6599,6 +6687,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteWorkoutRoutine(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "addExerciseRoutine":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_addExerciseRoutine(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -7533,6 +7630,11 @@ func (ec *executionContext) marshalNExerciseRoutine2ᚖgithubᚗcomᚋneilZonᚋ
 		return graphql.Null
 	}
 	return ec._ExerciseRoutine(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNExerciseRoutineInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutineInput(ctx context.Context, v interface{}) (model.ExerciseRoutineInput, error) {
+	res, err := ec.unmarshalInputExerciseRoutineInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {

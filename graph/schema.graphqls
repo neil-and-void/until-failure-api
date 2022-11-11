@@ -72,7 +72,6 @@ input WorkoutRoutineInput {
 
 input UpdateWorkoutRoutineInput {
   name: String
-  exerciseRoutines: [ExerciseRoutineInput]
 }
 
 input UpdateExerciseRoutineInput {
@@ -148,6 +147,10 @@ type Mutation {
   ): WorkoutRoutine!
   deleteWorkoutRoutine(workoutRoutineId: ID!): Int!
 
+  addExerciseRoutine(
+    workoutRoutineId: ID!
+    exerciseRoutine: ExerciseRoutineInput!
+  ): ID!
   updateExerciseRoutine(
     exerciseRoutineId: ID!
     updateExerciseRoutineInput: UpdateExerciseRoutineInput!
