@@ -179,18 +179,18 @@ func (r *mutationResolver) UpdateWorkoutRoutine(ctx context.Context, workoutRout
 func (r *mutationResolver) DeleteWorkoutRoutine(ctx context.Context, workoutRoutineID string) (int, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return 0, gqlerror.Errorf("Error Adding Workout Session: Invalid Token")
+		return 0, gqlerror.Errorf("Error Deleting Workout Routine: Invalid Token")
 	}
 	
 	userId := fmt.Sprintf("%d", u.ID)
 	err = r.ACS.CanAccessWorkoutRoutine(userId, workoutRoutineID)
 	if err != nil {
-		return 0, gqlerror.Errorf("Error Deleting Exercise Routine")
+		return 0, gqlerror.Errorf("Error Deleting Workout Routine: Access Denied")
 	}
 
 	err = database.DeleteWorkoutRoutine(r.DB, workoutRoutineID)
 	if err != nil {
-		return 0, gqlerror.Errorf("Error Deleting Exercise Routine")
+		return 0, gqlerror.Errorf("Error Deleting Workout Routine")
 	}
 
 	return 1, nil
@@ -293,7 +293,7 @@ func (r *mutationResolver) DeleteWorkoutSession(ctx context.Context, workoutSess
 	userId := fmt.Sprintf("%d", u.ID)
 	err = r.ACS.CanAccessWorkoutSession(userId, workoutSessionID)
 	if err != nil {
-		return 0, gqlerror.Errorf("Error Adding Exercise: Access Denied")
+		return 0, gqlerror.Errorf("Error Deleting Workout Session: Access Denied")
 	}
 
 	err = database.DeleteWorkoutSession(r.DB, workoutSessionID)
@@ -673,7 +673,7 @@ func (r *queryResolver) WorkoutSession(ctx context.Context, workoutSessionID str
 	var dbWorkoutSession database.WorkoutSession
 	err = database.GetWorkoutSession(r.DB, fmt.Sprintf("%d", u.ID), workoutSessionID, &dbWorkoutSession)
 	if err != nil {
-		return &model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Session")
+		return &model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Session: Access Denied")
 	}
 
 	var exercises []*model.Exercise

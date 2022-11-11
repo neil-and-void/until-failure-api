@@ -302,9 +302,8 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
 		)
-		require.EqualError(t, err, "[{\"message\":\"Error Getting Sets\",\"path\":[\"sets\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Error Getting Sets: Invalid Token\",\"path\":[\"sets\"]}]")
 	})
 
 	t.Run("Get Set Entries Access Denied", func(t *testing.T) {

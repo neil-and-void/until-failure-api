@@ -1,20 +1,18 @@
 package test
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/99designs/gqlgen/client"
-	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/joho/godotenv"
 	"github.com/neilZon/workout-logger-api/accesscontroller/accesscontrol"
-	"github.com/neilZon/workout-logger-api/graph"
-	"github.com/neilZon/workout-logger-api/graph/generated"
 	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/helpers"
 	"github.com/neilZon/workout-logger-api/tests/testdata"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 type WorkoutRoutineResp struct {
@@ -33,6 +31,10 @@ type GetWorkoutRoutineResp struct {
 	}
 }
 
+type DeleteWorkoutRoutineResp struct {
+	DeleteWorkoutRoutine int
+}
+
 func TestWorkoutRoutineResolvers(t *testing.T) {
 	t.Parallel()
 
@@ -42,6 +44,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 	}
 
 	wr := testdata.WorkoutRoutine
+	ws := testdata.WorkoutSession
 	u := testdata.User
 
 	t.Run("Create workout routine success", func(t *testing.T) {
@@ -106,9 +109,8 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 
 	t.Run("Create workout routine invalid data", func(t *testing.T) {
 		_, gormDB := helpers.SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-		}})))
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		var resp WorkoutRoutineResp
 		err = c.Post(`mutation CreateWorkoutRoutine {
@@ -132,9 +134,8 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 
 	t.Run("Create workout routine no token", func(t *testing.T) {
 		_, gormDB := helpers.SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-		}})))
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		var resp WorkoutRoutineResp
 		err := c.Post(`mutation CreateWorkoutRoutine {
@@ -179,6 +180,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 		}`,
 			&resp,
 			helpers.AddContext(u))
+
 		err = mock.ExpectationsWereMet() // make sure all expectations were met
 		if err != nil {
 			panic(err)
@@ -187,9 +189,8 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 
 	t.Run("Get Workout Routine No Token", func(t *testing.T) {
 		_, gormDB := helpers.SetupMockDB()
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-			DB: gormDB,
-		}})))
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		var resp GetWorkoutRoutineResp
 		err := c.Post(`query WorkoutRoutines {
@@ -203,6 +204,144 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 	})
 
 	t.Run("Delete Workout Routine Success", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)	
 
+		workoutRoutineRow := sqlmock.
+			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at"}).
+			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnRows(workoutRoutineRow)
+
+		mock.ExpectBegin()
+
+		deleteWorkoutRoutineQuery := `UPDATE "workout_routines" SET "deleted_at"=$1 WHERE id = $2 AND "workout_routines"."deleted_at" IS NULL`
+		mock.ExpectExec(regexp.QuoteMeta(deleteWorkoutRoutineQuery)).
+			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(wr.ID)).
+			WillReturnResult(sqlmock.NewResult(1,1))
+
+		deleteExerciseRoutinesQuery := `UPDATE "exercise_routines" SET "deleted_at"=$1 WHERE workout_routine_id = $2 AND "exercise_routines"."deleted_at" IS NULL`
+		mock.ExpectExec(regexp.QuoteMeta(deleteExerciseRoutinesQuery)).
+			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(wr.ID)).
+			WillReturnResult(sqlmock.NewResult(1,2))
+
+		workoutSessionRows := sqlmock.
+			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
+			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
+		deleteWorkoutSession := `UPDATE "workout_sessions" SET "deleted_at"=$1 WHERE workout_routine_id = $2 AND "workout_sessions"."deleted_at" IS NULL RETURNING *`
+		mock.ExpectQuery(regexp.QuoteMeta(deleteWorkoutSession)).
+			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(wr.ID)).
+			WillReturnRows(workoutSessionRows)
+
+		exerciseRows := sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "workout_session_id", "exercise_routine_id"})	
+		for _, e := range ws.Exercises {
+			exerciseRows.AddRow(e.ID, e.CreatedAt, e.DeletedAt, e.UpdatedAt, e.WorkoutSessionID, e.ExerciseRoutineID)
+		}
+
+		deleteExerciseQuery := `UPDATE "exercises" SET "deleted_at"=$1 WHERE workout_session_id IN ($2) AND "exercises"."deleted_at" IS NULL RETURNING *`
+		mock.ExpectQuery(regexp.QuoteMeta(deleteExerciseQuery)).
+			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(ws.ID)).
+			WillReturnRows(exerciseRows)
+
+		deleteSetQuery := `UPDATE "set_entries" SET "deleted_at"=$1 WHERE exercise_id IN ($2,$3) AND "set_entries"."deleted_at" IS NULL`
+		mock.ExpectExec(regexp.QuoteMeta(deleteSetQuery)).
+			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(ws.Exercises[0].ID), helpers.UIntToString(ws.Exercises[1].ID)).
+			WillReturnResult(sqlmock.NewResult(1,1))
+
+		mock.ExpectCommit()
+
+		var resp DeleteWorkoutRoutineResp
+		gqlQuery := fmt.Sprintf(`
+			mutation DeleteWorkoutRoutine {
+				deleteWorkoutRoutine(workoutRoutineId: "%d")
+			}`,
+			wr.ID,
+		)
+		c.MustPost(gqlQuery, &resp, helpers.AddContext(u))
+
+		err = mock.ExpectationsWereMet() // make sure all expectations were met
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Delete Workout Invalid Token", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		var resp DeleteWorkoutRoutineResp
+		gqlQuery := fmt.Sprintf(`
+			mutation DeleteWorkoutRoutine {
+				deleteWorkoutRoutine(workoutRoutineId: "%d")
+			}`,
+			wr.ID,
+		)
+		err := c.Post(gqlQuery, &resp)
+		require.EqualError(t, err, "[{\"message\":\"Error Deleting Workout Routine: Invalid Token\",\"path\":[\"deleteWorkoutRoutine\"]}]")
+
+		err = mock.ExpectationsWereMet() // make sure all expectations were met
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Delete Workout Access Denied", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)	
+		
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnError(gorm.ErrRecordNotFound)
+
+		var resp DeleteWorkoutRoutineResp
+		gqlQuery := fmt.Sprintf(`
+			mutation DeleteWorkoutRoutine {
+				deleteWorkoutRoutine(workoutRoutineId: "%d")
+			}`,
+			wr.ID,
+		)
+
+		err := c.Post(gqlQuery, &resp, helpers.AddContext(u))
+		require.EqualError(t, err, "[{\"message\":\"Error Deleting Workout Routine: Access Denied\",\"path\":[\"deleteWorkoutRoutine\"]}]")
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Delete Workout Error Deleting", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)	
+
+		workoutRoutineRow := sqlmock.
+			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at"}).
+			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnRows(workoutRoutineRow)
+
+		mock.ExpectBegin()
+
+		deleteWorkoutRoutineQuery := `UPDATE "workout_routines" SET "deleted_at"=$1 WHERE id = $2 AND "workout_routines"."deleted_at" IS NULL`
+		mock.ExpectExec(regexp.QuoteMeta(deleteWorkoutRoutineQuery)).
+			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(wr.ID)).
+			WillReturnError(gorm.ErrInvalidTransaction)
+
+		mock.ExpectRollback()
+
+		var resp DeleteWorkoutRoutineResp
+		gqlQuery := fmt.Sprintf(`
+			mutation DeleteWorkoutRoutine {
+				deleteWorkoutRoutine(workoutRoutineId: "%d")
+			}`,
+			wr.ID,
+		)	
+		err := c.Post(gqlQuery, &resp, helpers.AddContext(u))
+		require.EqualError(t, err, "[{\"message\":\"Error Deleting Workout Routine\",\"path\":[\"deleteWorkoutRoutine\"]}]")
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
 	})
 }

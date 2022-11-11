@@ -244,8 +244,8 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta(exerciseRoutineQuery)).WithArgs(fmt.Sprintf("%d", er.ID)).WillReturnRows(exerciseRoutineRow)
 
 		workoutRoutineRow := sqlmock.
-			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at"}).
-			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt)
+			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at", "user_id"}).
+			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt, wr.UserID)
 		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", er.WorkoutRoutineID)).WillReturnRows(workoutRoutineRow)
 
 		mock.ExpectBegin()
