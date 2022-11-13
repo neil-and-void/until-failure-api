@@ -71,11 +71,14 @@ var WorkoutRoutine = &database.WorkoutRoutine{
 
 var noteOne = "This is a note"
 var noteTwo = "This is another note"
+var start = time.Date(2022, time.October, 30, 12, 34, 0, 0, time.UTC)
+var end = time.Date(2022, time.October, 30, 14, 34, 0, 0, time.UTC)
 
 var WorkoutSession = &database.WorkoutSession{
 	WorkoutRoutineID: 8,
 	UserID:           28,
 	Start:            time.Date(2022, time.October, 30, 12, 34, 0, 0, time.UTC),
+	End:            &end,
 	Model: gorm.Model{
 		ID:        3,
 		CreatedAt: time.Now(),

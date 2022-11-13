@@ -46,6 +46,11 @@ func GetWorkoutRoutines(db *gorm.DB, email string) ([]WorkoutRoutine, error) {
 	return workoutRoutines, nil
 }
 
+func UpdateWorkoutRoutine(db *gorm.DB, workoutRoutineId string, updatedWorkoutRoutine *WorkoutRoutine) error {
+	result := db.Model(updatedWorkoutRoutine).Clauses(clause.Returning{}).Where("id = ?", workoutRoutineId).Updates(updatedWorkoutRoutine)
+	return result.Error
+}
+
 func DeleteWorkoutRoutine(db *gorm.DB, workoutRoutineId string) error {
 	tx := db.Begin()
 	if err := tx.Where("id = ?", workoutRoutineId).Delete(&WorkoutRoutine{}).Error; err != nil {
@@ -92,6 +97,16 @@ func DeleteWorkoutRoutine(db *gorm.DB, workoutRoutineId string) error {
 }
 
 // Exercise Routine
+func AddExerciseRoutine(db *gorm.DB, exerciseRoutine *ExerciseRoutine) (error) {
+	result := db.Create(exerciseRoutine)
+	return result.Error	
+}
+
+func UpdateExerciseRoutine(db *gorm.DB, exerciseRoutineId string, exerciseRoutine *ExerciseRoutine) error {
+	result := db.Model(exerciseRoutine).Clauses(clause.Returning{}).Where("id = ?", exerciseRoutineId).Updates(exerciseRoutine)	
+	return result.Error	
+}
+
 func GetExerciseRoutines(db *gorm.DB, workoutRoutineId string) ([]ExerciseRoutine, error) {
 	result := db.Model(&WorkoutRoutine{}). // todo: change to use .Preload()
 		Select("exercise_routines.id, exercise_routines.name, exercise_routines.sets, exercise_routines.reps, exercise_routines.created_at, exercise_routines.updated_at, exercise_routines.deleted_at").
@@ -158,6 +173,11 @@ func GetWorkoutSessions(db *gorm.DB, userId string) ([]*WorkoutSession, error) {
 	var workoutSessions []*WorkoutSession
 	db.Preload("Exercises.Sets").Where("user_id = ?", userId).Find(&workoutSessions)
 	return workoutSessions, nil
+}
+
+func UpdateWorkoutSession(db *gorm.DB, workoutSessionId string, updatedWorkoutSession *WorkoutSession) error {
+	result := db.Model(updatedWorkoutSession).Clauses(clause.Returning{}).Where("id = ?", workoutSessionId).Updates(updatedWorkoutSession)	
+	return result.Error
 }
 
 func DeleteWorkoutSession(db *gorm.DB, workoutSessionId string) error {

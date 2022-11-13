@@ -31,6 +31,13 @@ type GetWorkoutRoutineResp struct {
 	}
 }
 
+type UpdateWorkoutRoutine struct {
+	UpdateWorkoutRoutine struct {
+		ID string
+		Name string
+	}
+}
+
 type DeleteWorkoutRoutineResp struct {
 	DeleteWorkoutRoutine int
 }
@@ -201,6 +208,139 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 		}`,
 			&resp)
 		require.EqualError(t, err, "[{\"message\":\"Error Getting Workout Routine: Invalid Token\",\"path\":[\"workoutRoutines\"]}]")
+	})
+
+	t.Run("Update Workout Routine", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		workoutRoutineRow := sqlmock.
+			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at"}).
+			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnRows(workoutRoutineRow)
+
+		mock.ExpectBegin()
+
+		updateWorkoutRoutineStmt := `UPDATE "workout_routines" SET "updated_at"=$1,"name"=$2 WHERE id = $3 AND "workout_routines"."deleted_at" IS NULL RETURNING *`
+		mock.ExpectQuery(regexp.QuoteMeta(updateWorkoutRoutineStmt)).
+			WithArgs(sqlmock.AnyArg(), wr.Name, helpers.UIntToString(wr.ID)).
+			WillReturnRows(workoutRoutineRow)
+
+		mock.ExpectCommit()
+		
+		var resp UpdateWorkoutRoutine
+		mutation := fmt.Sprintf(`
+			mutation UpdateWorkoutRoutine {
+				updateWorkoutRoutine(workoutRoutineId: "%d", updateWorkoutRoutineInput: {
+					name: "%s"
+				}) {
+					id
+					name
+				}
+			}`,
+			wr.ID, wr.Name,
+		)
+		c.MustPost(mutation, &resp, helpers.AddContext(u))
+
+		err = mock.ExpectationsWereMet() 
+		if err != nil {
+			panic(err)
+		}	
+	})
+
+	t.Run("Update Workout Routine Invalid Token", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+		
+		var resp UpdateWorkoutRoutine
+		mutation := fmt.Sprintf(`
+			mutation UpdateWorkoutRoutine {
+				updateWorkoutRoutine(workoutRoutineId: "%d", updateWorkoutRoutineInput: {
+					name: "%s"
+				}) {
+					id
+					name
+				}
+			}`,
+			wr.ID, wr.Name,
+		)
+		err := c.Post(mutation, &resp)
+		require.EqualError(t, err, "[{\"message\":\"Error Updating Workout Routine: Invalid Token\",\"path\":[\"updateWorkoutRoutine\"]}]")
+
+		err = mock.ExpectationsWereMet() 
+		if err != nil {
+			panic(err)
+		}	
+	})
+
+	t.Run("Update Workout Routine Access Denied", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnError(gorm.ErrRecordNotFound)
+		
+		var resp UpdateWorkoutRoutine
+		mutation := fmt.Sprintf(`
+			mutation UpdateWorkoutRoutine {
+				updateWorkoutRoutine(workoutRoutineId: "%d", updateWorkoutRoutineInput: {
+					name: "%s"
+				}) {
+					id
+					name
+				}
+			}`,
+			wr.ID, wr.Name,
+		)
+		err := c.Post(mutation, &resp, helpers.AddContext(u))
+		require.EqualError(t, err, "[{\"message\":\"Error Updating Workout Routine: Access Denied\",\"path\":[\"updateWorkoutRoutine\"]}]")
+
+		err = mock.ExpectationsWereMet() 
+		if err != nil {
+			panic(err)
+		}	
+	})
+
+	t.Run("Update Workout Routine Error", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		workoutRoutineRow := sqlmock.
+			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at"}).
+			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnRows(workoutRoutineRow)
+
+		mock.ExpectBegin()
+
+		updateWorkoutRoutineStmt := `UPDATE "workout_routines" SET "updated_at"=$1,"name"=$2 WHERE id = $3 AND "workout_routines"."deleted_at" IS NULL RETURNING *`
+		mock.ExpectQuery(regexp.QuoteMeta(updateWorkoutRoutineStmt)).
+			WithArgs(sqlmock.AnyArg(), wr.Name, helpers.UIntToString(wr.ID)).
+			WillReturnError(gorm.ErrRecordNotFound)
+
+		mock.ExpectRollback()
+		
+		var resp UpdateWorkoutRoutine
+		mutation := fmt.Sprintf(`
+			mutation UpdateWorkoutRoutine {
+				updateWorkoutRoutine(workoutRoutineId: "%d", updateWorkoutRoutineInput: {
+					name: "%s"
+				}) {
+					id
+					name
+				}
+			}`,
+			wr.ID, wr.Name,
+		)
+		err := c.Post(mutation, &resp, helpers.AddContext(u))
+		require.EqualError(t, err, "[{\"message\":\"Error Updating Workout Routine\",\"path\":[\"updateWorkoutRoutine\"]}]")
+
+		err = mock.ExpectationsWereMet() 
+		if err != nil {
+			panic(err)
+		}		
 	})
 
 	t.Run("Delete Workout Routine Success", func(t *testing.T) {

@@ -13,6 +13,11 @@ type WorkoutRoutine {
   exerciseRoutines: [ExerciseRoutine]
 }
 
+type UpdatedWorkoutRoutine {
+  id: ID!
+  name: String!
+}
+
 type ExerciseRoutine {
   id: ID!
   name: String!
@@ -26,6 +31,12 @@ type WorkoutSession {
   end: Time
   workoutRoutineId: ID!
   exercises: [Exercise]!
+}
+
+type UpdatedWorkoutSession {
+  id: ID!
+  start: Time!
+  end: Time
 }
 
 type Exercise {
@@ -71,7 +82,7 @@ input WorkoutRoutineInput {
 }
 
 input UpdateWorkoutRoutineInput {
-  name: String
+  name: String!
 }
 
 input UpdateExerciseRoutineInput {
@@ -144,7 +155,7 @@ type Mutation {
   updateWorkoutRoutine(
     workoutRoutineId: ID!
     updateWorkoutRoutineInput: UpdateWorkoutRoutineInput!
-  ): WorkoutRoutine!
+  ): UpdatedWorkoutRoutine!
   deleteWorkoutRoutine(workoutRoutineId: ID!): Int!
 
   addExerciseRoutine(
@@ -161,7 +172,7 @@ type Mutation {
   updateWorkoutSession(
     workoutSessionId: ID!
     updateWorkoutSessionInput: UpdateWorkoutSessionInput!
-  ): WorkoutSession!
+  ): UpdatedWorkoutSession!
   deleteWorkoutSession(workoutSessionId: ID!): Int!
 
   # addImpromptuExercise(workoutSession, exerciseRoutine:{sets, reps, name, workoutRoutineId}) for later

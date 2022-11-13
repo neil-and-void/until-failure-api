@@ -14,8 +14,21 @@ import (
 	"gorm.io/gorm"
 )
 
+type AddExerciseRoutine struct {
+	AddExerciseRoutine string
+}
+
 type GetExerciseRoutineResp struct {
 	ExerciseRoutines []struct {
+		ID   string
+		Name string
+		Sets int
+		Reps int
+	}
+}
+
+type UpdateExerciseRoutineResp struct {
+	UpdateExerciseRoutine struct {
 		ID   string
 		Name string
 		Sets int
@@ -39,6 +52,99 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 	wr := testdata.WorkoutRoutine
 	ws := testdata.WorkoutSession
 	er := testdata.WorkoutRoutine.ExerciseRoutines[0]
+
+	t.Run("Add Exercise Routine", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		workoutRoutineRow := sqlmock.
+			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at"}).
+			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnRows(workoutRoutineRow)	
+
+		mock.ExpectBegin()
+		createExerciseRoutineStmt := `INSERT INTO "exercise_routines" ("created_at","updated_at","deleted_at","name","sets","reps","workout_routine_id") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`
+		mock.ExpectQuery(regexp.QuoteMeta(createExerciseRoutineStmt)).
+			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), er.Name, er.Sets, er.Reps, er.WorkoutRoutineID).
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(er.ID))	
+		mock.ExpectCommit()
+
+		var resp AddExerciseRoutine
+		mutation := fmt.Sprintf(`
+			mutation AddExerciseRoutine {
+				addExerciseRoutine(workoutRoutineId: "%d", exerciseRoutine: {
+					sets: %d,
+					reps: %d,
+					name: "%s"
+				}) 
+			}
+			`,
+			er.WorkoutRoutineID, er.Sets, er.Reps, er.Name,
+		)
+		c.MustPost(mutation, &resp, helpers.AddContext(u))
+
+		err = mock.ExpectationsWereMet() // make sure all expectations were met
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Add Exercise Routine Invalid Token", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		var resp AddExerciseRoutine
+		mutation := fmt.Sprintf(`
+			mutation AddExerciseRoutine {
+				addExerciseRoutine(workoutRoutineId: "%d", exerciseRoutine: {
+					sets: %d,
+					reps: %d,
+					name: "%s"
+				}) 
+			}
+			`,
+			er.WorkoutRoutineID, er.Sets, er.Reps, er.Name,
+		)
+		err := c.Post(mutation, &resp)
+		require.EqualError(t, err, "[{\"message\":\"Error Adding Exercise Routine: Invalid Token\",\"path\":[\"addExerciseRoutine\"]}]")
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Add Exercise Routine Access Token", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnError(gorm.ErrRecordNotFound)	
+
+		var resp AddExerciseRoutine
+		mutation := fmt.Sprintf(`
+			mutation AddExerciseRoutine {
+				addExerciseRoutine(workoutRoutineId: "%d", exerciseRoutine: {
+					sets: %d,
+					reps: %d,
+					name: "%s"
+				}) 
+			}
+			`,
+			er.WorkoutRoutineID, er.Sets, er.Reps, er.Name,
+		)
+		err := c.Post(mutation, &resp, helpers.AddContext(u))
+		require.EqualError(t, err, "[{\"message\":\"Error Adding Exercise Routine: Access Denied\",\"path\":[\"addExerciseRoutine\"]}]")
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Add Exercise Routine Error Creating", func(t *testing.T) {})
 
 	t.Run("Get Exercise Routines Success", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
@@ -96,6 +202,175 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		}
 	})
 
+	t.Run("Update Exercise Routine", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		exerciseRoutineRow := sqlmock.
+			NewRows([]string{"id", "name", "sets", "reps", "created_at", "deleted_at", "updated_at", "workout_routine_id"}).
+			AddRow(er.ID, er.Name, er.Sets, er.Reps, er.CreatedAt, er.DeletedAt, er.UpdatedAt, er.WorkoutRoutineID)
+		const exerciseRoutineQuery = `SELECT * FROM "exercise_routines" WHERE id = $1 AND "exercise_routines"."deleted_at" IS NULL ORDER BY "exercise_routines"."id" LIMIT 1`
+		mock.ExpectQuery(regexp.QuoteMeta(exerciseRoutineQuery)).WithArgs(fmt.Sprintf("%d", er.ID)).WillReturnRows(exerciseRoutineRow)
+
+		workoutRoutineRow := sqlmock.
+			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at"}).
+			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", er.WorkoutRoutineID)).WillReturnRows(workoutRoutineRow)		
+
+		mock.ExpectBegin()
+
+		updatedExerciseRoutineRow := sqlmock.
+			NewRows([]string{"id", "name", "sets", "reps", "created_at", "deleted_at", "updated_at"}).
+			AddRow(er.ID, er.Name, er.Sets, er.Reps, er.CreatedAt, er.DeletedAt, er.UpdatedAt)
+		updateExerciseRoutineQuery := `UPDATE "exercise_routines" SET "updated_at"=$1,"name"=$2,"sets"=$3,"reps"=$4 WHERE id = $5 AND "exercise_routines"."deleted_at" IS NULL RETURNING *`
+		mock.ExpectQuery(regexp.QuoteMeta(updateExerciseRoutineQuery)).WithArgs(sqlmock.AnyArg(), er.Name, er.Sets, er.Reps, fmt.Sprintf("%d", er.ID)).WillReturnRows(updatedExerciseRoutineRow)
+
+		mock.ExpectCommit()
+
+		var resp UpdateExerciseRoutineResp
+		mutation := fmt.Sprintf(`
+			mutation UpdateExerciseRoutine {
+				updateExerciseRoutine(exerciseRoutineId: "%d", updateExerciseRoutineInput: {
+					reps: %d,
+					sets: %d,
+					name: "%s"
+				}) {
+					id
+					sets
+					reps
+					name
+				}
+			}	
+			`,
+			er.ID, er.Reps, er.Sets, er.Name,
+		)
+		c.MustPost(mutation, &resp, helpers.AddContext(u))
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Update Exercise Routine Invalid Token", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		var resp UpdateExerciseRoutineResp
+		mutation := fmt.Sprintf(`
+			mutation UpdateExerciseRoutine {
+				updateExerciseRoutine(exerciseRoutineId: "%d", updateExerciseRoutineInput: {
+					reps: %d,
+					sets: %d,
+					name: "%s"
+				}) {
+					id
+					sets
+					reps
+					name
+				}
+			}	
+			`,
+			er.ID, er.Reps, er.Sets, er.Name,
+		)
+		err := c.Post(mutation, &resp)
+		require.EqualError(t, err,  "[{\"message\":\"Error Updating Exercise Routine: Invalid Token\",\"path\":[\"updateExerciseRoutine\"]}]")
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Update Exercise Routine Access Denied", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		exerciseRoutineRow := sqlmock.
+			NewRows([]string{"id", "name", "sets", "reps", "created_at", "deleted_at", "updated_at", "workout_routine_id"}).
+			AddRow(er.ID, er.Name, er.Sets, er.Reps, er.CreatedAt, er.DeletedAt, er.UpdatedAt, er.WorkoutRoutineID)
+		const exerciseRoutineQuery = `SELECT * FROM "exercise_routines" WHERE id = $1 AND "exercise_routines"."deleted_at" IS NULL ORDER BY "exercise_routines"."id" LIMIT 1`
+		mock.ExpectQuery(regexp.QuoteMeta(exerciseRoutineQuery)).WithArgs(fmt.Sprintf("%d", er.ID)).WillReturnRows(exerciseRoutineRow)
+
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", er.WorkoutRoutineID)).WillReturnError(gorm.ErrRecordNotFound)
+
+		var resp UpdateExerciseRoutineResp
+		mutation := fmt.Sprintf(`
+			mutation UpdateExerciseRoutine {
+				updateExerciseRoutine(exerciseRoutineId: "%d", updateExerciseRoutineInput: {
+					reps: %d,
+					sets: %d,
+					name: "%s"
+				}) {
+					id
+					sets
+					reps
+					name
+				}
+			}	
+			`,
+			er.ID, er.Reps, er.Sets, er.Name,
+		)
+		err := c.Post(mutation, &resp, helpers.AddContext(u))
+		require.EqualError(t, err, "[{\"message\":\"Error Updating Exercise Routine: Access Denied\",\"path\":[\"updateExerciseRoutine\"]}]")
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Update Exercise Routine Error Updating", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		exerciseRoutineRow := sqlmock.
+			NewRows([]string{"id", "name", "sets", "reps", "created_at", "deleted_at", "updated_at", "workout_routine_id"}).
+			AddRow(er.ID, er.Name, er.Sets, er.Reps, er.CreatedAt, er.DeletedAt, er.UpdatedAt, er.WorkoutRoutineID)
+		const exerciseRoutineQuery = `SELECT * FROM "exercise_routines" WHERE id = $1 AND "exercise_routines"."deleted_at" IS NULL ORDER BY "exercise_routines"."id" LIMIT 1`
+		mock.ExpectQuery(regexp.QuoteMeta(exerciseRoutineQuery)).WithArgs(fmt.Sprintf("%d", er.ID)).WillReturnRows(exerciseRoutineRow)
+
+		workoutRoutineRow := sqlmock.
+			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at"}).
+			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", er.WorkoutRoutineID)).WillReturnRows(workoutRoutineRow)		
+
+		mock.ExpectBegin()
+
+		updateExerciseRoutineQuery := `UPDATE "exercise_routines" SET "updated_at"=$1,"name"=$2,"sets"=$3,"reps"=$4 WHERE id = $5 AND "exercise_routines"."deleted_at" IS NULL RETURNING *`
+		mock.ExpectQuery(regexp.QuoteMeta(updateExerciseRoutineQuery)).WithArgs(sqlmock.AnyArg(), er.Name, er.Sets, er.Reps, fmt.Sprintf("%d", er.ID)).WillReturnError(gorm.ErrInvalidTransaction)
+
+		mock.ExpectRollback()
+
+		var resp UpdateExerciseRoutineResp
+		mutation := fmt.Sprintf(`
+			mutation UpdateExerciseRoutine {
+				updateExerciseRoutine(exerciseRoutineId: "%d", updateExerciseRoutineInput: {
+					reps: %d,
+					sets: %d,
+					name: "%s"
+				}) {
+					id
+					sets
+					reps
+					name
+				}
+			}	
+			`,
+			er.ID, er.Reps, er.Sets, er.Name,
+		)
+		err := c.Post(mutation, &resp, helpers.AddContext(u))
+		require.EqualError(t, err, "[{\"message\":\"Error Updating Exercise Routine\",\"path\":[\"updateExerciseRoutine\"]}]")
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})
 
 	t.Run("Get Exercise Routines Error", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()

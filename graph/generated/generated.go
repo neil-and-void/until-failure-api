@@ -113,6 +113,17 @@ type ComplexityRoot struct {
 		Notes func(childComplexity int) int
 	}
 
+	UpdatedWorkoutRoutine struct {
+		ID   func(childComplexity int) int
+		Name func(childComplexity int) int
+	}
+
+	UpdatedWorkoutSession struct {
+		End   func(childComplexity int) int
+		ID    func(childComplexity int) int
+		Start func(childComplexity int) int
+	}
+
 	User struct {
 		Email func(childComplexity int) int
 		ID    func(childComplexity int) int
@@ -139,13 +150,13 @@ type MutationResolver interface {
 	Signup(ctx context.Context, email string, name string, password string, confirmPassword string) (model.AuthResult, error)
 	RefreshAccessToken(ctx context.Context, refreshToken string) (*model.RefreshSuccess, error)
 	CreateWorkoutRoutine(ctx context.Context, routine model.WorkoutRoutineInput) (*model.WorkoutRoutine, error)
-	UpdateWorkoutRoutine(ctx context.Context, workoutRoutineID string, updateWorkoutRoutineInput model.UpdateWorkoutRoutineInput) (*model.WorkoutRoutine, error)
+	UpdateWorkoutRoutine(ctx context.Context, workoutRoutineID string, updateWorkoutRoutineInput model.UpdateWorkoutRoutineInput) (*model.UpdatedWorkoutRoutine, error)
 	DeleteWorkoutRoutine(ctx context.Context, workoutRoutineID string) (int, error)
 	AddExerciseRoutine(ctx context.Context, workoutRoutineID string, exerciseRoutine model.ExerciseRoutineInput) (string, error)
 	UpdateExerciseRoutine(ctx context.Context, exerciseRoutineID string, updateExerciseRoutineInput model.UpdateExerciseRoutineInput) (*model.ExerciseRoutine, error)
 	DeleteExerciseRoutine(ctx context.Context, exerciseRoutineID string) (int, error)
 	AddWorkoutSession(ctx context.Context, workout model.WorkoutSessionInput) (string, error)
-	UpdateWorkoutSession(ctx context.Context, workoutSessionID string, updateWorkoutSessionInput model.UpdateWorkoutSessionInput) (*model.WorkoutSession, error)
+	UpdateWorkoutSession(ctx context.Context, workoutSessionID string, updateWorkoutSessionInput model.UpdateWorkoutSessionInput) (*model.UpdatedWorkoutSession, error)
 	DeleteWorkoutSession(ctx context.Context, workoutSessionID string) (int, error)
 	AddExercise(ctx context.Context, workoutSessionID string, exercise model.ExerciseInput) (string, error)
 	UpdateExercise(ctx context.Context, exerciseID string, exercise model.UpdateExerciseInput) (*model.UpdatedExercise, error)
@@ -588,6 +599,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UpdatedExercise.Notes(childComplexity), true
 
+	case "UpdatedWorkoutRoutine.id":
+		if e.complexity.UpdatedWorkoutRoutine.ID == nil {
+			break
+		}
+
+		return e.complexity.UpdatedWorkoutRoutine.ID(childComplexity), true
+
+	case "UpdatedWorkoutRoutine.name":
+		if e.complexity.UpdatedWorkoutRoutine.Name == nil {
+			break
+		}
+
+		return e.complexity.UpdatedWorkoutRoutine.Name(childComplexity), true
+
+	case "UpdatedWorkoutSession.end":
+		if e.complexity.UpdatedWorkoutSession.End == nil {
+			break
+		}
+
+		return e.complexity.UpdatedWorkoutSession.End(childComplexity), true
+
+	case "UpdatedWorkoutSession.id":
+		if e.complexity.UpdatedWorkoutSession.ID == nil {
+			break
+		}
+
+		return e.complexity.UpdatedWorkoutSession.ID(childComplexity), true
+
+	case "UpdatedWorkoutSession.start":
+		if e.complexity.UpdatedWorkoutSession.Start == nil {
+			break
+		}
+
+		return e.complexity.UpdatedWorkoutSession.Start(childComplexity), true
+
 	case "User.email":
 		if e.complexity.User.Email == nil {
 			break
@@ -758,6 +804,11 @@ type WorkoutRoutine {
   exerciseRoutines: [ExerciseRoutine]
 }
 
+type UpdatedWorkoutRoutine {
+  id: ID!
+  name: String!
+}
+
 type ExerciseRoutine {
   id: ID!
   name: String!
@@ -771,6 +822,12 @@ type WorkoutSession {
   end: Time
   workoutRoutineId: ID!
   exercises: [Exercise]!
+}
+
+type UpdatedWorkoutSession {
+  id: ID!
+  start: Time!
+  end: Time
 }
 
 type Exercise {
@@ -816,7 +873,7 @@ input WorkoutRoutineInput {
 }
 
 input UpdateWorkoutRoutineInput {
-  name: String
+  name: String!
 }
 
 input UpdateExerciseRoutineInput {
@@ -889,7 +946,7 @@ type Mutation {
   updateWorkoutRoutine(
     workoutRoutineId: ID!
     updateWorkoutRoutineInput: UpdateWorkoutRoutineInput!
-  ): WorkoutRoutine!
+  ): UpdatedWorkoutRoutine!
   deleteWorkoutRoutine(workoutRoutineId: ID!): Int!
 
   addExerciseRoutine(
@@ -906,7 +963,7 @@ type Mutation {
   updateWorkoutSession(
     workoutSessionId: ID!
     updateWorkoutSessionInput: UpdateWorkoutSessionInput!
-  ): WorkoutSession!
+  ): UpdatedWorkoutSession!
   deleteWorkoutSession(workoutSessionId: ID!): Int!
 
   # addImpromptuExercise(workoutSession, exerciseRoutine:{sets, reps, name, workoutRoutineId}) for later
@@ -2182,9 +2239,9 @@ func (ec *executionContext) _Mutation_updateWorkoutRoutine(ctx context.Context, 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.WorkoutRoutine)
+	res := resTmp.(*model.UpdatedWorkoutRoutine)
 	fc.Result = res
-	return ec.marshalNWorkoutRoutine2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutine(ctx, field.Selections, res)
+	return ec.marshalNUpdatedWorkoutRoutine2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUpdatedWorkoutRoutine(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateWorkoutRoutine(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2196,13 +2253,11 @@ func (ec *executionContext) fieldContext_Mutation_updateWorkoutRoutine(ctx conte
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_WorkoutRoutine_id(ctx, field)
+				return ec.fieldContext_UpdatedWorkoutRoutine_id(ctx, field)
 			case "name":
-				return ec.fieldContext_WorkoutRoutine_name(ctx, field)
-			case "exerciseRoutines":
-				return ec.fieldContext_WorkoutRoutine_exerciseRoutines(ctx, field)
+				return ec.fieldContext_UpdatedWorkoutRoutine_name(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type WorkoutRoutine", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type UpdatedWorkoutRoutine", field.Name)
 		},
 	}
 	defer func() {
@@ -2530,9 +2585,9 @@ func (ec *executionContext) _Mutation_updateWorkoutSession(ctx context.Context, 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.WorkoutSession)
+	res := resTmp.(*model.UpdatedWorkoutSession)
 	fc.Result = res
-	return ec.marshalNWorkoutSession2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSession(ctx, field.Selections, res)
+	return ec.marshalNUpdatedWorkoutSession2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUpdatedWorkoutSession(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateWorkoutSession(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2544,17 +2599,13 @@ func (ec *executionContext) fieldContext_Mutation_updateWorkoutSession(ctx conte
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_WorkoutSession_id(ctx, field)
+				return ec.fieldContext_UpdatedWorkoutSession_id(ctx, field)
 			case "start":
-				return ec.fieldContext_WorkoutSession_start(ctx, field)
+				return ec.fieldContext_UpdatedWorkoutSession_start(ctx, field)
 			case "end":
-				return ec.fieldContext_WorkoutSession_end(ctx, field)
-			case "workoutRoutineId":
-				return ec.fieldContext_WorkoutSession_workoutRoutineId(ctx, field)
-			case "exercises":
-				return ec.fieldContext_WorkoutSession_exercises(ctx, field)
+				return ec.fieldContext_UpdatedWorkoutSession_end(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type WorkoutSession", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type UpdatedWorkoutSession", field.Name)
 		},
 	}
 	defer func() {
@@ -3770,6 +3821,223 @@ func (ec *executionContext) fieldContext_UpdatedExercise_notes(ctx context.Conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpdatedWorkoutRoutine_id(ctx context.Context, field graphql.CollectedField, obj *model.UpdatedWorkoutRoutine) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UpdatedWorkoutRoutine_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UpdatedWorkoutRoutine_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpdatedWorkoutRoutine",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpdatedWorkoutRoutine_name(ctx context.Context, field graphql.CollectedField, obj *model.UpdatedWorkoutRoutine) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UpdatedWorkoutRoutine_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UpdatedWorkoutRoutine_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpdatedWorkoutRoutine",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpdatedWorkoutSession_id(ctx context.Context, field graphql.CollectedField, obj *model.UpdatedWorkoutSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UpdatedWorkoutSession_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UpdatedWorkoutSession_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpdatedWorkoutSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpdatedWorkoutSession_start(ctx context.Context, field graphql.CollectedField, obj *model.UpdatedWorkoutSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UpdatedWorkoutSession_start(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Start, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UpdatedWorkoutSession_start(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpdatedWorkoutSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpdatedWorkoutSession_end(ctx context.Context, field graphql.CollectedField, obj *model.UpdatedWorkoutSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UpdatedWorkoutSession_end(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.End, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UpdatedWorkoutSession_end(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpdatedWorkoutSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -6296,7 +6564,7 @@ func (ec *executionContext) unmarshalInputUpdateWorkoutRoutineInput(ctx context.
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7098,6 +7366,80 @@ func (ec *executionContext) _UpdatedExercise(ctx context.Context, sel ast.Select
 	return out
 }
 
+var updatedWorkoutRoutineImplementors = []string{"UpdatedWorkoutRoutine"}
+
+func (ec *executionContext) _UpdatedWorkoutRoutine(ctx context.Context, sel ast.SelectionSet, obj *model.UpdatedWorkoutRoutine) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, updatedWorkoutRoutineImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UpdatedWorkoutRoutine")
+		case "id":
+
+			out.Values[i] = ec._UpdatedWorkoutRoutine_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+
+			out.Values[i] = ec._UpdatedWorkoutRoutine_name(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var updatedWorkoutSessionImplementors = []string{"UpdatedWorkoutSession"}
+
+func (ec *executionContext) _UpdatedWorkoutSession(ctx context.Context, sel ast.SelectionSet, obj *model.UpdatedWorkoutSession) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, updatedWorkoutSessionImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UpdatedWorkoutSession")
+		case "id":
+
+			out.Values[i] = ec._UpdatedWorkoutSession_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "start":
+
+			out.Values[i] = ec._UpdatedWorkoutSession_start(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "end":
+
+			out.Values[i] = ec._UpdatedWorkoutSession_end(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var userImplementors = []string{"User"}
 
 func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj *model.User) graphql.Marshaler {
@@ -7817,6 +8159,34 @@ func (ec *executionContext) marshalNUpdatedExercise2ᚖgithubᚗcomᚋneilZonᚋ
 	return ec._UpdatedExercise(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNUpdatedWorkoutRoutine2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUpdatedWorkoutRoutine(ctx context.Context, sel ast.SelectionSet, v model.UpdatedWorkoutRoutine) graphql.Marshaler {
+	return ec._UpdatedWorkoutRoutine(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUpdatedWorkoutRoutine2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUpdatedWorkoutRoutine(ctx context.Context, sel ast.SelectionSet, v *model.UpdatedWorkoutRoutine) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UpdatedWorkoutRoutine(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNUpdatedWorkoutSession2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUpdatedWorkoutSession(ctx context.Context, sel ast.SelectionSet, v model.UpdatedWorkoutSession) graphql.Marshaler {
+	return ec._UpdatedWorkoutSession(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUpdatedWorkoutSession2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUpdatedWorkoutSession(ctx context.Context, sel ast.SelectionSet, v *model.UpdatedWorkoutSession) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UpdatedWorkoutSession(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNWorkoutRoutine2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutine(ctx context.Context, sel ast.SelectionSet, v model.WorkoutRoutine) graphql.Marshaler {
 	return ec._WorkoutRoutine(ctx, sel, &v)
 }
@@ -7834,20 +8204,6 @@ func (ec *executionContext) marshalNWorkoutRoutine2ᚖgithubᚗcomᚋneilZonᚋw
 func (ec *executionContext) unmarshalNWorkoutRoutineInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutineInput(ctx context.Context, v interface{}) (model.WorkoutRoutineInput, error) {
 	res, err := ec.unmarshalInputWorkoutRoutineInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNWorkoutSession2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSession(ctx context.Context, sel ast.SelectionSet, v model.WorkoutSession) graphql.Marshaler {
-	return ec._WorkoutSession(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNWorkoutSession2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSession(ctx context.Context, sel ast.SelectionSet, v *model.WorkoutSession) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._WorkoutSession(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNWorkoutSessionInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSessionInput(ctx context.Context, v interface{}) (model.WorkoutSessionInput, error) {

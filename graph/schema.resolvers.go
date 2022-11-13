@@ -10,6 +10,7 @@ import (
 	"net/mail"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/neilZon/workout-logger-api/config"
 	"github.com/neilZon/workout-logger-api/database"
@@ -171,8 +172,29 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine mod
 }
 
 // UpdateWorkoutRoutine is the resolver for the updateWorkoutRoutine field.
-func (r *mutationResolver) UpdateWorkoutRoutine(ctx context.Context, workoutRoutineID string, updateWorkoutRoutineInput model.UpdateWorkoutRoutineInput) (*model.WorkoutRoutine, error) {
-	panic(fmt.Errorf("not implemented: UpdateWorkoutRoutine - updateWorkoutRoutine"))
+func (r *mutationResolver) UpdateWorkoutRoutine(ctx context.Context, workoutRoutineID string, updateWorkoutRoutineInput model.UpdateWorkoutRoutineInput) (*model.UpdatedWorkoutRoutine, error) {
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.UpdatedWorkoutRoutine{}, gqlerror.Errorf("Error Updating Workout Routine: Invalid Token")
+	}
+	userId := fmt.Sprintf("%d", u.ID)
+	err = r.ACS.CanAccessWorkoutRoutine(userId, workoutRoutineID)
+	if err != nil {
+		return &model.UpdatedWorkoutRoutine{}, gqlerror.Errorf("Error Updating Workout Routine: Access Denied")
+	}
+
+	dbWorkoutRoutine := database.WorkoutRoutine{
+		Name: updateWorkoutRoutineInput.Name,
+	}
+	err = database.UpdateWorkoutRoutine(r.DB, workoutRoutineID, &dbWorkoutRoutine)
+	if err != nil {
+		return &model.UpdatedWorkoutRoutine{}, gqlerror.Errorf("Error Updating Workout Routine")
+	}
+
+	return &model.UpdatedWorkoutRoutine{
+		ID:   fmt.Sprintf("%d", dbWorkoutRoutine.ID),
+		Name: dbWorkoutRoutine.Name,
+	}, nil
 }
 
 // DeleteWorkoutRoutine is the resolver for the deleteWorkoutRoutine field.
@@ -198,12 +220,80 @@ func (r *mutationResolver) DeleteWorkoutRoutine(ctx context.Context, workoutRout
 
 // AddExerciseRoutine is the resolver for the addExerciseRoutine field.
 func (r *mutationResolver) AddExerciseRoutine(ctx context.Context, workoutRoutineID string, exerciseRoutine model.ExerciseRoutineInput) (string, error) {
-	panic(fmt.Errorf("not implemented: AddExerciseRoutine - addExerciseRoutine"))
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return "", gqlerror.Errorf("Error Adding Exercise Routine: Invalid Token")
+	}
+
+	userId := fmt.Sprintf("%d", u.ID)
+	err = r.ACS.CanAccessWorkoutRoutine(userId, workoutRoutineID)
+	if err != nil {
+		return "", gqlerror.Errorf("Error Adding Exercise Routine: Access Denied")
+	}
+
+	workoutRoutineIDUint, err := strconv.ParseUint(workoutRoutineID, 10, strconv.IntSize)
+	if err != nil {
+		return "", gqlerror.Errorf("Error Adding Exercise Routine")
+	}
+	dbExerciseRoutine := &database.ExerciseRoutine{
+		Name:             exerciseRoutine.Name,
+		Sets:             uint(exerciseRoutine.Sets),
+		Reps:             uint(exerciseRoutine.Reps),
+		WorkoutRoutineID: uint(workoutRoutineIDUint),
+	}
+	err = database.AddExerciseRoutine(r.DB, dbExerciseRoutine)
+	if err != nil {
+		return "", gqlerror.Errorf("Error Adding Exercise Routine")
+	}
+
+	return fmt.Sprintf("%d", dbExerciseRoutine.ID), nil
 }
 
 // UpdateExerciseRoutine is the resolver for the updateExerciseRoutine field.
 func (r *mutationResolver) UpdateExerciseRoutine(ctx context.Context, exerciseRoutineID string, updateExerciseRoutineInput model.UpdateExerciseRoutineInput) (*model.ExerciseRoutine, error) {
-	panic(fmt.Errorf("not implemented: UpdateExerciseRoutine - updateExerciseRoutine"))
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.ExerciseRoutine{}, gqlerror.Errorf("Error Updating Exercise Routine: Invalid Token")
+	}
+
+	exerciseRoutine := database.ExerciseRoutine{}
+	err = database.GetExerciseRoutine(r.DB, exerciseRoutineID, &exerciseRoutine)
+
+	userId := fmt.Sprintf("%d", u.ID)
+	err = r.ACS.CanAccessWorkoutRoutine(userId, fmt.Sprintf("%d", exerciseRoutine.WorkoutRoutineID))
+	if err != nil {
+		return &model.ExerciseRoutine{}, gqlerror.Errorf("Error Updating Exercise Routine: Access Denied")
+	}
+
+	var name string
+	var sets int
+	var reps int
+	if updateExerciseRoutineInput.Name != nil {
+		name = *updateExerciseRoutineInput.Name
+	}
+	if updateExerciseRoutineInput.Sets != nil {
+		sets = *updateExerciseRoutineInput.Sets
+	}
+	if updateExerciseRoutineInput.Reps != nil {
+		reps = *updateExerciseRoutineInput.Reps
+	}
+
+	updatedExerciseRoutine := database.ExerciseRoutine{
+		Name: name,
+		Reps: uint(reps),
+		Sets: uint(sets),
+	}
+	err = database.UpdateExerciseRoutine(r.DB, exerciseRoutineID, &updatedExerciseRoutine)
+	if err != nil {
+		return &model.ExerciseRoutine{},gqlerror.Errorf("Error Updating Exercise Routine") 
+	}
+
+	return &model.ExerciseRoutine{
+		ID:   fmt.Sprintf("%d", updatedExerciseRoutine.ID),
+		Name: updatedExerciseRoutine.Name,
+		Reps: int(updatedExerciseRoutine.Reps),
+		Sets: int(updatedExerciseRoutine.Sets),
+	}, nil
 }
 
 // DeleteExerciseRoutine is the resolver for the deleteExerciseRoutine field.
@@ -284,8 +374,38 @@ func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.
 }
 
 // UpdateWorkoutSession is the resolver for the updateWorkoutSession field.
-func (r *mutationResolver) UpdateWorkoutSession(ctx context.Context, workoutSessionID string, updateWorkoutSessionInput model.UpdateWorkoutSessionInput) (*model.WorkoutSession, error) {
-	panic(fmt.Errorf("not implemented: UpdateWorkoutSession - updateWorkoutSession"))
+func (r *mutationResolver) UpdateWorkoutSession(ctx context.Context, workoutSessionID string, updateWorkoutSessionInput model.UpdateWorkoutSessionInput) (*model.UpdatedWorkoutSession, error) {
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.UpdatedWorkoutSession{}, gqlerror.Errorf("Error Updating Workout Session: Invalid Token")
+	}
+
+	fmt.Println("wtf")
+	userId := fmt.Sprintf("%d", u.ID)
+	err = r.ACS.CanAccessWorkoutSession(userId, workoutSessionID)
+	if err != nil {
+		return &model.UpdatedWorkoutSession{}, gqlerror.Errorf("Error Updating Workout Session: Access Denied")
+	}
+
+	var start time.Time
+	if updateWorkoutSessionInput.Start != nil {
+		start = *updateWorkoutSessionInput.Start
+	}
+	updatedWorkoutSession := database.WorkoutSession{
+		Start: start,
+		End:   updateWorkoutSessionInput.End,
+	}
+	err = database.UpdateWorkoutSession(r.DB, workoutSessionID, &updatedWorkoutSession)
+	if err != nil {
+		return &model.UpdatedWorkoutSession{}, gqlerror.Errorf("Error Updating Workout Session")
+	}
+	fmt.Println(updatedWorkoutSession.Start, updatedWorkoutSession.End)
+
+	return &model.UpdatedWorkoutSession{
+		ID:    fmt.Sprintf("%d", updatedWorkoutSession.ID),
+		Start: updatedWorkoutSession.Start,
+		End:   updatedWorkoutSession.End,
+	}, nil
 }
 
 // DeleteWorkoutSession is the resolver for the deleteWorkoutSession field.
