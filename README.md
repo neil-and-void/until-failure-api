@@ -1,4 +1,5 @@
-# Workout Logger API![Screen Shot 2022-11-10 at 12 51 05 PM](https://user-images.githubusercontent.com/46465568/201192502-89745b79-d2e2-4b52-b4cf-043fc33ebe7c.png)
+# Workout Logger API
+<img width="1440" alt="Screen Shot 2022-11-13 at 11 47 42 AM" src="https://user-images.githubusercontent.com/46465568/201538851-99b051a7-b084-4919-993c-93f7efffd447.png">
 
 
 The GraphQL api for a very simple workout logger app I built for myself to track progression of weight I'm lifting for certain exercises.
