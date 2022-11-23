@@ -135,7 +135,7 @@ func TestExerciseResolvers(t *testing.T) {
 			}`,
 			&resp,
 		)
-		require.EqualError(t, err, "[{\"message\":\"Error Adding Exercise: Invalid Token\",\"path\":[\"addExercise\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"addExercise\"]}]")
 	})
 
 	t.Run("Add Exercise Access Denied", func(t *testing.T) {
@@ -236,7 +236,7 @@ func TestExerciseResolvers(t *testing.T) {
 			ws.ID,
 		)
 		err = c.Post(gqlQuery, &resp)
-		require.EqualError(t, err, "[{\"message\":\"Error Getting Exercises: Invalid Token\",\"path\":[\"exercises\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"exercises\"]}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -343,7 +343,7 @@ func TestExerciseResolvers(t *testing.T) {
 			e.ID,
 		)
 		err := c.Post(gqlQuery, &resp)
-		require.EqualError(t, err, "[{\"message\":\"Error Getting Exercise: Invalid Token\",\"path\":[\"exercise\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"exercise\"]}]")
 	})
 
 	t.Run("Get Exercise Access Denied", func(t *testing.T) {
@@ -469,7 +469,7 @@ func TestExerciseResolvers(t *testing.T) {
 			updatedNote,
 		)
 		err := c.Post(gqlQuery, &resp)
-		require.EqualError(t, err, "[{\"message\":\"Error Updating Exercise: Invalid Token\",\"path\":[\"updateExercise\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"updateExercise\"]}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -647,7 +647,7 @@ func TestExerciseResolvers(t *testing.T) {
 			e.ID,
 		)
 		err := c.Post(gqlQuery, &resp)
-		require.EqualError(t, err, "[{\"message\":\"Error Deleting Exercise: Invalid Token\",\"path\":[\"deleteExercise\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"deleteExercise\"]}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {

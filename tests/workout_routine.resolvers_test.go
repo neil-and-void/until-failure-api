@@ -160,7 +160,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			}
 		  }`,
 			&resp)
-		require.EqualError(t, err, "[{\"message\":\"Error Creating Workout: Invalid Token\",\"path\":[\"createWorkoutRoutine\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"createWorkoutRoutine\"]}]")
 	})
 
 	t.Run("Get Workout Routines Success", func(t *testing.T) {
@@ -207,7 +207,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			}
 		}`,
 			&resp)
-		require.EqualError(t, err, "[{\"message\":\"Error Getting Workout Routine: Invalid Token\",\"path\":[\"workoutRoutines\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"workoutRoutines\"]}]")
 	})
 
 	t.Run("Update Workout Routine", func(t *testing.T) {
@@ -267,7 +267,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			wr.ID, wr.Name,
 		)
 		err := c.Post(mutation, &resp)
-		require.EqualError(t, err, "[{\"message\":\"Error Updating Workout Routine: Invalid Token\",\"path\":[\"updateWorkoutRoutine\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"updateWorkoutRoutine\"]}]")
 
 		err = mock.ExpectationsWereMet() 
 		if err != nil {
@@ -418,7 +418,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			wr.ID,
 		)
 		err := c.Post(gqlQuery, &resp)
-		require.EqualError(t, err, "[{\"message\":\"Error Deleting Workout Routine: Invalid Token\",\"path\":[\"deleteWorkoutRoutine\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"deleteWorkoutRoutine\"]}]")
 
 		err = mock.ExpectationsWereMet() // make sure all expectations were met
 		if err != nil {

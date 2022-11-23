@@ -31,7 +31,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 func GetUser(ctx context.Context) (*token.Claims, error) {
 	u, ok := ctx.Value(UserCtxKey).(*token.Claims)
 	if !ok || u == nil || (token.Claims{}) == *u {
-		return nil, errors.New("Invalid Token")
+		return nil, errors.New("Unauthorized")
 	}
 	return u, nil
 }

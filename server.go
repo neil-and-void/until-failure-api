@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/joho/godotenv"
 	"github.com/neilZon/workout-logger-api/accesscontroller/accesscontrol"
@@ -37,6 +38,7 @@ func main() {
 
 	acs := accesscontrol.NewAccessControllerService(db)
 	srv := helpers.NewGqlServer(db, acs)
+	srv.Use(extension.Introspection{})
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
 		// notify bug tracker...maybe? idk too much mone˜
 		if err != nil {

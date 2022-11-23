@@ -130,7 +130,7 @@ func (r *mutationResolver) RefreshAccessToken(ctx context.Context, refreshToken 
 func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine model.WorkoutRoutineInput) (*model.WorkoutRoutine, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return &model.WorkoutRoutine{}, gqlerror.Errorf("Error Creating Workout: %s", err.Error())
+		return &model.WorkoutRoutine{}, err
 	}
 
 	// validate input
@@ -175,7 +175,7 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine mod
 func (r *mutationResolver) UpdateWorkoutRoutine(ctx context.Context, workoutRoutineID string, updateWorkoutRoutineInput model.UpdateWorkoutRoutineInput) (*model.UpdatedWorkoutRoutine, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return &model.UpdatedWorkoutRoutine{}, gqlerror.Errorf("Error Updating Workout Routine: Invalid Token")
+		return &model.UpdatedWorkoutRoutine{}, err
 	}
 	userId := fmt.Sprintf("%d", u.ID)
 	err = r.ACS.CanAccessWorkoutRoutine(userId, workoutRoutineID)
@@ -201,7 +201,7 @@ func (r *mutationResolver) UpdateWorkoutRoutine(ctx context.Context, workoutRout
 func (r *mutationResolver) DeleteWorkoutRoutine(ctx context.Context, workoutRoutineID string) (int, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return 0, gqlerror.Errorf("Error Deleting Workout Routine: Invalid Token")
+		return 0, err
 	}
 
 	userId := fmt.Sprintf("%d", u.ID)
@@ -222,7 +222,7 @@ func (r *mutationResolver) DeleteWorkoutRoutine(ctx context.Context, workoutRout
 func (r *mutationResolver) AddExerciseRoutine(ctx context.Context, workoutRoutineID string, exerciseRoutine model.ExerciseRoutineInput) (string, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return "", gqlerror.Errorf("Error Adding Exercise Routine: Invalid Token")
+		return "", err
 	}
 
 	userId := fmt.Sprintf("%d", u.ID)
@@ -253,7 +253,7 @@ func (r *mutationResolver) AddExerciseRoutine(ctx context.Context, workoutRoutin
 func (r *mutationResolver) UpdateExerciseRoutine(ctx context.Context, exerciseRoutineID string, updateExerciseRoutineInput model.UpdateExerciseRoutineInput) (*model.ExerciseRoutine, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return &model.ExerciseRoutine{}, gqlerror.Errorf("Error Updating Exercise Routine: Invalid Token")
+		return &model.ExerciseRoutine{}, err
 	}
 
 	exerciseRoutine := database.ExerciseRoutine{}
@@ -285,7 +285,7 @@ func (r *mutationResolver) UpdateExerciseRoutine(ctx context.Context, exerciseRo
 	}
 	err = database.UpdateExerciseRoutine(r.DB, exerciseRoutineID, &updatedExerciseRoutine)
 	if err != nil {
-		return &model.ExerciseRoutine{},gqlerror.Errorf("Error Updating Exercise Routine") 
+		return &model.ExerciseRoutine{}, gqlerror.Errorf("Error Updating Exercise Routine")
 	}
 
 	return &model.ExerciseRoutine{
@@ -300,7 +300,7 @@ func (r *mutationResolver) UpdateExerciseRoutine(ctx context.Context, exerciseRo
 func (r *mutationResolver) DeleteExerciseRoutine(ctx context.Context, exerciseRoutineID string) (int, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return 0, gqlerror.Errorf("Error Deleting Exercise Routine: Invalid Token")
+		return 0, err
 	}
 
 	exerciseRoutine := database.ExerciseRoutine{}
@@ -327,7 +327,7 @@ func (r *mutationResolver) DeleteExerciseRoutine(ctx context.Context, exerciseRo
 func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.WorkoutSessionInput) (string, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return "", gqlerror.Errorf("Error Adding Workout Session: Invalid Token")
+		return "", err
 	}
 
 	var dbExercises []database.Exercise
@@ -377,7 +377,7 @@ func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.
 func (r *mutationResolver) UpdateWorkoutSession(ctx context.Context, workoutSessionID string, updateWorkoutSessionInput model.UpdateWorkoutSessionInput) (*model.UpdatedWorkoutSession, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return &model.UpdatedWorkoutSession{}, gqlerror.Errorf("Error Updating Workout Session: Invalid Token")
+		return &model.UpdatedWorkoutSession{}, err
 	}
 
 	fmt.Println("wtf")
@@ -412,7 +412,7 @@ func (r *mutationResolver) UpdateWorkoutSession(ctx context.Context, workoutSess
 func (r *mutationResolver) DeleteWorkoutSession(ctx context.Context, workoutSessionID string) (int, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return 0, gqlerror.Errorf("Error Deleting Workout Session: Invalid Token")
+		return 0, err
 	}
 
 	userId := fmt.Sprintf("%d", u.ID)
@@ -433,7 +433,7 @@ func (r *mutationResolver) DeleteWorkoutSession(ctx context.Context, workoutSess
 func (r *mutationResolver) AddExercise(ctx context.Context, workoutSessionID string, exercise model.ExerciseInput) (string, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return "", gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
+		return "", err
 	}
 
 	userId := fmt.Sprintf("%d", u.ID)
@@ -481,7 +481,7 @@ func (r *mutationResolver) AddExercise(ctx context.Context, workoutSessionID str
 func (r *mutationResolver) UpdateExercise(ctx context.Context, exerciseID string, exercise model.UpdateExerciseInput) (*model.UpdatedExercise, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return &model.UpdatedExercise{}, gqlerror.Errorf("Error Updating Exercise: Invalid Token")
+		return &model.UpdatedExercise{}, err
 	}
 
 	exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, strconv.IntSize)
@@ -518,7 +518,7 @@ func (r *mutationResolver) UpdateExercise(ctx context.Context, exerciseID string
 func (r *mutationResolver) DeleteExercise(ctx context.Context, exerciseID string) (int, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return 0, gqlerror.Errorf("Error Deleting Exercise: Invalid Token")
+		return 0, err
 	}
 
 	exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, strconv.IntSize)
@@ -549,7 +549,7 @@ func (r *mutationResolver) DeleteExercise(ctx context.Context, exerciseID string
 func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *model.SetEntryInput) (string, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return "", gqlerror.Errorf("Error Adding Set: %s", err.Error())
+		return "", err
 	}
 
 	exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, 64)
@@ -588,7 +588,7 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *m
 func (r *mutationResolver) UpdateSet(ctx context.Context, setID string, set model.UpdateSetEntryInput) (*model.SetEntry, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return &model.SetEntry{}, gqlerror.Errorf("Error Updating Set: Invalid Token")
+		return &model.SetEntry{}, err
 	}
 
 	var setEntry database.SetEntry
@@ -642,7 +642,7 @@ func (r *mutationResolver) UpdateSet(ctx context.Context, setID string, set mode
 func (r *mutationResolver) DeleteSet(ctx context.Context, setID string) (int, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return 0, gqlerror.Errorf("Error Deleting Routine: Invalid Token")
+		return 0, err
 	}
 
 	var setEntry database.SetEntry
@@ -678,7 +678,7 @@ func (r *mutationResolver) DeleteSet(ctx context.Context, setID string) (int, er
 func (r *queryResolver) WorkoutRoutines(ctx context.Context) ([]*model.WorkoutRoutine, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return []*model.WorkoutRoutine{}, gqlerror.Errorf("Error Getting Workout Routine: %s", err.Error())
+		return []*model.WorkoutRoutine{}, err
 	}
 
 	dbwr, err := database.GetWorkoutRoutines(r.DB, u.Subject)
@@ -713,7 +713,7 @@ func (r *queryResolver) WorkoutRoutines(ctx context.Context) ([]*model.WorkoutRo
 func (r *queryResolver) ExerciseRoutines(ctx context.Context, workoutRoutineID string) ([]*model.ExerciseRoutine, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Exercise Routine: %s", err.Error())
+		return []*model.ExerciseRoutine{}, err
 	}
 
 	userId := fmt.Sprintf("%d", u.ID)
@@ -744,7 +744,7 @@ func (r *queryResolver) ExerciseRoutines(ctx context.Context, workoutRoutineID s
 func (r *queryResolver) WorkoutSessions(ctx context.Context) ([]*model.WorkoutSession, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return []*model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Sessions: Invalid Token")
+		return []*model.WorkoutSession{}, err
 	}
 
 	dbWorkoutSessions, err := database.GetWorkoutSessions(r.DB, fmt.Sprintf("%d", u.ID))
@@ -792,7 +792,7 @@ func (r *queryResolver) WorkoutSessions(ctx context.Context) ([]*model.WorkoutSe
 func (r *queryResolver) WorkoutSession(ctx context.Context, workoutSessionID string) (*model.WorkoutSession, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return &model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Sessions: Invalid Token")
+		return &model.WorkoutSession{}, err
 	}
 
 	var dbWorkoutSession database.WorkoutSession
@@ -835,7 +835,7 @@ func (r *queryResolver) WorkoutSession(ctx context.Context, workoutSessionID str
 func (r *queryResolver) Exercise(ctx context.Context, exerciseID string) (*model.Exercise, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return &model.Exercise{}, gqlerror.Errorf("Error Getting Exercise: Invalid Token")
+		return &model.Exercise{}, err
 	}
 
 	exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, 64)
@@ -879,7 +879,7 @@ func (r *queryResolver) Exercise(ctx context.Context, exerciseID string) (*model
 func (r *queryResolver) Exercises(ctx context.Context, workoutSessionID string) ([]*model.Exercise, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return []*model.Exercise{}, gqlerror.Errorf("Error Getting Exercises: Invalid Token")
+		return []*model.Exercise{}, err
 	}
 
 	err = r.ACS.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), workoutSessionID)
@@ -919,7 +919,7 @@ func (r *queryResolver) Exercises(ctx context.Context, workoutSessionID string) 
 func (r *queryResolver) Sets(ctx context.Context, exerciseID string) ([]*model.SetEntry, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return []*model.SetEntry{}, gqlerror.Errorf("Error Getting Sets: %s", err.Error())
+		return []*model.SetEntry{}, err
 	}
 
 	exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, 64)

@@ -114,7 +114,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			`,
 			&resp,
 		)
-		require.EqualError(t, err, "[{\"message\":\"Error Adding Set: Invalid Token\",\"path\":[\"addSet\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"addSet\"]}]")
 	})
 
 	t.Run("Add Set Access Denied", func(t *testing.T) {
@@ -303,7 +303,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			`,
 			&resp,
 		)
-		require.EqualError(t, err, "[{\"message\":\"Error Getting Sets: Invalid Token\",\"path\":[\"sets\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"sets\"]}]")
 	})
 
 	t.Run("Get Set Entries Access Denied", func(t *testing.T) {
@@ -423,7 +423,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			`,
 			&resp,
 		)
-		require.EqualError(t, err, "[{\"message\":\"Error Updating Set: Invalid Token\",\"path\":[\"updateSet\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"updateSet\"]}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -612,7 +612,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			`,
 			&resp,
 		)
-		require.EqualError(t, err, "[{\"message\":\"Error Deleting Routine: Invalid Token\",\"path\":[\"deleteSet\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"deleteSet\"]}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {

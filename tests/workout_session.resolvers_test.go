@@ -186,7 +186,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 			}`,
 			&resp,
 		)
-		require.EqualError(t, err, "[{\"message\":\"Error Adding Workout Session: Invalid Token\",\"path\":[\"addWorkoutSession\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"addWorkoutSession\"]}]")
 	})
 
 	t.Run("Add Workout Session Error (invalid workout routine ID fk constraint)", func(t *testing.T) {
@@ -390,7 +390,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 			}`,
 			&resp,
 		)
-		require.EqualError(t, err, "[{\"message\":\"Error Getting Workout Sessions: Invalid Token\",\"path\":[\"workoutSessions\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"workoutSessions\"]}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -459,7 +459,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 			}`,
 			&resp,
 		)
-		require.EqualError(t, err, "[{\"message\":\"Error Getting Workout Sessions: Invalid Token\",\"path\":[\"workoutSession\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"workoutSession\"]}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -525,7 +525,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 			}`, ws.ID, ws.End.Format(time.RFC3339))
 		var resp UpdateWorkoutSession
 		err := c.Post(gqlQuery, &resp)
-		require.EqualError(t, err, "[{\"message\":\"Error Updating Workout Session: Invalid Token\",\"path\":[\"updateWorkoutSession\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"updateWorkoutSession\"]}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -649,7 +649,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		}`, ws.ID)
 		var resp DeleteWorkoutSessionResp
 		err := c.Post(gqlQuery, &resp)
-		require.EqualError(t, err, "[{\"message\":\"Error Deleting Workout Session: Invalid Token\",\"path\":[\"deleteWorkoutSession\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"deleteWorkoutSession\"]}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {

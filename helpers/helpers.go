@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/99designs/gqlgen/client"
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/neilZon/workout-logger-api/accesscontroller"
@@ -13,6 +14,7 @@ import (
 	"github.com/neilZon/workout-logger-api/graph/generated"
 	"github.com/neilZon/workout-logger-api/middleware"
 	"github.com/neilZon/workout-logger-api/token"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -34,10 +36,22 @@ func SetupMockDB() (sqlmock.Sqlmock, *gorm.DB) {
 }
 
 func NewGqlServer(gormDB *gorm.DB, acs accesscontroller.AccessControllerService) *handler.Server {
-	return handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
 		DB:  gormDB,
 		ACS: acs,
 	}}))
+
+	srv.SetErrorPresenter(func(ctx context.Context, e error) *gqlerror.Error {
+		err := graphql.DefaultErrorPresenter(ctx, e)
+		// add status code for unauthorized errors so client knows to refresh token
+		if e.Error() == "Unauthorized" {
+			err.Extensions = map[string]interface{}{
+				"code": "UNAUTHORIZED",
+			}
+		}
+		return err
+	})
+	return srv
 }
 
 func NewGqlClient(gormDB *gorm.DB, acs accesscontroller.AccessControllerService) *client.Client {

@@ -108,7 +108,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 			er.WorkoutRoutineID, er.Sets, er.Reps, er.Name,
 		)
 		err := c.Post(mutation, &resp)
-		require.EqualError(t, err, "[{\"message\":\"Error Adding Exercise Routine: Invalid Token\",\"path\":[\"addExerciseRoutine\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"addExerciseRoutine\"]}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -116,7 +116,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		}
 	})
 
-	t.Run("Add Exercise Routine Access Token", func(t *testing.T) {
+	t.Run("Add Exercise Routine Access Denied", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
 		acs := accesscontrol.NewAccessControllerService(gormDB)
 		c := helpers.NewGqlClient(gormDB, acs)
@@ -276,7 +276,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 			er.ID, er.Reps, er.Sets, er.Name,
 		)
 		err := c.Post(mutation, &resp)
-		require.EqualError(t, err,  "[{\"message\":\"Error Updating Exercise Routine: Invalid Token\",\"path\":[\"updateExerciseRoutine\"]}]")
+		require.EqualError(t, err,  "[{\"message\":\"Unauthorized\",\"path\":[\"updateExerciseRoutine\"]}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -470,7 +470,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 			er.ID,
 		)
 		err := c.Post(gqlQuery, &resp)
-		require.EqualError(t, err, "[{\"message\":\"Error Deleting Exercise Routine: Invalid Token\",\"path\":[\"deleteExerciseRoutine\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"deleteExerciseRoutine\"]}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
