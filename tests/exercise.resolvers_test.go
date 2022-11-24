@@ -135,7 +135,7 @@ func TestExerciseResolvers(t *testing.T) {
 			}`,
 			&resp,
 		)
-		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"addExercise\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"addExercise\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
 	})
 
 	t.Run("Add Exercise Access Denied", func(t *testing.T) {
@@ -236,7 +236,7 @@ func TestExerciseResolvers(t *testing.T) {
 			ws.ID,
 		)
 		err = c.Post(gqlQuery, &resp)
-		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"exercises\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"exercises\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -343,7 +343,7 @@ func TestExerciseResolvers(t *testing.T) {
 			e.ID,
 		)
 		err := c.Post(gqlQuery, &resp)
-		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"exercise\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"exercise\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
 	})
 
 	t.Run("Get Exercise Access Denied", func(t *testing.T) {
@@ -469,7 +469,7 @@ func TestExerciseResolvers(t *testing.T) {
 			updatedNote,
 		)
 		err := c.Post(gqlQuery, &resp)
-		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"updateExercise\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"updateExercise\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -647,7 +647,7 @@ func TestExerciseResolvers(t *testing.T) {
 			e.ID,
 		)
 		err := c.Post(gqlQuery, &resp)
-		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"deleteExercise\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"deleteExercise\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {

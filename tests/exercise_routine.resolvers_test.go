@@ -108,7 +108,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 			er.WorkoutRoutineID, er.Sets, er.Reps, er.Name,
 		)
 		err := c.Post(mutation, &resp)
-		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"addExerciseRoutine\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"addExerciseRoutine\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -276,7 +276,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 			er.ID, er.Reps, er.Sets, er.Name,
 		)
 		err := c.Post(mutation, &resp)
-		require.EqualError(t, err,  "[{\"message\":\"Unauthorized\",\"path\":[\"updateExerciseRoutine\"]}]")
+		require.EqualError(t, err,  "[{\"message\":\"Unauthorized\",\"path\":[\"updateExerciseRoutine\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -470,7 +470,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 			er.ID,
 		)
 		err := c.Post(gqlQuery, &resp)
-		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"deleteExerciseRoutine\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"deleteExerciseRoutine\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {

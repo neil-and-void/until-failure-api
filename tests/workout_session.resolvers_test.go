@@ -186,7 +186,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 			}`,
 			&resp,
 		)
-		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"addWorkoutSession\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"addWorkoutSession\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
 	})
 
 	t.Run("Add Workout Session Error (invalid workout routine ID fk constraint)", func(t *testing.T) {
@@ -390,7 +390,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 			}`,
 			&resp,
 		)
-		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"workoutSessions\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"workoutSessions\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -459,7 +459,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 			}`,
 			&resp,
 		)
-		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"workoutSession\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"workoutSession\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -525,7 +525,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 			}`, ws.ID, ws.End.Format(time.RFC3339))
 		var resp UpdateWorkoutSession
 		err := c.Post(gqlQuery, &resp)
-		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"updateWorkoutSession\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"updateWorkoutSession\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -649,7 +649,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		}`, ws.ID)
 		var resp DeleteWorkoutSessionResp
 		err := c.Post(gqlQuery, &resp)
-		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"deleteWorkoutSession\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"deleteWorkoutSession\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {

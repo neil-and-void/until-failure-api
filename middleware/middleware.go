@@ -2,10 +2,10 @@ package middleware
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"os"
 
+	"github.com/neilZon/workout-logger-api/common"
 	"github.com/neilZon/workout-logger-api/config"
 	"github.com/neilZon/workout-logger-api/token"
 )
@@ -31,7 +31,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 func GetUser(ctx context.Context) (*token.Claims, error) {
 	u, ok := ctx.Value(UserCtxKey).(*token.Claims)
 	if !ok || u == nil || (token.Claims{}) == *u {
-		return nil, errors.New("Unauthorized")
+		return nil, &common.UnauthorizedError{}
 	}
 	return u, nil
 }

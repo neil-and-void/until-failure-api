@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/neilZon/workout-logger-api/accesscontroller"
+	"github.com/neilZon/workout-logger-api/common"
 	"github.com/neilZon/workout-logger-api/graph"
 	"github.com/neilZon/workout-logger-api/graph/generated"
 	"github.com/neilZon/workout-logger-api/middleware"
@@ -44,7 +46,8 @@ func NewGqlServer(gormDB *gorm.DB, acs accesscontroller.AccessControllerService)
 	srv.SetErrorPresenter(func(ctx context.Context, e error) *gqlerror.Error {
 		err := graphql.DefaultErrorPresenter(ctx, e)
 		// add status code for unauthorized errors so client knows to refresh token
-		if e.Error() == "Unauthorized" {
+		var unauthorizedError *common.UnauthorizedError
+		if errors.As(e, &unauthorizedError) {
 			err.Extensions = map[string]interface{}{
 				"code": "UNAUTHORIZED",
 			}

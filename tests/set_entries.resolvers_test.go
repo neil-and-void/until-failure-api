@@ -114,7 +114,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			`,
 			&resp,
 		)
-		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"addSet\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"addSet\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
 	})
 
 	t.Run("Add Set Access Denied", func(t *testing.T) {
@@ -303,7 +303,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			`,
 			&resp,
 		)
-		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"sets\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"sets\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
 	})
 
 	t.Run("Get Set Entries Access Denied", func(t *testing.T) {
@@ -423,7 +423,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			`,
 			&resp,
 		)
-		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"updateSet\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"updateSet\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -612,7 +612,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			`,
 			&resp,
 		)
-		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"deleteSet\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"deleteSet\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
