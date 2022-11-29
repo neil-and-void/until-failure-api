@@ -23,7 +23,7 @@ The GraphQL api for a very simple workout logger app I built for myself to track
 2. `cd` into the root of the repo
 3. Have copy contents of `.test.env` into a new `.env` file
 4. Fill in and replace secrets and postgres database connection parameters 
-5. Run `make dev` to start test env
+5. Run `make dev` to start dev server or `make test` to run all integration tests
 
 # Commands
 
