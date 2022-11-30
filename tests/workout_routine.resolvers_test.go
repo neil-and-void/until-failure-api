@@ -172,11 +172,17 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at"}).
 			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt)
 
-		const workoutRoutineQuery = `
-		SELECT workout_routines.id, workout_routines.name, workout_routines.created_at, workout_routines.updated_at, workout_routines.deleted_at 
-		FROM "users" left join workout_routines on workout_routines.user_id = users.id 
-		WHERE users.email = $1 AND "users"."deleted_at" IS NULL`
-		mock.ExpectQuery(regexp.QuoteMeta(workoutRoutineQuery)).WithArgs(u.Subject).WillReturnRows(workoutRoutineRow)
+		const workoutRoutineQuery = `SELECT * FROM "workout_routines" WHERE user_id = $1 AND "workout_routines"."deleted_at" IS NULL`
+		mock.ExpectQuery(regexp.QuoteMeta(workoutRoutineQuery)).WithArgs(fmt.Sprintf("%d", u.ID)).WillReturnRows(workoutRoutineRow)
+
+		exerciseRoutineRows := sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "name", "sets", "reps", "workout_routine_id"})
+		for _, er := range wr.ExerciseRoutines {
+			exerciseRoutineRows.AddRow(er.ID, er.CreatedAt, er.DeletedAt, er.UpdatedAt, er.Name, er.Sets, er.Reps, er.WorkoutRoutineID)
+		}
+		const getExerciseRoutinesQuery = `SELECT * FROM "exercise_routines" WHERE "exercise_routines"."workout_routine_id" = $1 AND "exercise_routines"."deleted_at" IS NULL`
+		mock.ExpectQuery(regexp.QuoteMeta(getExerciseRoutinesQuery)).
+			WithArgs(wr.ID).
+			WillReturnRows(exerciseRoutineRows)
 
 		var resp GetWorkoutRoutineResp
 		c.MustPost(`query WorkoutRoutines {
