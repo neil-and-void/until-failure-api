@@ -26,24 +26,10 @@ func GetWorkoutRoutine(db *gorm.DB, userId string, workoutRoutineId string) (*Wo
 }
 
 // Workout Routine
-func GetWorkoutRoutines(db *gorm.DB, email string) ([]WorkoutRoutine, error) {
-	result := db.Model(&User{}). // todo: change to use .Preload()
-		Select("workout_routines.id, workout_routines.name, workout_routines.created_at, workout_routines.updated_at, workout_routines.deleted_at").
-		Joins("left join workout_routines on workout_routines.user_id = users.id").
-		Where("users.email = ?", email)
-	rows, err := result.Rows()
-	if err != nil {
-		return []WorkoutRoutine{}, err
-	}
-	defer rows.Close()
-
-	workoutRoutines := make([]WorkoutRoutine, 0)
-	for rows.Next() {
-		var wr WorkoutRoutine
-		db.ScanRows(rows, &wr)
-		workoutRoutines = append(workoutRoutines, wr)
-	}
-	return workoutRoutines, nil
+func GetWorkoutRoutines(db *gorm.DB, userId string) ([]*WorkoutRoutine, error) {
+	var workoutRoutines []*WorkoutRoutine
+	result := db.Preload("ExerciseRoutines").Where("user_id = ?", userId).Find(&workoutRoutines)
+	return workoutRoutines,result.Error
 }
 
 func UpdateWorkoutRoutine(db *gorm.DB, workoutRoutineId string, updatedWorkoutRoutine *WorkoutRoutine) error {

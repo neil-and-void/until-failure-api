@@ -681,7 +681,7 @@ func (r *queryResolver) WorkoutRoutines(ctx context.Context) ([]*model.WorkoutRo
 		return []*model.WorkoutRoutine{}, err
 	}
 
-	dbwr, err := database.GetWorkoutRoutines(r.DB, u.Subject)
+	dbwr, err := database.GetWorkoutRoutines(r.DB, fmt.Sprintf("%d", u.ID))
 	if err != nil {
 		return []*model.WorkoutRoutine{}, gqlerror.Errorf("Error Getting Workout Routine")
 	}
