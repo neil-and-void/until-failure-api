@@ -22,7 +22,7 @@ mutation Login {
 3. take the access token and paste this into the header section at the bottom of the page 
 ```
 {
-  Authorization:"Bearer <PASTE_ACCESS_TOKEN_HERE>"
+  "Authorization": "Bearer <PASTE_ACCESS_TOKEN_HERE>"
 }
 ```
 4. Click the docs button on the top left of the page and start running queries!
