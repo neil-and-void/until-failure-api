@@ -27,12 +27,12 @@ type Exercise struct {
 	ID                string      `json:"id"`
 	ExerciseRoutineID string      `json:"exerciseRoutineId"`
 	Sets              []*SetEntry `json:"sets"`
-	Notes             *string     `json:"notes"`
+	Notes             string      `json:"notes"`
 }
 
 type ExerciseInput struct {
 	ExerciseRoutineID string           `json:"exerciseRoutineId"`
-	Notes             *string          `json:"notes"`
+	Notes             string           `json:"notes"`
 	SetEntries        []*SetEntryInput `json:"setEntries"`
 }
 
@@ -80,7 +80,8 @@ type UpdateSetEntryInput struct {
 }
 
 type UpdateWorkoutRoutineInput struct {
-	Name string `json:"name"`
+	Name             string                        `json:"name"`
+	ExerciseRoutines []*UpdateExerciseRoutineInput `json:"exerciseRoutines"`
 }
 
 type UpdateWorkoutSessionInput struct {

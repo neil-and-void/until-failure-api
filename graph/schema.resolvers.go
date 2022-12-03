@@ -501,7 +501,7 @@ func (r *mutationResolver) UpdateExercise(ctx context.Context, exerciseID string
 	}
 
 	updatedExercise := database.Exercise{
-		Notes: &exercise.Notes,
+		Notes: exercise.Notes,
 	}
 	err = database.UpdateExercise(r.DB, exerciseID, &updatedExercise)
 	if err != nil {
@@ -510,7 +510,7 @@ func (r *mutationResolver) UpdateExercise(ctx context.Context, exerciseID string
 
 	return &model.UpdatedExercise{
 		ID:    exerciseID,
-		Notes: *updatedExercise.Notes,
+		Notes: updatedExercise.Notes,
 	}, nil
 }
 

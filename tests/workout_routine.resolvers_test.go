@@ -238,9 +238,13 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 		var resp UpdateWorkoutRoutine
 		mutation := fmt.Sprintf(`
 			mutation UpdateWorkoutRoutine {
-				updateWorkoutRoutine(workoutRoutineId: "%d", updateWorkoutRoutineInput: {
-					name: "%s"
-				}) {
+				updateWorkoutRoutine(
+					workoutRoutineId: "%d", 
+					updateWorkoutRoutineInput: {
+						name: "%s"
+						exerciseRoutines: []
+					}
+				) {
 					id
 					name
 				}
@@ -265,6 +269,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			mutation UpdateWorkoutRoutine {
 				updateWorkoutRoutine(workoutRoutineId: "%d", updateWorkoutRoutineInput: {
 					name: "%s"
+					exerciseRoutines: []
 				}) {
 					id
 					name
@@ -293,6 +298,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			mutation UpdateWorkoutRoutine {
 				updateWorkoutRoutine(workoutRoutineId: "%d", updateWorkoutRoutineInput: {
 					name: "%s"
+					exerciseRoutines: []
 				}) {
 					id
 					name
@@ -333,6 +339,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			mutation UpdateWorkoutRoutine {
 				updateWorkoutRoutine(workoutRoutineId: "%d", updateWorkoutRoutineInput: {
 					name: "%s"
+					exerciseRoutines: []
 				}) {
 					id
 					name

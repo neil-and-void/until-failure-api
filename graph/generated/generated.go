@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -801,7 +802,7 @@ type User {
 type WorkoutRoutine {
   id: ID!
   name: String!
-  exerciseRoutines: [ExerciseRoutine]
+  exerciseRoutines: [ExerciseRoutine!]!
 }
 
 type UpdatedWorkoutRoutine {
@@ -821,7 +822,7 @@ type WorkoutSession {
   start: Time!
   end: Time
   workoutRoutineId: ID!
-  exercises: [Exercise]!
+  exercises: [Exercise!]!
 }
 
 type UpdatedWorkoutSession {
@@ -833,8 +834,8 @@ type UpdatedWorkoutSession {
 type Exercise {
   id: ID!
   exerciseRoutineId: ID!
-  sets: [SetEntry]!
-  notes: String
+  sets: [SetEntry!]!
+  notes: String!
 }
 
 type UpdatedExercise {
@@ -869,11 +870,12 @@ type RefreshSuccess {
 
 input WorkoutRoutineInput {
   name: String!
-  exerciseRoutines: [ExerciseRoutineInput]
+  exerciseRoutines: [ExerciseRoutineInput!]!
 }
 
 input UpdateWorkoutRoutineInput {
   name: String!
+  exerciseRoutines: [UpdateExerciseRoutineInput!]!
 }
 
 input UpdateExerciseRoutineInput {
@@ -892,7 +894,7 @@ input WorkoutSessionInput {
   workoutRoutineId: ID!
   start: Time!
   end: Time
-  exercises: [ExerciseInput]
+  exercises: [ExerciseInput!]!
 }
 
 input UpdateWorkoutSessionInput {
@@ -902,8 +904,8 @@ input UpdateWorkoutSessionInput {
 
 input ExerciseInput {
   exerciseRoutineId: ID!
-  notes: String
-  setEntries: [SetEntryInput]
+  notes: String!
+  setEntries: [SetEntryInput!]!
 }
 
 input UpdateExerciseInput {
@@ -923,13 +925,13 @@ input UpdateSetEntryInput {
 ### END INPUTS ###
 
 type Query {
-  workoutRoutines: [WorkoutRoutine]
-  exerciseRoutines(workoutRoutineId: ID!): [ExerciseRoutine]
-  workoutSessions: [WorkoutSession]
+  workoutRoutines: [WorkoutRoutine!]!
+  exerciseRoutines(workoutRoutineId: ID!): [ExerciseRoutine!]!
+  workoutSessions: [WorkoutSession!]!
   workoutSession(workoutSessionId: ID!): WorkoutSession
   exercise(exerciseId: ID!): Exercise
-  exercises(workoutSessionId: ID!): [Exercise]
-  sets(exerciseId: ID!): [SetEntry]
+  exercises(workoutSessionId: ID!): [Exercise!]!
+  sets(exerciseId: ID!): [SetEntry!]!
 }
 
 type Mutation {
@@ -1740,7 +1742,7 @@ func (ec *executionContext) _Exercise_sets(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.([]*model.SetEntry)
 	fc.Result = res
-	return ec.marshalNSetEntry2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntry(ctx, field.Selections, res)
+	return ec.marshalNSetEntry2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntryᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Exercise_sets(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1785,11 +1787,14 @@ func (ec *executionContext) _Exercise_notes(ctx context.Context, field graphql.C
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Exercise_notes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3042,11 +3047,14 @@ func (ec *executionContext) _Query_workoutRoutines(ctx context.Context, field gr
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]*model.WorkoutRoutine)
 	fc.Result = res
-	return ec.marshalOWorkoutRoutine2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutine(ctx, field.Selections, res)
+	return ec.marshalNWorkoutRoutine2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutineᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_workoutRoutines(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3091,11 +3099,14 @@ func (ec *executionContext) _Query_exerciseRoutines(ctx context.Context, field g
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]*model.ExerciseRoutine)
 	fc.Result = res
-	return ec.marshalOExerciseRoutine2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutine(ctx, field.Selections, res)
+	return ec.marshalNExerciseRoutine2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutineᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_exerciseRoutines(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3153,11 +3164,14 @@ func (ec *executionContext) _Query_workoutSessions(ctx context.Context, field gr
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]*model.WorkoutSession)
 	fc.Result = res
-	return ec.marshalOWorkoutSession2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSession(ctx, field.Selections, res)
+	return ec.marshalNWorkoutSession2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSessionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_workoutSessions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3332,11 +3346,14 @@ func (ec *executionContext) _Query_exercises(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]*model.Exercise)
 	fc.Result = res
-	return ec.marshalOExercise2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExercise(ctx, field.Selections, res)
+	return ec.marshalNExercise2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_exercises(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3394,11 +3411,14 @@ func (ec *executionContext) _Query_sets(ctx context.Context, field graphql.Colle
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]*model.SetEntry)
 	fc.Result = res
-	return ec.marshalOSetEntry2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntry(ctx, field.Selections, res)
+	return ec.marshalNSetEntry2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntryᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_sets(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4284,11 +4304,14 @@ func (ec *executionContext) _WorkoutRoutine_exerciseRoutines(ctx context.Context
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]*model.ExerciseRoutine)
 	fc.Result = res
-	return ec.marshalOExerciseRoutine2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutine(ctx, field.Selections, res)
+	return ec.marshalNExerciseRoutine2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutineᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_WorkoutRoutine_exerciseRoutines(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4515,7 +4538,7 @@ func (ec *executionContext) _WorkoutSession_exercises(ctx context.Context, field
 	}
 	res := resTmp.([]*model.Exercise)
 	fc.Result = res
-	return ec.marshalNExercise2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExercise(ctx, field.Selections, res)
+	return ec.marshalNExercise2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_WorkoutSession_exercises(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6340,7 +6363,7 @@ func (ec *executionContext) unmarshalInputExerciseInput(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
-			it.Notes, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			it.Notes, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6348,7 +6371,7 @@ func (ec *executionContext) unmarshalInputExerciseInput(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("setEntries"))
-			it.SetEntries, err = ec.unmarshalOSetEntryInput2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntryInput(ctx, v)
+			it.SetEntries, err = ec.unmarshalNSetEntryInput2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntryInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6553,7 +6576,7 @@ func (ec *executionContext) unmarshalInputUpdateWorkoutRoutineInput(ctx context.
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name"}
+	fieldsInOrder := [...]string{"name", "exerciseRoutines"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -6565,6 +6588,14 @@ func (ec *executionContext) unmarshalInputUpdateWorkoutRoutineInput(ctx context.
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "exerciseRoutines":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("exerciseRoutines"))
+			it.ExerciseRoutines, err = ec.unmarshalNUpdateExerciseRoutineInput2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUpdateExerciseRoutineInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6636,7 +6667,7 @@ func (ec *executionContext) unmarshalInputWorkoutRoutineInput(ctx context.Contex
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("exerciseRoutines"))
-			it.ExerciseRoutines, err = ec.unmarshalOExerciseRoutineInput2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutineInput(ctx, v)
+			it.ExerciseRoutines, err = ec.unmarshalNExerciseRoutineInput2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutineInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6688,7 +6719,7 @@ func (ec *executionContext) unmarshalInputWorkoutSessionInput(ctx context.Contex
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("exercises"))
-			it.Exercises, err = ec.unmarshalOExerciseInput2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseInput(ctx, v)
+			it.Exercises, err = ec.unmarshalNExerciseInput2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6827,6 +6858,9 @@ func (ec *executionContext) _Exercise(ctx context.Context, sel ast.SelectionSet,
 
 			out.Values[i] = ec._Exercise_notes(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7108,6 +7142,9 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_workoutRoutines(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -7128,6 +7165,9 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_exerciseRoutines(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -7148,6 +7188,9 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_workoutSessions(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -7208,6 +7251,9 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_exercises(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -7228,6 +7274,9 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_sets(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -7510,6 +7559,9 @@ func (ec *executionContext) _WorkoutRoutine(ctx context.Context, sel ast.Selecti
 
 			out.Values[i] = ec._WorkoutRoutine_exerciseRoutines(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7917,7 +7969,7 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNExercise2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExercise(ctx context.Context, sel ast.SelectionSet, v []*model.Exercise) graphql.Marshaler {
+func (ec *executionContext) marshalNExercise2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Exercise) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -7941,7 +7993,7 @@ func (ec *executionContext) marshalNExercise2ᚕᚖgithubᚗcomᚋneilZonᚋwork
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOExercise2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExercise(ctx, sel, v[i])
+			ret[i] = ec.marshalNExercise2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExercise(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -7952,7 +8004,23 @@ func (ec *executionContext) marshalNExercise2ᚕᚖgithubᚗcomᚋneilZonᚋwork
 	}
 	wg.Wait()
 
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
 	return ret
+}
+
+func (ec *executionContext) marshalNExercise2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExercise(ctx context.Context, sel ast.SelectionSet, v *model.Exercise) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Exercise(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNExerciseInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseInput(ctx context.Context, v interface{}) (model.ExerciseInput, error) {
@@ -7960,8 +8028,74 @@ func (ec *executionContext) unmarshalNExerciseInput2githubᚗcomᚋneilZonᚋwor
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNExerciseInput2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseInputᚄ(ctx context.Context, v interface{}) ([]*model.ExerciseInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.ExerciseInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNExerciseInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNExerciseInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseInput(ctx context.Context, v interface{}) (*model.ExerciseInput, error) {
+	res, err := ec.unmarshalInputExerciseInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNExerciseRoutine2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutine(ctx context.Context, sel ast.SelectionSet, v model.ExerciseRoutine) graphql.Marshaler {
 	return ec._ExerciseRoutine(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNExerciseRoutine2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutineᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ExerciseRoutine) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNExerciseRoutine2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutine(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNExerciseRoutine2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutine(ctx context.Context, sel ast.SelectionSet, v *model.ExerciseRoutine) graphql.Marshaler {
@@ -7977,6 +8111,28 @@ func (ec *executionContext) marshalNExerciseRoutine2ᚖgithubᚗcomᚋneilZonᚋ
 func (ec *executionContext) unmarshalNExerciseRoutineInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutineInput(ctx context.Context, v interface{}) (model.ExerciseRoutineInput, error) {
 	res, err := ec.unmarshalInputExerciseRoutineInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNExerciseRoutineInput2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutineInputᚄ(ctx context.Context, v interface{}) ([]*model.ExerciseRoutineInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.ExerciseRoutineInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNExerciseRoutineInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutineInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNExerciseRoutineInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutineInput(ctx context.Context, v interface{}) (*model.ExerciseRoutineInput, error) {
+	res, err := ec.unmarshalInputExerciseRoutineInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
@@ -8042,7 +8198,7 @@ func (ec *executionContext) marshalNSetEntry2githubᚗcomᚋneilZonᚋworkoutᚑ
 	return ec._SetEntry(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSetEntry2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntry(ctx context.Context, sel ast.SelectionSet, v []*model.SetEntry) graphql.Marshaler {
+func (ec *executionContext) marshalNSetEntry2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SetEntry) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -8066,7 +8222,7 @@ func (ec *executionContext) marshalNSetEntry2ᚕᚖgithubᚗcomᚋneilZonᚋwork
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOSetEntry2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntry(ctx, sel, v[i])
+			ret[i] = ec.marshalNSetEntry2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntry(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8076,6 +8232,12 @@ func (ec *executionContext) marshalNSetEntry2ᚕᚖgithubᚗcomᚋneilZonᚋwork
 
 	}
 	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
 
 	return ret
 }
@@ -8088,6 +8250,28 @@ func (ec *executionContext) marshalNSetEntry2ᚖgithubᚗcomᚋneilZonᚋworkout
 		return graphql.Null
 	}
 	return ec._SetEntry(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNSetEntryInput2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntryInputᚄ(ctx context.Context, v interface{}) ([]*model.SetEntryInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.SetEntryInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNSetEntryInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntryInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNSetEntryInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntryInput(ctx context.Context, v interface{}) (*model.SetEntryInput, error) {
+	res, err := ec.unmarshalInputSetEntryInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -8128,6 +8312,28 @@ func (ec *executionContext) unmarshalNUpdateExerciseInput2githubᚗcomᚋneilZon
 func (ec *executionContext) unmarshalNUpdateExerciseRoutineInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUpdateExerciseRoutineInput(ctx context.Context, v interface{}) (model.UpdateExerciseRoutineInput, error) {
 	res, err := ec.unmarshalInputUpdateExerciseRoutineInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateExerciseRoutineInput2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUpdateExerciseRoutineInputᚄ(ctx context.Context, v interface{}) ([]*model.UpdateExerciseRoutineInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.UpdateExerciseRoutineInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNUpdateExerciseRoutineInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUpdateExerciseRoutineInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNUpdateExerciseRoutineInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUpdateExerciseRoutineInput(ctx context.Context, v interface{}) (*model.UpdateExerciseRoutineInput, error) {
+	res, err := ec.unmarshalInputUpdateExerciseRoutineInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNUpdateSetEntryInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUpdateSetEntryInput(ctx context.Context, v interface{}) (model.UpdateSetEntryInput, error) {
@@ -8191,6 +8397,50 @@ func (ec *executionContext) marshalNWorkoutRoutine2githubᚗcomᚋneilZonᚋwork
 	return ec._WorkoutRoutine(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNWorkoutRoutine2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutineᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.WorkoutRoutine) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNWorkoutRoutine2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutine(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNWorkoutRoutine2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutine(ctx context.Context, sel ast.SelectionSet, v *model.WorkoutRoutine) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -8204,6 +8454,60 @@ func (ec *executionContext) marshalNWorkoutRoutine2ᚖgithubᚗcomᚋneilZonᚋw
 func (ec *executionContext) unmarshalNWorkoutRoutineInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutineInput(ctx context.Context, v interface{}) (model.WorkoutRoutineInput, error) {
 	res, err := ec.unmarshalInputWorkoutRoutineInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNWorkoutSession2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSessionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.WorkoutSession) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNWorkoutSession2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSession(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNWorkoutSession2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSession(ctx context.Context, sel ast.SelectionSet, v *model.WorkoutSession) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._WorkoutSession(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNWorkoutSessionInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSessionInput(ctx context.Context, v interface{}) (model.WorkoutSessionInput, error) {
@@ -8490,156 +8794,11 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOExercise2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExercise(ctx context.Context, sel ast.SelectionSet, v []*model.Exercise) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOExercise2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExercise(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	return ret
-}
-
 func (ec *executionContext) marshalOExercise2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExercise(ctx context.Context, sel ast.SelectionSet, v *model.Exercise) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Exercise(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOExerciseInput2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseInput(ctx context.Context, v interface{}) ([]*model.ExerciseInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*model.ExerciseInput, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalOExerciseInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseInput(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) unmarshalOExerciseInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseInput(ctx context.Context, v interface{}) (*model.ExerciseInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputExerciseInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOExerciseRoutine2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutine(ctx context.Context, sel ast.SelectionSet, v []*model.ExerciseRoutine) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOExerciseRoutine2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutine(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	return ret
-}
-
-func (ec *executionContext) marshalOExerciseRoutine2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutine(ctx context.Context, sel ast.SelectionSet, v *model.ExerciseRoutine) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._ExerciseRoutine(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOExerciseRoutineInput2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutineInput(ctx context.Context, v interface{}) ([]*model.ExerciseRoutineInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*model.ExerciseRoutineInput, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalOExerciseRoutineInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutineInput(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) unmarshalOExerciseRoutineInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutineInput(ctx context.Context, v interface{}) (*model.ExerciseRoutineInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputExerciseRoutineInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v interface{}) (*float64, error) {
@@ -8672,74 +8831,6 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
-}
-
-func (ec *executionContext) marshalOSetEntry2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntry(ctx context.Context, sel ast.SelectionSet, v []*model.SetEntry) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOSetEntry2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntry(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	return ret
-}
-
-func (ec *executionContext) marshalOSetEntry2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntry(ctx context.Context, sel ast.SelectionSet, v *model.SetEntry) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._SetEntry(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOSetEntryInput2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntryInput(ctx context.Context, v interface{}) ([]*model.SetEntryInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*model.SetEntryInput, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalOSetEntryInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntryInput(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
 }
 
 func (ec *executionContext) unmarshalOSetEntryInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntryInput(ctx context.Context, v interface{}) (*model.SetEntryInput, error) {
@@ -8780,95 +8871,6 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 	}
 	res := graphql.MarshalTime(*v)
 	return res
-}
-
-func (ec *executionContext) marshalOWorkoutRoutine2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutine(ctx context.Context, sel ast.SelectionSet, v []*model.WorkoutRoutine) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOWorkoutRoutine2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutine(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	return ret
-}
-
-func (ec *executionContext) marshalOWorkoutRoutine2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutine(ctx context.Context, sel ast.SelectionSet, v *model.WorkoutRoutine) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._WorkoutRoutine(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOWorkoutSession2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSession(ctx context.Context, sel ast.SelectionSet, v []*model.WorkoutSession) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOWorkoutSession2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSession(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	return ret
 }
 
 func (ec *executionContext) marshalOWorkoutSession2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSession(ctx context.Context, sel ast.SelectionSet, v *model.WorkoutSession) graphql.Marshaler {

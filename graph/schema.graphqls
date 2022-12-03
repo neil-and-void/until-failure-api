@@ -10,7 +10,7 @@ type User {
 type WorkoutRoutine {
   id: ID!
   name: String!
-  exerciseRoutines: [ExerciseRoutine]
+  exerciseRoutines: [ExerciseRoutine!]!
 }
 
 type UpdatedWorkoutRoutine {
@@ -30,7 +30,7 @@ type WorkoutSession {
   start: Time!
   end: Time
   workoutRoutineId: ID!
-  exercises: [Exercise]!
+  exercises: [Exercise!]!
 }
 
 type UpdatedWorkoutSession {
@@ -42,8 +42,8 @@ type UpdatedWorkoutSession {
 type Exercise {
   id: ID!
   exerciseRoutineId: ID!
-  sets: [SetEntry]!
-  notes: String
+  sets: [SetEntry!]!
+  notes: String!
 }
 
 type UpdatedExercise {
@@ -78,11 +78,12 @@ type RefreshSuccess {
 
 input WorkoutRoutineInput {
   name: String!
-  exerciseRoutines: [ExerciseRoutineInput]
+  exerciseRoutines: [ExerciseRoutineInput!]!
 }
 
 input UpdateWorkoutRoutineInput {
   name: String!
+  exerciseRoutines: [UpdateExerciseRoutineInput!]!
 }
 
 input UpdateExerciseRoutineInput {
@@ -101,7 +102,7 @@ input WorkoutSessionInput {
   workoutRoutineId: ID!
   start: Time!
   end: Time
-  exercises: [ExerciseInput]
+  exercises: [ExerciseInput!]!
 }
 
 input UpdateWorkoutSessionInput {
@@ -111,8 +112,8 @@ input UpdateWorkoutSessionInput {
 
 input ExerciseInput {
   exerciseRoutineId: ID!
-  notes: String
-  setEntries: [SetEntryInput]
+  notes: String!
+  setEntries: [SetEntryInput!]!
 }
 
 input UpdateExerciseInput {
@@ -132,13 +133,13 @@ input UpdateSetEntryInput {
 ### END INPUTS ###
 
 type Query {
-  workoutRoutines: [WorkoutRoutine]
-  exerciseRoutines(workoutRoutineId: ID!): [ExerciseRoutine]
-  workoutSessions: [WorkoutSession]
+  workoutRoutines: [WorkoutRoutine!]!
+  exerciseRoutines(workoutRoutineId: ID!): [ExerciseRoutine!]!
+  workoutSessions: [WorkoutSession!]!
   workoutSession(workoutSessionId: ID!): WorkoutSession
   exercise(exerciseId: ID!): Exercise
-  exercises(workoutSessionId: ID!): [Exercise]
-  sets(exerciseId: ID!): [SetEntry]
+  exercises(workoutSessionId: ID!): [Exercise!]!
+  sets(exerciseId: ID!): [SetEntry!]!
 }
 
 type Mutation {
