@@ -2,13 +2,13 @@
 
 # Workout Logger API
 
-
-
 The GraphQL api for a very simple workout logger app I built for myself to track progression of weight I'm lifting for certain exercises.
 
 # Try It Out
+
 1. Go to https://workout-logger-api-ejtky726bq-uw.a.run.app/
-2. Do a login mutation to get the access token by pasting and running 
+2. Do a login mutation to get the access token by pasting and running
+
 ```
 mutation Login {
   login(email: "test@test.com", password:"password123") {
@@ -19,12 +19,15 @@ mutation Login {
   }
 }
 ```
-3. take the access token and paste this into the header section at the bottom of the page 
+
+3. take the access token and paste this into the header section at the bottom of the page
+
 ```
 {
   "Authorization": "Bearer <PASTE_ACCESS_TOKEN_HERE>"
 }
 ```
+
 4. Click the docs button on the top left of the page and start running queries!
 
 # Techonologies Used
@@ -45,7 +48,7 @@ mutation Login {
 1. Clone repo
 2. `cd` into the root of the repo
 3. Have copy contents of `.test.env` into a new `.env` file
-4. Fill in and replace secrets and postgres database connection parameters 
+4. Fill in and replace secrets and postgres database connection parameters
 5. Run `make dev` to start dev server or `make test` to run all integration tests
 
 # Commands
@@ -54,3 +57,6 @@ mutation Login {
 - `make test`: run all test files
 - `make format`: format all code within repo
 - `make regenerate`: regenerate graphql resolvers from `schema.graphqls`
+
+32
+neil-inc-workout-logger
