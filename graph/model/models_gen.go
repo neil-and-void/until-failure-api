@@ -81,6 +81,7 @@ type UpdateSetEntryInput struct {
 }
 
 type UpdateWorkoutRoutineInput struct {
+	ID               string                        `json:"id"`
 	Name             string                        `json:"name"`
 	ExerciseRoutines []*UpdateExerciseRoutineInput `json:"exerciseRoutines"`
 }

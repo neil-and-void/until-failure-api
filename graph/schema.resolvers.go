@@ -172,20 +172,20 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine mod
 }
 
 // UpdateWorkoutRoutine is the resolver for the updateWorkoutRoutine field.
-func (r *mutationResolver) UpdateWorkoutRoutine(ctx context.Context, workoutRoutineID string, updateWorkoutRoutineInput model.UpdateWorkoutRoutineInput) (*model.UpdatedWorkoutRoutine, error) {
+func (r *mutationResolver) UpdateWorkoutRoutine(ctx context.Context, workoutRoutine model.UpdateWorkoutRoutineInput) (*model.UpdatedWorkoutRoutine, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
 		return &model.UpdatedWorkoutRoutine{}, err
 	}
 
 	userId := fmt.Sprintf("%d", u.ID)
-	err = r.ACS.CanAccessWorkoutRoutine(userId, workoutRoutineID)
+	err = r.ACS.CanAccessWorkoutRoutine(userId, workoutRoutine.ID)
 	if err != nil {
 		return &model.UpdatedWorkoutRoutine{}, gqlerror.Errorf("Error Updating Workout Routine: Access Denied")
 	}
 
 	var exerciseRoutines []*database.ExerciseRoutine
-	for _, er := range updateWorkoutRoutineInput.ExerciseRoutines {
+	for _, er := range workoutRoutine.ExerciseRoutines {
 		// newly added exercises won't have an ID
 		// nil ID indicates that this exercise should be created, otherwise update
 		// the exercise that has that ID
@@ -198,7 +198,7 @@ func (r *mutationResolver) UpdateWorkoutRoutine(ctx context.Context, workoutRout
 			model.ID = uint(num)
 		}
 
-		workoutRoutineIDUint, err := strconv.ParseUint(workoutRoutineID, 10, strconv.IntSize)
+		workoutRoutineIDUint, err := strconv.ParseUint(workoutRoutine.ID, 10, strconv.IntSize)
 		if err != nil {
 			panic(err)
 		}
@@ -212,7 +212,7 @@ func (r *mutationResolver) UpdateWorkoutRoutine(ctx context.Context, workoutRout
 		})
 	}
 
-	err = database.UpdateWorkoutRoutine(r.DB, workoutRoutineID, updateWorkoutRoutineInput.Name, exerciseRoutines)
+	err = database.UpdateWorkoutRoutine(r.DB, workoutRoutine.ID, workoutRoutine.Name, exerciseRoutines)
 	if err != nil {
 		return &model.UpdatedWorkoutRoutine{}, gqlerror.Errorf("Error Updating Workout Routine")
 	}
@@ -228,8 +228,8 @@ func (r *mutationResolver) UpdateWorkoutRoutine(ctx context.Context, workoutRout
 	}
 
 	return &model.UpdatedWorkoutRoutine{
-		ID:               workoutRoutineID,
-		Name:             "bruh",
+		ID:               workoutRoutine.ID,
+		Name:             workoutRoutine.Name,
 		ExerciseRoutines: updatedExerciseRoutines,
 	}, nil
 }
