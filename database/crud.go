@@ -32,9 +32,27 @@ func GetWorkoutRoutines(db *gorm.DB, userId string) ([]*WorkoutRoutine, error) {
 	return workoutRoutines,result.Error
 }
 
-func UpdateWorkoutRoutine(db *gorm.DB, workoutRoutineId string, updatedWorkoutRoutine *WorkoutRoutine) error {
-	result := db.Model(updatedWorkoutRoutine).Clauses(clause.Returning{}).Where("id = ?", workoutRoutineId).Updates(updatedWorkoutRoutine)
-	return result.Error
+func UpdateWorkoutRoutine(db *gorm.DB, workoutRoutineId string, workoutRoutineName string, exerciseRoutines []*ExerciseRoutine) error {
+	tx := db.Begin()
+
+	if err := tx.Model(&WorkoutRoutine{}).Where("id = ?", workoutRoutineId).Update("name", workoutRoutineName).Error; err != nil {
+		tx.Rollback()
+		return err	
+	}
+
+	// upsert exercise routines
+	for _, er := range exerciseRoutines {
+		err := tx.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"reps", "sets"}),
+		}).Clauses(clause.Returning{}).Create(er).Error
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	return tx.Commit().Error	
 }
 
 func DeleteWorkoutRoutine(db *gorm.DB, workoutRoutineId string) error {

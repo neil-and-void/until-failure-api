@@ -40,7 +40,7 @@ func main() {
 	srv := helpers.NewGqlServer(db, acs)
 	srv.Use(extension.Introspection{})
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
-		// notify bug tracker...maybe? idk too much mone˜
+		// notify bug tracker...maybe? idk too much money
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -50,7 +50,7 @@ func main() {
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://127.0.0.1", "http://localhost:8080", "https://hoppscotch.io/"},
 		AllowCredentials: true,
-		Debug:            true,
+		Debug:            false,
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 	})
 

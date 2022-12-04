@@ -177,23 +177,60 @@ func (r *mutationResolver) UpdateWorkoutRoutine(ctx context.Context, workoutRout
 	if err != nil {
 		return &model.UpdatedWorkoutRoutine{}, err
 	}
+
 	userId := fmt.Sprintf("%d", u.ID)
 	err = r.ACS.CanAccessWorkoutRoutine(userId, workoutRoutineID)
 	if err != nil {
 		return &model.UpdatedWorkoutRoutine{}, gqlerror.Errorf("Error Updating Workout Routine: Access Denied")
 	}
 
-	dbWorkoutRoutine := database.WorkoutRoutine{
-		Name: updateWorkoutRoutineInput.Name,
+	var exerciseRoutines []*database.ExerciseRoutine
+	for _, er := range updateWorkoutRoutineInput.ExerciseRoutines {
+		// newly added exercises won't have an ID
+		// nil ID indicates that this exercise should be created, otherwise update
+		// the exercise that has that ID
+		var model gorm.Model
+		if er.ID != nil {
+			num, err := strconv.ParseUint(*er.ID, 10, strconv.IntSize)
+			if err != nil {
+				panic(err)
+			}
+			model.ID = uint(num)
+		}
+
+		workoutRoutineIDUint, err := strconv.ParseUint(workoutRoutineID, 10, strconv.IntSize)
+		if err != nil {
+			panic(err)
+		}
+
+		exerciseRoutines = append(exerciseRoutines, &database.ExerciseRoutine{
+			Model:            model,
+			Name:             er.Name,
+			Sets:             uint(er.Sets),
+			Reps:             uint(er.Reps),
+			WorkoutRoutineID: uint(workoutRoutineIDUint),
+		})
 	}
-	err = database.UpdateWorkoutRoutine(r.DB, workoutRoutineID, &dbWorkoutRoutine)
+
+	err = database.UpdateWorkoutRoutine(r.DB, workoutRoutineID, updateWorkoutRoutineInput.Name, exerciseRoutines)
 	if err != nil {
 		return &model.UpdatedWorkoutRoutine{}, gqlerror.Errorf("Error Updating Workout Routine")
 	}
 
+	var updatedExerciseRoutines []*model.ExerciseRoutine
+	for _, er := range exerciseRoutines {
+		updatedExerciseRoutines = append(updatedExerciseRoutines, &model.ExerciseRoutine{
+			ID:   fmt.Sprintf("%d", er.ID),
+			Name: er.Name,
+			Reps: int(er.Reps),
+			Sets: int(er.Sets),
+		})
+	}
+
 	return &model.UpdatedWorkoutRoutine{
-		ID:   fmt.Sprintf("%d", dbWorkoutRoutine.ID),
-		Name: dbWorkoutRoutine.Name,
+		ID:               workoutRoutineID,
+		Name:             "bruh",
+		ExerciseRoutines: updatedExerciseRoutines,
 	}, nil
 }
 
@@ -247,53 +284,6 @@ func (r *mutationResolver) AddExerciseRoutine(ctx context.Context, workoutRoutin
 	}
 
 	return fmt.Sprintf("%d", dbExerciseRoutine.ID), nil
-}
-
-// UpdateExerciseRoutine is the resolver for the updateExerciseRoutine field.
-func (r *mutationResolver) UpdateExerciseRoutine(ctx context.Context, exerciseRoutineID string, updateExerciseRoutineInput model.UpdateExerciseRoutineInput) (*model.ExerciseRoutine, error) {
-	u, err := middleware.GetUser(ctx)
-	if err != nil {
-		return &model.ExerciseRoutine{}, err
-	}
-
-	exerciseRoutine := database.ExerciseRoutine{}
-	err = database.GetExerciseRoutine(r.DB, exerciseRoutineID, &exerciseRoutine)
-
-	userId := fmt.Sprintf("%d", u.ID)
-	err = r.ACS.CanAccessWorkoutRoutine(userId, fmt.Sprintf("%d", exerciseRoutine.WorkoutRoutineID))
-	if err != nil {
-		return &model.ExerciseRoutine{}, gqlerror.Errorf("Error Updating Exercise Routine: Access Denied")
-	}
-
-	var name string
-	var sets int
-	var reps int
-	if updateExerciseRoutineInput.Name != nil {
-		name = *updateExerciseRoutineInput.Name
-	}
-	if updateExerciseRoutineInput.Sets != nil {
-		sets = *updateExerciseRoutineInput.Sets
-	}
-	if updateExerciseRoutineInput.Reps != nil {
-		reps = *updateExerciseRoutineInput.Reps
-	}
-
-	updatedExerciseRoutine := database.ExerciseRoutine{
-		Name: name,
-		Reps: uint(reps),
-		Sets: uint(sets),
-	}
-	err = database.UpdateExerciseRoutine(r.DB, exerciseRoutineID, &updatedExerciseRoutine)
-	if err != nil {
-		return &model.ExerciseRoutine{}, gqlerror.Errorf("Error Updating Exercise Routine")
-	}
-
-	return &model.ExerciseRoutine{
-		ID:   fmt.Sprintf("%d", updatedExerciseRoutine.ID),
-		Name: updatedExerciseRoutine.Name,
-		Reps: int(updatedExerciseRoutine.Reps),
-		Sets: int(updatedExerciseRoutine.Sets),
-	}, nil
 }
 
 // DeleteExerciseRoutine is the resolver for the deleteExerciseRoutine field.
@@ -380,7 +370,6 @@ func (r *mutationResolver) UpdateWorkoutSession(ctx context.Context, workoutSess
 		return &model.UpdatedWorkoutSession{}, err
 	}
 
-	fmt.Println("wtf")
 	userId := fmt.Sprintf("%d", u.ID)
 	err = r.ACS.CanAccessWorkoutSession(userId, workoutSessionID)
 	if err != nil {
@@ -399,7 +388,6 @@ func (r *mutationResolver) UpdateWorkoutSession(ctx context.Context, workoutSess
 	if err != nil {
 		return &model.UpdatedWorkoutSession{}, gqlerror.Errorf("Error Updating Workout Session")
 	}
-	fmt.Println(updatedWorkoutSession.Start, updatedWorkoutSession.End)
 
 	return &model.UpdatedWorkoutSession{
 		ID:    fmt.Sprintf("%d", updatedWorkoutSession.ID),
