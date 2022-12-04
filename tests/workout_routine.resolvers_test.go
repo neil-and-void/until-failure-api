@@ -35,6 +35,12 @@ type UpdateWorkoutRoutine struct {
 	UpdateWorkoutRoutine struct {
 		ID string
 		Name string
+		ExerciseRoutines []struct {
+			ID string
+			Name string
+			Sets   int
+			Reps   int
+		}
 	}
 }
 
@@ -228,10 +234,35 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 
 		mock.ExpectBegin()
 
-		updateWorkoutRoutineStmt := `UPDATE "workout_routines" SET "updated_at"=$1,"name"=$2 WHERE id = $3 AND "workout_routines"."deleted_at" IS NULL RETURNING *`
-		mock.ExpectQuery(regexp.QuoteMeta(updateWorkoutRoutineStmt)).
-			WithArgs(sqlmock.AnyArg(), wr.Name, helpers.UIntToString(wr.ID)).
-			WillReturnRows(workoutRoutineRow)
+		updateWorkoutRoutineStmt := `UPDATE "workout_routines" SET "name"=$1,"updated_at"=$2 WHERE id = $3 AND "workout_routines"."deleted_at" IS NULL`
+		mock.ExpectExec(regexp.QuoteMeta(updateWorkoutRoutineStmt)).
+			WithArgs(wr.Name, sqlmock.AnyArg(), helpers.UIntToString(wr.ID)).
+			WillReturnResult(sqlmock.NewResult(1,1))
+
+		exerciseRoutineRow :=sqlmock.
+			NewRows([]string{"id", "name", "reps", "sets", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
+			AddRow(
+				wr.ExerciseRoutines[0].ID,
+				wr.ExerciseRoutines[0].Name,
+				wr.ExerciseRoutines[0].Reps,
+				wr.ExerciseRoutines[0].Sets,
+				helpers.UIntToString(wr.ID),
+				wr.ExerciseRoutines[0].CreatedAt,
+				wr.ExerciseRoutines[0].DeletedAt,
+				wr.ExerciseRoutines[0].UpdatedAt,
+			)
+		updateExerciseRoutineStmt := `INSERT INTO "exercise_routines" ("created_at","updated_at","deleted_at","name","sets","reps","workout_routine_id","id") VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT ("id") DO UPDATE SET "reps"="excluded"."reps","sets"="excluded"."sets" RETURNING *`
+		mock.ExpectQuery(regexp.QuoteMeta(updateExerciseRoutineStmt)).
+		WithArgs(
+			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(), 
+			sqlmock.AnyArg(),
+			wr.ExerciseRoutines[0].Name,
+			wr.ExerciseRoutines[0].Sets, 
+			wr.ExerciseRoutines[0].Reps,
+			wr.ID,
+			wr.ExerciseRoutines[0].ID,
+		).WillReturnRows(exerciseRoutineRow)
 
 		mock.ExpectCommit()
 		
@@ -242,14 +273,28 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 					workoutRoutineId: "%d", 
 					updateWorkoutRoutineInput: {
 						name: "%s"
-						exerciseRoutines: []
+						exerciseRoutines: [
+							{
+								id: "%d",
+								name: "%s",
+								sets: %d,
+								reps: %d
+							}
+						]
 					}
 				) {
 					id
-					name
+					name 
+					exerciseRoutines {
+						id
+						name
+						reps
+						sets
+					}
 				}
 			}`,
-			wr.ID, wr.Name,
+			wr.ID, 
+			wr.Name, wr.ExerciseRoutines[0].ID, wr.ExerciseRoutines[0].Name, wr.ExerciseRoutines[0].Sets, wr.ExerciseRoutines[0].Reps,
 		)
 		c.MustPost(mutation, &resp, helpers.AddContext(u))
 
@@ -267,15 +312,35 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 		var resp UpdateWorkoutRoutine
 		mutation := fmt.Sprintf(`
 			mutation UpdateWorkoutRoutine {
-				updateWorkoutRoutine(workoutRoutineId: "%d", updateWorkoutRoutineInput: {
-					name: "%s"
-					exerciseRoutines: []
-				}) {
+				updateWorkoutRoutine(
+					workoutRoutineId: "%d", 
+					updateWorkoutRoutineInput: {
+						name: "%s"
+						exerciseRoutines: [
+							{
+								id: "%d",
+								name: "%s",
+								sets: %d,
+								reps: %d
+							}
+						]
+					}
+				) {
 					id
-					name
+					name 
+					exerciseRoutines {
+						id
+						name
+						reps
+						sets
+					}
 				}
 			}`,
-			wr.ID, wr.Name,
+			wr.ID, 
+			wr.Name,
+			wr.ExerciseRoutines[0].ID,
+			wr.ExerciseRoutines[0].Name, 
+			wr.ExerciseRoutines[0].Sets, wr.ExerciseRoutines[0].Reps,
 		)
 		err := c.Post(mutation, &resp)
 		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"updateWorkoutRoutine\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
@@ -296,15 +361,35 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 		var resp UpdateWorkoutRoutine
 		mutation := fmt.Sprintf(`
 			mutation UpdateWorkoutRoutine {
-				updateWorkoutRoutine(workoutRoutineId: "%d", updateWorkoutRoutineInput: {
-					name: "%s"
-					exerciseRoutines: []
-				}) {
+				updateWorkoutRoutine(
+					workoutRoutineId: "%d", 
+					updateWorkoutRoutineInput: {
+						name: "%s"
+						exerciseRoutines: [
+							{
+								id: "%d",
+								name: "%s",
+								sets: %d,
+								reps: %d
+							}
+						]
+					}
+				) {
 					id
-					name
+					name 
+					exerciseRoutines {
+						id
+						name
+						reps
+						sets
+					}
 				}
 			}`,
-			wr.ID, wr.Name,
+			wr.ID, 
+			wr.Name,
+			wr.ExerciseRoutines[0].ID,
+			wr.ExerciseRoutines[0].Name, 
+			wr.ExerciseRoutines[0].Sets, wr.ExerciseRoutines[0].Reps,
 		)
 		err := c.Post(mutation, &resp, helpers.AddContext(u))
 		require.EqualError(t, err, "[{\"message\":\"Error Updating Workout Routine: Access Denied\",\"path\":[\"updateWorkoutRoutine\"]}]")
@@ -327,25 +412,45 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 
 		mock.ExpectBegin()
 
-		updateWorkoutRoutineStmt := `UPDATE "workout_routines" SET "updated_at"=$1,"name"=$2 WHERE id = $3 AND "workout_routines"."deleted_at" IS NULL RETURNING *`
-		mock.ExpectQuery(regexp.QuoteMeta(updateWorkoutRoutineStmt)).
-			WithArgs(sqlmock.AnyArg(), wr.Name, helpers.UIntToString(wr.ID)).
-			WillReturnError(gorm.ErrRecordNotFound)
+		updateWorkoutRoutineStmt := `UPDATE "workout_routines" SET "name"=$1,"updated_at"=$2 WHERE id = $3 AND "workout_routines"."deleted_at" IS NULL`
+		mock.ExpectExec(regexp.QuoteMeta(updateWorkoutRoutineStmt)).
+			WithArgs(wr.Name, sqlmock.AnyArg(), helpers.UIntToString(wr.ID)).
+			WillReturnError(gorm.ErrInvalidTransaction)
 
 		mock.ExpectRollback()
 		
 		var resp UpdateWorkoutRoutine
 		mutation := fmt.Sprintf(`
 			mutation UpdateWorkoutRoutine {
-				updateWorkoutRoutine(workoutRoutineId: "%d", updateWorkoutRoutineInput: {
-					name: "%s"
-					exerciseRoutines: []
-				}) {
+				updateWorkoutRoutine(
+					workoutRoutineId: "%d", 
+					updateWorkoutRoutineInput: {
+						name: "%s"
+						exerciseRoutines: [
+							{
+								id: "%d",
+								name: "%s",
+								sets: %d,
+								reps: %d
+							}
+						]
+					}
+				) {
 					id
-					name
+					name 
+					exerciseRoutines {
+						id
+						name
+						reps
+						sets
+					}
 				}
 			}`,
-			wr.ID, wr.Name,
+			wr.ID, 
+			wr.Name,
+			wr.ExerciseRoutines[0].ID,
+			wr.ExerciseRoutines[0].Name, 
+			wr.ExerciseRoutines[0].Sets, wr.ExerciseRoutines[0].Reps,
 		)
 		err := c.Post(mutation, &resp, helpers.AddContext(u))
 		require.EqualError(t, err, "[{\"message\":\"Error Updating Workout Routine\",\"path\":[\"updateWorkoutRoutine\"]}]")
