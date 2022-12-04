@@ -57,6 +57,5 @@ mutation Login {
 - `make test`: run all test files
 - `make format`: format all code within repo
 - `make regenerate`: regenerate graphql resolvers from `schema.graphqls`
-
-32
-neil-inc-workout-logger
+- `schema_json`: generate new `schema.json` file for the iOS client
+- `deploy`: deploy to GCP Run
