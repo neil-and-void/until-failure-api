@@ -676,18 +676,17 @@ func (r *queryResolver) WorkoutRoutines(ctx context.Context) ([]*model.WorkoutRo
 	}
 
 	// map database workout routine to graphql workout routine
-	workoutRoutines := make([]*model.WorkoutRoutine, 0)
+	var workoutRoutines []*model.WorkoutRoutine
 	for _, wr := range dbwr {
-
 		// map database exercise routine to graphql exercise routine
-		exerciseRoutines := make([]*model.ExerciseRoutine, 0)
+		var exerciseRoutines []*model.ExerciseRoutine
 		for _, er := range wr.ExerciseRoutines {
 			exerciseRoutines = append(exerciseRoutines, &model.ExerciseRoutine{
 				ID:     fmt.Sprintf("%d", er.ID),
 				Name:   er.Name,
+				Active: er.Active,
 				Sets:   int(er.Sets),
 				Reps:   int(er.Reps),
-				Active: er.Active,
 			})
 		}
 		workoutRoutines = append(workoutRoutines, &model.WorkoutRoutine{
