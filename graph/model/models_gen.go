@@ -96,12 +96,6 @@ type UpdatedExercise struct {
 	Notes string `json:"notes"`
 }
 
-type UpdatedWorkoutRoutine struct {
-	ID               string             `json:"id"`
-	Name             string             `json:"name"`
-	ExerciseRoutines []*ExerciseRoutine `json:"exerciseRoutines"`
-}
-
 type UpdatedWorkoutSession struct {
 	ID    string     `json:"id"`
 	Start time.Time  `json:"start"`
