@@ -19,7 +19,7 @@ type WorkoutRoutine struct {
 	Name             string `gorm:"not null"`
 	ExerciseRoutines []ExerciseRoutine
 	WorkoutSessions  []WorkoutSession
-	Active       bool      `gorm:"default:true"`
+	Active           bool `gorm:"default:true"`
 	UserID           uint
 }
 
@@ -29,7 +29,7 @@ type ExerciseRoutine struct {
 	Sets             uint   `gorm:"not null"`
 	Reps             uint   `gorm:"not null"`
 	Exercises        []Exercise
-	Active       bool      `gorm:"default:true"`
+	Active           bool `gorm:"default:true"`
 	WorkoutRoutineID uint
 }
 
@@ -46,7 +46,7 @@ type Exercise struct {
 	gorm.Model
 	WorkoutSessionID  uint
 	ExerciseRoutineID uint
-	Notes             string `gorm:"size:512"`
+	Notes             string     `gorm:"size:512"`
 	Sets              []SetEntry `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }
 

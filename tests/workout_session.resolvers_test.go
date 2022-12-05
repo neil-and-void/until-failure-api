@@ -40,9 +40,9 @@ type GetWorkoutSession struct {
 
 type UpdateWorkoutSession struct {
 	UpdateWorkoutSession struct {
-		ID string
+		ID    string
 		Start string
-		End string
+		End   string
 	}
 }
 
@@ -475,7 +475,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)		
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
 		mock.ExpectBegin()
 
@@ -485,7 +485,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		updateWorkoutSessionStmt := `UPDATE "workout_sessions" SET "updated_at"=$1,"end"=$2 WHERE id = $3 AND "workout_sessions"."deleted_at" IS NULL RETURNING *`
 		mock.ExpectQuery(regexp.QuoteMeta(updateWorkoutSessionStmt)).
 			WithArgs(sqlmock.AnyArg(), ws.End, helpers.UIntToString(ws.ID)).
-			WillReturnRows(updatedWorkoutSessionRow)		
+			WillReturnRows(updatedWorkoutSessionRow)
 
 		mock.ExpectCommit()
 
@@ -538,7 +538,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		acs := accesscontrol.NewAccessControllerService(gormDB)
 		c := helpers.NewGqlClient(gormDB, acs)
 
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnError(gorm.ErrRecordNotFound)	
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnError(gorm.ErrRecordNotFound)
 
 		gqlQuery := fmt.Sprintf(`
 			mutation UpdateWorkoutSession {
@@ -568,7 +568,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)		
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
 		mock.ExpectBegin()
 
@@ -623,7 +623,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		deleteSetEntryQuery := `UPDATE "set_entries" SET "deleted_at"=$1 WHERE exercise_id IN ($2,$3) AND "set_entries"."deleted_at" IS NULL`
 		mock.ExpectExec(regexp.QuoteMeta(deleteSetEntryQuery)).
 			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(ws.Exercises[0].ID), helpers.UIntToString(ws.Exercises[1].ID)).
-			WillReturnResult(sqlmock.NewResult(1,2))
+			WillReturnResult(sqlmock.NewResult(1, 2))
 
 		mock.ExpectCommit()
 
@@ -674,7 +674,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
-		}	
+		}
 	})
 
 	t.Run("Delete Workout Session Error", func(t *testing.T) {
@@ -689,7 +689,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 
 		mock.ExpectBegin()
 		deleteWorkoutSessionQuery := `UPDATE "workout_sessions" SET "deleted_at"=$1 WHERE id = $2 AND "workout_sessions"."deleted_at" IS NULL`
-		mock.ExpectExec(regexp.QuoteMeta(deleteWorkoutSessionQuery)).WithArgs(sqlmock.AnyArg(), helpers.UIntToString(ws.ID)).WillReturnError(gorm.ErrInvalidTransaction)	
+		mock.ExpectExec(regexp.QuoteMeta(deleteWorkoutSessionQuery)).WithArgs(sqlmock.AnyArg(), helpers.UIntToString(ws.ID)).WillReturnError(gorm.ErrInvalidTransaction)
 		mock.ExpectRollback()
 
 		gqlQuery := fmt.Sprintf(`mutation DeleteWorkoutSession {
@@ -702,6 +702,6 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
-		}	
+		}
 	})
 }

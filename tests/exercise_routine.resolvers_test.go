@@ -61,13 +61,13 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		workoutRoutineRow := sqlmock.
 			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at"}).
 			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnRows(workoutRoutineRow)	
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnRows(workoutRoutineRow)
 
 		mock.ExpectBegin()
 		createExerciseRoutineStmt := `INSERT INTO "exercise_routines" ("created_at","updated_at","deleted_at","name","sets","reps","active","workout_routine_id") VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING "id"`
 		mock.ExpectQuery(regexp.QuoteMeta(createExerciseRoutineStmt)).
 			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), er.Name, er.Sets, er.Reps, er.Active, er.WorkoutRoutineID).
-			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(er.ID))	
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(er.ID))
 		mock.ExpectCommit()
 
 		var resp AddExerciseRoutine
@@ -121,7 +121,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		acs := accesscontrol.NewAccessControllerService(gormDB)
 		c := helpers.NewGqlClient(gormDB, acs)
 
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnError(gorm.ErrRecordNotFound)	
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnError(gorm.ErrRecordNotFound)
 
 		var resp AddExerciseRoutine
 		mutation := fmt.Sprintf(`
@@ -255,7 +255,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		mock.ExpectExec(regexp.QuoteMeta(deleteExerciseRoutineQuery)).
 			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(er.ID)).
 			WillReturnResult(sqlmock.NewResult(1, 1))
-		
+
 		exerciseRow := sqlmock.
 			NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "workout_session_id", "exercise_routine_id"})
 		for _, e := range ws.Exercises {
@@ -284,7 +284,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
-		}	
+		}
 	})
 
 	t.Run("Delete Exercise Routine Invalid Token", func(t *testing.T) {
@@ -305,7 +305,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
-		}	
+		}
 	})
 
 	t.Run("Delete Exercise Routine Access Denied", func(t *testing.T) {
@@ -358,7 +358,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		mock.ExpectExec(regexp.QuoteMeta(deleteExerciseRoutineQuery)).
 			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(er.ID)).
 			WillReturnResult(sqlmock.NewResult(1, 1))
-		
+
 		exerciseRow := sqlmock.
 			NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "workout_session_id", "exercise_routine_id"})
 		for _, e := range ws.Exercises {

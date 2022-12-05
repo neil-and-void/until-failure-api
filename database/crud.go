@@ -29,7 +29,7 @@ func GetWorkoutRoutine(db *gorm.DB, userId string, workoutRoutineId string) (*Wo
 func GetWorkoutRoutines(db *gorm.DB, userId string) ([]*WorkoutRoutine, error) {
 	var workoutRoutines []*WorkoutRoutine
 	result := db.Preload("ExerciseRoutines").Where("user_id = ?", userId).Find(&workoutRoutines)
-	return workoutRoutines,result.Error
+	return workoutRoutines, result.Error
 }
 
 func UpdateWorkoutRoutine(db *gorm.DB, workoutRoutineId string, workoutRoutineName string, exerciseRoutines []*ExerciseRoutine) error {
@@ -37,7 +37,7 @@ func UpdateWorkoutRoutine(db *gorm.DB, workoutRoutineId string, workoutRoutineNa
 
 	if err := tx.Model(&WorkoutRoutine{}).Where("id = ?", workoutRoutineId).Update("name", workoutRoutineName).Error; err != nil {
 		tx.Rollback()
-		return err	
+		return err
 	}
 
 	// exercise routines that are not present in this array are to be deleted
@@ -58,42 +58,42 @@ func UpdateWorkoutRoutine(db *gorm.DB, workoutRoutineId string, workoutRoutineNa
 
 	if err := tx.Where("workout_routine_id = ? AND id NOT IN ?", workoutRoutineId, exerciseRoutineIds).Delete(&ExerciseRoutine{}).Error; err != nil {
 		tx.Rollback()
-		return err	
+		return err
 	}
 
-	return tx.Commit().Error	
+	return tx.Commit().Error
 }
 
 func DeleteWorkoutRoutine(db *gorm.DB, workoutRoutineId string) error {
 	tx := db.Begin()
 	if err := tx.Where("id = ?", workoutRoutineId).Delete(&WorkoutRoutine{}).Error; err != nil {
 		tx.Rollback()
-		return err	
+		return err
 	}
 
 	// Cascade exercise routines
 	if err := tx.Where("workout_routine_id = ?", workoutRoutineId).Delete(&ExerciseRoutine{}).Error; err != nil {
 		tx.Rollback()
-		return err	
+		return err
 	}
 
 	// Cascade workout sessions
 	var workoutSessions []*WorkoutSession
 	if err := tx.Clauses(clause.Returning{}).Where("workout_routine_id = ?", workoutRoutineId).Delete(&workoutSessions).Error; err != nil {
 		tx.Rollback()
-		return err	
+		return err
 	}
 
 	var workoutSessionIds []string
 	for _, ws := range workoutSessions {
 		workoutSessionIds = append(workoutSessionIds, fmt.Sprintf("%d", ws.ID))
-	} 
+	}
 
 	// Cascade exercises
 	var exercises []*Exercise
 	if err := tx.Clauses(clause.Returning{}).Where("workout_session_id IN ?", workoutSessionIds).Delete(&exercises).Error; err != nil {
 		tx.Rollback()
-		return err	
+		return err
 	}
 	var exerciseIds []string
 	for _, e := range exercises {
@@ -103,28 +103,28 @@ func DeleteWorkoutRoutine(db *gorm.DB, workoutRoutineId string) error {
 	// Cascade sets
 	if err := tx.Where("exercise_id IN ?", exerciseIds).Delete(&SetEntry{}).Error; err != nil {
 		tx.Rollback()
-		return err	
+		return err
 	}
 
-	return tx.Commit().Error	
+	return tx.Commit().Error
 }
 
 // Exercise Routine
-func AddExerciseRoutine(db *gorm.DB, exerciseRoutine *ExerciseRoutine) (error) {
+func AddExerciseRoutine(db *gorm.DB, exerciseRoutine *ExerciseRoutine) error {
 	result := db.Create(exerciseRoutine)
-	return result.Error	
+	return result.Error
 }
 
 func UpdateExerciseRoutine(db *gorm.DB, exerciseRoutineId string, exerciseRoutine *ExerciseRoutine) error {
-	result := db.Model(exerciseRoutine).Clauses(clause.Returning{}).Where("id = ?", exerciseRoutineId).Updates(exerciseRoutine)	
-	return result.Error	
+	result := db.Model(exerciseRoutine).Clauses(clause.Returning{}).Where("id = ?", exerciseRoutineId).Updates(exerciseRoutine)
+	return result.Error
 }
 
 func GetExerciseRoutines(db *gorm.DB, workoutRoutineId string) ([]ExerciseRoutine, error) {
 	result := db.Model(&WorkoutRoutine{}). // todo: change to use .Preload()
-		Select("exercise_routines.id, exercise_routines.name, exercise_routines.sets, exercise_routines.reps, exercise_routines.created_at, exercise_routines.updated_at, exercise_routines.deleted_at").
-		Joins("left join exercise_routines on workout_routines.id = exercise_routines.workout_routine_id").
-		Where("exercise_routines.workout_routine_id = ?", workoutRoutineId)
+						Select("exercise_routines.id, exercise_routines.name, exercise_routines.sets, exercise_routines.reps, exercise_routines.created_at, exercise_routines.updated_at, exercise_routines.deleted_at").
+						Joins("left join exercise_routines on workout_routines.id = exercise_routines.workout_routine_id").
+						Where("exercise_routines.workout_routine_id = ?", workoutRoutineId)
 	rows, err := result.Rows()
 	if err != nil {
 		return []ExerciseRoutine{}, err
@@ -189,7 +189,7 @@ func GetWorkoutSessions(db *gorm.DB, userId string) ([]*WorkoutSession, error) {
 }
 
 func UpdateWorkoutSession(db *gorm.DB, workoutSessionId string, updatedWorkoutSession *WorkoutSession) error {
-	result := db.Model(updatedWorkoutSession).Clauses(clause.Returning{}).Where("id = ?", workoutSessionId).Updates(updatedWorkoutSession)	
+	result := db.Model(updatedWorkoutSession).Clauses(clause.Returning{}).Where("id = ?", workoutSessionId).Updates(updatedWorkoutSession)
 	return result.Error
 }
 

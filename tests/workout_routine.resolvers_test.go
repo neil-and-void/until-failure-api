@@ -33,13 +33,13 @@ type GetWorkoutRoutineResp struct {
 
 type UpdateWorkoutRoutine struct {
 	UpdateWorkoutRoutine struct {
-		ID string
-		Name string
+		ID               string
+		Name             string
 		ExerciseRoutines []struct {
-			ID string
+			ID   string
 			Name string
-			Sets   int
-			Reps   int
+			Sets int
+			Reps int
 		}
 	}
 }
@@ -75,7 +75,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			sqlmock.AnyArg(),
 			wr.ExerciseRoutines[0].Name,
 			wr.ExerciseRoutines[0].Sets,
-			wr.ExerciseRoutines[0].Reps,	
+			wr.ExerciseRoutines[0].Reps,
 			wr.ExerciseRoutines[0].Active,
 			wr.ExerciseRoutines[0].WorkoutRoutineID,
 			sqlmock.AnyArg(),
@@ -239,9 +239,9 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 		updateWorkoutRoutineStmt := `UPDATE "workout_routines" SET "name"=$1,"updated_at"=$2 WHERE id = $3 AND "workout_routines"."deleted_at" IS NULL`
 		mock.ExpectExec(regexp.QuoteMeta(updateWorkoutRoutineStmt)).
 			WithArgs(wr.Name, sqlmock.AnyArg(), helpers.UIntToString(wr.ID)).
-			WillReturnResult(sqlmock.NewResult(1,1))
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
-		exerciseRoutineRow :=sqlmock.
+		exerciseRoutineRow := sqlmock.
 			NewRows([]string{"id", "name", "reps", "sets", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(
 				wr.ExerciseRoutines[0].ID,
@@ -255,24 +255,24 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			)
 		updateExerciseRoutineStmt := `INSERT INTO "exercise_routines" ("created_at","updated_at","deleted_at","name","sets","reps","active","workout_routine_id","id") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT ("id") DO UPDATE SET "reps"="excluded"."reps","sets"="excluded"."sets","name"="excluded"."name","active"="excluded"."active" RETURNING *`
 		mock.ExpectQuery(regexp.QuoteMeta(updateExerciseRoutineStmt)).
-		WithArgs(
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(), 
-			sqlmock.AnyArg(),
-			wr.ExerciseRoutines[0].Name,
-			wr.ExerciseRoutines[0].Sets, 
-			wr.ExerciseRoutines[0].Reps,
-			wr.Active,
-			wr.ID,
-			wr.ExerciseRoutines[0].ID,
-		).WillReturnRows(exerciseRoutineRow)
+			WithArgs(
+				sqlmock.AnyArg(),
+				sqlmock.AnyArg(),
+				sqlmock.AnyArg(),
+				wr.ExerciseRoutines[0].Name,
+				wr.ExerciseRoutines[0].Sets,
+				wr.ExerciseRoutines[0].Reps,
+				wr.Active,
+				wr.ID,
+				wr.ExerciseRoutines[0].ID,
+			).WillReturnRows(exerciseRoutineRow)
 
 		deleteExerciseRoutinesStmt := `UPDATE "exercise_routines" SET "deleted_at"=$1 WHERE (workout_routine_id = $2 AND id NOT IN ($3)) AND "exercise_routines"."deleted_at" IS NULL`
 		mock.ExpectExec(regexp.QuoteMeta(deleteExerciseRoutinesStmt)).
 			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(wr.ID), wr.ExerciseRoutines[0].ID).
-			WillReturnResult(sqlmock.NewResult(1,1))
+			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectCommit()
-		
+
 		var resp UpdateWorkoutRoutine
 		mutation := fmt.Sprintf(`
 			mutation UpdateWorkoutRoutine {
@@ -300,22 +300,22 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 					}
 				}
 			}`,
-			wr.ID, 
+			wr.ID,
 			wr.Name, wr.ExerciseRoutines[0].ID, wr.ExerciseRoutines[0].Name, wr.ExerciseRoutines[0].Sets, wr.ExerciseRoutines[0].Reps,
 		)
 		c.MustPost(mutation, &resp, helpers.AddContext(u))
 
-		err = mock.ExpectationsWereMet() 
+		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
-		}	
+		}
 	})
 
 	t.Run("Update Workout Routine Invalid Token", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
 		acs := accesscontrol.NewAccessControllerService(gormDB)
 		c := helpers.NewGqlClient(gormDB, acs)
-		
+
 		var resp UpdateWorkoutRoutine
 		mutation := fmt.Sprintf(`
 			mutation UpdateWorkoutRoutine {
@@ -343,19 +343,19 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 					}
 				}
 			}`,
-			wr.ID, 
+			wr.ID,
 			wr.Name,
 			wr.ExerciseRoutines[0].ID,
-			wr.ExerciseRoutines[0].Name, 
+			wr.ExerciseRoutines[0].Name,
 			wr.ExerciseRoutines[0].Sets, wr.ExerciseRoutines[0].Reps,
 		)
 		err := c.Post(mutation, &resp)
 		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"updateWorkoutRoutine\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
 
-		err = mock.ExpectationsWereMet() 
+		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
-		}	
+		}
 	})
 
 	t.Run("Update Workout Routine Access Denied", func(t *testing.T) {
@@ -364,7 +364,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 		c := helpers.NewGqlClient(gormDB, acs)
 
 		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnError(gorm.ErrRecordNotFound)
-		
+
 		var resp UpdateWorkoutRoutine
 		mutation := fmt.Sprintf(`
 			mutation UpdateWorkoutRoutine {
@@ -392,19 +392,19 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 					}
 				}
 			}`,
-			wr.ID, 
+			wr.ID,
 			wr.Name,
 			wr.ExerciseRoutines[0].ID,
-			wr.ExerciseRoutines[0].Name, 
+			wr.ExerciseRoutines[0].Name,
 			wr.ExerciseRoutines[0].Sets, wr.ExerciseRoutines[0].Reps,
 		)
 		err := c.Post(mutation, &resp, helpers.AddContext(u))
 		require.EqualError(t, err, "[{\"message\":\"Error Updating Workout Routine: Access Denied\",\"path\":[\"updateWorkoutRoutine\"]}]")
 
-		err = mock.ExpectationsWereMet() 
+		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
-		}	
+		}
 	})
 
 	t.Run("Update Workout Routine Error", func(t *testing.T) {
@@ -425,7 +425,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			WillReturnError(gorm.ErrInvalidTransaction)
 
 		mock.ExpectRollback()
-		
+
 		var resp UpdateWorkoutRoutine
 		mutation := fmt.Sprintf(`
 			mutation UpdateWorkoutRoutine {
@@ -453,25 +453,25 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 					}
 				}
 			}`,
-			wr.ID, 
+			wr.ID,
 			wr.Name,
 			wr.ExerciseRoutines[0].ID,
-			wr.ExerciseRoutines[0].Name, 
+			wr.ExerciseRoutines[0].Name,
 			wr.ExerciseRoutines[0].Sets, wr.ExerciseRoutines[0].Reps,
 		)
 		err := c.Post(mutation, &resp, helpers.AddContext(u))
 		require.EqualError(t, err, "[{\"message\":\"Error Updating Workout Routine\",\"path\":[\"updateWorkoutRoutine\"]}]")
 
-		err = mock.ExpectationsWereMet() 
+		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
-		}		
+		}
 	})
 
 	t.Run("Delete Workout Routine Success", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
 		acs := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, acs)	
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		workoutRoutineRow := sqlmock.
 			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at"}).
@@ -483,12 +483,12 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 		deleteWorkoutRoutineQuery := `UPDATE "workout_routines" SET "deleted_at"=$1 WHERE id = $2 AND "workout_routines"."deleted_at" IS NULL`
 		mock.ExpectExec(regexp.QuoteMeta(deleteWorkoutRoutineQuery)).
 			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(wr.ID)).
-			WillReturnResult(sqlmock.NewResult(1,1))
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		deleteExerciseRoutinesQuery := `UPDATE "exercise_routines" SET "deleted_at"=$1 WHERE workout_routine_id = $2 AND "exercise_routines"."deleted_at" IS NULL`
 		mock.ExpectExec(regexp.QuoteMeta(deleteExerciseRoutinesQuery)).
 			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(wr.ID)).
-			WillReturnResult(sqlmock.NewResult(1,2))
+			WillReturnResult(sqlmock.NewResult(1, 2))
 
 		workoutSessionRows := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
@@ -498,7 +498,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(wr.ID)).
 			WillReturnRows(workoutSessionRows)
 
-		exerciseRows := sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "workout_session_id", "exercise_routine_id"})	
+		exerciseRows := sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "workout_session_id", "exercise_routine_id"})
 		for _, e := range ws.Exercises {
 			exerciseRows.AddRow(e.ID, e.CreatedAt, e.DeletedAt, e.UpdatedAt, e.WorkoutSessionID, e.ExerciseRoutineID)
 		}
@@ -511,7 +511,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 		deleteSetQuery := `UPDATE "set_entries" SET "deleted_at"=$1 WHERE exercise_id IN ($2,$3) AND "set_entries"."deleted_at" IS NULL`
 		mock.ExpectExec(regexp.QuoteMeta(deleteSetQuery)).
 			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(ws.Exercises[0].ID), helpers.UIntToString(ws.Exercises[1].ID)).
-			WillReturnResult(sqlmock.NewResult(1,1))
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		mock.ExpectCommit()
 
@@ -554,8 +554,8 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 	t.Run("Delete Workout Access Denied", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
 		acs := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, acs)	
-		
+		c := helpers.NewGqlClient(gormDB, acs)
+
 		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnError(gorm.ErrRecordNotFound)
 
 		var resp DeleteWorkoutRoutineResp
@@ -578,7 +578,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 	t.Run("Delete Workout Error Deleting", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
 		acs := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, acs)	
+		c := helpers.NewGqlClient(gormDB, acs)
 
 		workoutRoutineRow := sqlmock.
 			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at"}).
@@ -600,7 +600,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 				deleteWorkoutRoutine(workoutRoutineId: "%d")
 			}`,
 			wr.ID,
-		)	
+		)
 		err := c.Post(gqlQuery, &resp, helpers.AddContext(u))
 		require.EqualError(t, err, "[{\"message\":\"Error Deleting Workout Routine\",\"path\":[\"deleteWorkoutRoutine\"]}]")
 

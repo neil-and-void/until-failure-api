@@ -606,7 +606,6 @@ func TestExerciseResolvers(t *testing.T) {
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
 		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
-
 		mock.ExpectBegin()
 		deleteExerciseQuery := `UPDATE "exercises" SET "deleted_at"=$1 WHERE id = $2 AND "exercises"."deleted_at" IS NULL`
 		mock.ExpectExec(regexp.QuoteMeta(deleteExerciseQuery)).
@@ -631,7 +630,7 @@ func TestExerciseResolvers(t *testing.T) {
 		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
-		}	
+		}
 	})
 
 	t.Run("Delete Exercise Invalid Token", func(t *testing.T) {
@@ -652,7 +651,7 @@ func TestExerciseResolvers(t *testing.T) {
 		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
-		}	
+		}
 	})
 
 	t.Run("Delete Exercise Access Denied", func(t *testing.T) {
@@ -692,7 +691,7 @@ func TestExerciseResolvers(t *testing.T) {
 		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
-		}	
+		}
 	})
 
 	t.Run("Delete Exercise Error, Update exercise tx", func(t *testing.T) {
@@ -722,7 +721,6 @@ func TestExerciseResolvers(t *testing.T) {
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
 		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
-
 		mock.ExpectBegin()
 		deleteExerciseQuery := `UPDATE "exercises" SET "deleted_at"=$1 WHERE id = $2 AND "exercises"."deleted_at" IS NULL`
 		mock.ExpectExec(regexp.QuoteMeta(deleteExerciseQuery)).
@@ -744,7 +742,7 @@ func TestExerciseResolvers(t *testing.T) {
 		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
-		}	
+		}
 	})
 
 	t.Run("Delete Exercise Error, Update set entries tx", func(t *testing.T) {
@@ -774,12 +772,11 @@ func TestExerciseResolvers(t *testing.T) {
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
 		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
-
 		mock.ExpectBegin()
 		deleteExerciseQuery := `UPDATE "exercises" SET "deleted_at"=$1 WHERE id = $2 AND "exercises"."deleted_at" IS NULL`
 		mock.ExpectExec(regexp.QuoteMeta(deleteExerciseQuery)).
 			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(e.ID)).
-			WillReturnResult(sqlmock.NewResult(1,1))
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		deleteSetQuery := `UPDATE "set_entries" SET "deleted_at"=$1 WHERE exercise_id = $2 AND "set_entries"."deleted_at" IS NULL`
 		mock.ExpectExec(regexp.QuoteMeta(deleteSetQuery)).
@@ -800,6 +797,6 @@ func TestExerciseResolvers(t *testing.T) {
 		err = mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
-		}	
+		}
 	})
 }
