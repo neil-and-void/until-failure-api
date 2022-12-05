@@ -10,11 +10,13 @@ type User {
 type WorkoutRoutine {
   id: ID!
   name: String!
+  active: Boolean!
   exerciseRoutines: [ExerciseRoutine!]!
 }
 
 type ExerciseRoutine {
   id: ID!
+  active: Boolean!
   name: String!
   sets: Int!
   reps: Int!

@@ -44,7 +44,7 @@ func UpdateWorkoutRoutine(db *gorm.DB, workoutRoutineId string, workoutRoutineNa
 	for _, er := range exerciseRoutines {
 		err := tx.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "id"}},
-			DoUpdates: clause.AssignmentColumns([]string{"reps", "sets", "name"}),
+			DoUpdates: clause.AssignmentColumns([]string{"reps", "sets", "name", "active"}),
 		}).Clauses(clause.Returning{}).Create(er).Error
 		if err != nil {
 			tx.Rollback()

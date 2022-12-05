@@ -168,6 +168,7 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine mod
 		ID:               fmt.Sprintf("%d", wr.ID),
 		Name:             wr.Name,
 		ExerciseRoutines: []*model.ExerciseRoutine{},
+		Active: wr.Active,
 	}, nil
 }
 
@@ -686,11 +687,13 @@ func (r *queryResolver) WorkoutRoutines(ctx context.Context) ([]*model.WorkoutRo
 				Name: er.Name,
 				Sets: int(er.Sets),
 				Reps: int(er.Reps),
+				Active: er.Active,
 			})
 		}
 		workoutRoutines = append(workoutRoutines, &model.WorkoutRoutine{
 			ID:               fmt.Sprintf("%d", wr.ID),
 			Name:             wr.Name,
+			Active: wr.Active,
 			ExerciseRoutines: exerciseRoutines,
 		})
 	}

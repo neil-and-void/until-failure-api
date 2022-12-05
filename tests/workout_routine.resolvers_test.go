@@ -253,7 +253,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 				wr.ExerciseRoutines[0].DeletedAt,
 				wr.ExerciseRoutines[0].UpdatedAt,
 			)
-		updateExerciseRoutineStmt := `INSERT INTO "exercise_routines" ("created_at","updated_at","deleted_at","name","sets","reps","active","workout_routine_id","id") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT ("id") DO UPDATE SET "reps"="excluded"."reps","sets"="excluded"."sets","name"="excluded"."name" RETURNING *`
+		updateExerciseRoutineStmt := `INSERT INTO "exercise_routines" ("created_at","updated_at","deleted_at","name","sets","reps","active","workout_routine_id","id") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT ("id") DO UPDATE SET "reps"="excluded"."reps","sets"="excluded"."sets","name"="excluded"."name","active"="excluded"."active" RETURNING *`
 		mock.ExpectQuery(regexp.QuoteMeta(updateExerciseRoutineStmt)).
 		WithArgs(
 			sqlmock.AnyArg(), 

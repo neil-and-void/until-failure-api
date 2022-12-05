@@ -37,10 +37,11 @@ type ExerciseInput struct {
 }
 
 type ExerciseRoutine struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	Sets int    `json:"sets"`
-	Reps int    `json:"reps"`
+	ID     string `json:"id"`
+	Active bool   `json:"active"`
+	Name   string `json:"name"`
+	Sets   int    `json:"sets"`
+	Reps   int    `json:"reps"`
 }
 
 type ExerciseRoutineInput struct {
@@ -111,6 +112,7 @@ type User struct {
 type WorkoutRoutine struct {
 	ID               string             `json:"id"`
 	Name             string             `json:"name"`
+	Active           bool               `json:"active"`
 	ExerciseRoutines []*ExerciseRoutine `json:"exerciseRoutines"`
 }
 

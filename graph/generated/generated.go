@@ -62,10 +62,11 @@ type ComplexityRoot struct {
 	}
 
 	ExerciseRoutine struct {
-		ID   func(childComplexity int) int
-		Name func(childComplexity int) int
-		Reps func(childComplexity int) int
-		Sets func(childComplexity int) int
+		Active func(childComplexity int) int
+		ID     func(childComplexity int) int
+		Name   func(childComplexity int) int
+		Reps   func(childComplexity int) int
+		Sets   func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -126,6 +127,7 @@ type ComplexityRoot struct {
 	}
 
 	WorkoutRoutine struct {
+		Active           func(childComplexity int) int
 		ExerciseRoutines func(childComplexity int) int
 		ID               func(childComplexity int) int
 		Name             func(childComplexity int) int
@@ -232,6 +234,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Exercise.Sets(childComplexity), true
+
+	case "ExerciseRoutine.active":
+		if e.complexity.ExerciseRoutine.Active == nil {
+			break
+		}
+
+		return e.complexity.ExerciseRoutine.Active(childComplexity), true
 
 	case "ExerciseRoutine.id":
 		if e.complexity.ExerciseRoutine.ID == nil {
@@ -623,6 +632,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Name(childComplexity), true
 
+	case "WorkoutRoutine.active":
+		if e.complexity.WorkoutRoutine.Active == nil {
+			break
+		}
+
+		return e.complexity.WorkoutRoutine.Active(childComplexity), true
+
 	case "WorkoutRoutine.exerciseRoutines":
 		if e.complexity.WorkoutRoutine.ExerciseRoutines == nil {
 			break
@@ -769,11 +785,13 @@ type User {
 type WorkoutRoutine {
   id: ID!
   name: String!
+  active: Boolean!
   exerciseRoutines: [ExerciseRoutine!]!
 }
 
 type ExerciseRoutine {
   id: ID!
+  active: Boolean!
   name: String!
   sets: Int!
   reps: Int!
@@ -1784,6 +1802,50 @@ func (ec *executionContext) fieldContext_ExerciseRoutine_id(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _ExerciseRoutine_active(ctx context.Context, field graphql.CollectedField, obj *model.ExerciseRoutine) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ExerciseRoutine_active(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Active, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ExerciseRoutine_active(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExerciseRoutine",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ExerciseRoutine_name(ctx context.Context, field graphql.CollectedField, obj *model.ExerciseRoutine) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ExerciseRoutine_name(ctx, field)
 	if err != nil {
@@ -2128,6 +2190,8 @@ func (ec *executionContext) fieldContext_Mutation_createWorkoutRoutine(ctx conte
 				return ec.fieldContext_WorkoutRoutine_id(ctx, field)
 			case "name":
 				return ec.fieldContext_WorkoutRoutine_name(ctx, field)
+			case "active":
+				return ec.fieldContext_WorkoutRoutine_active(ctx, field)
 			case "exerciseRoutines":
 				return ec.fieldContext_WorkoutRoutine_exerciseRoutines(ctx, field)
 			}
@@ -2191,6 +2255,8 @@ func (ec *executionContext) fieldContext_Mutation_updateWorkoutRoutine(ctx conte
 				return ec.fieldContext_WorkoutRoutine_id(ctx, field)
 			case "name":
 				return ec.fieldContext_WorkoutRoutine_name(ctx, field)
+			case "active":
+				return ec.fieldContext_WorkoutRoutine_active(ctx, field)
 			case "exerciseRoutines":
 				return ec.fieldContext_WorkoutRoutine_exerciseRoutines(ctx, field)
 			}
@@ -2936,6 +3002,8 @@ func (ec *executionContext) fieldContext_Query_workoutRoutines(ctx context.Conte
 				return ec.fieldContext_WorkoutRoutine_id(ctx, field)
 			case "name":
 				return ec.fieldContext_WorkoutRoutine_name(ctx, field)
+			case "active":
+				return ec.fieldContext_WorkoutRoutine_active(ctx, field)
 			case "exerciseRoutines":
 				return ec.fieldContext_WorkoutRoutine_exerciseRoutines(ctx, field)
 			}
@@ -2986,6 +3054,8 @@ func (ec *executionContext) fieldContext_Query_exerciseRoutines(ctx context.Cont
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_ExerciseRoutine_id(ctx, field)
+			case "active":
+				return ec.fieldContext_ExerciseRoutine_active(ctx, field)
 			case "name":
 				return ec.fieldContext_ExerciseRoutine_name(ctx, field)
 			case "sets":
@@ -4062,6 +4132,50 @@ func (ec *executionContext) fieldContext_WorkoutRoutine_name(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _WorkoutRoutine_active(ctx context.Context, field graphql.CollectedField, obj *model.WorkoutRoutine) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WorkoutRoutine_active(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Active, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WorkoutRoutine_active(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WorkoutRoutine",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _WorkoutRoutine_exerciseRoutines(ctx context.Context, field graphql.CollectedField, obj *model.WorkoutRoutine) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_WorkoutRoutine_exerciseRoutines(ctx, field)
 	if err != nil {
@@ -4103,6 +4217,8 @@ func (ec *executionContext) fieldContext_WorkoutRoutine_exerciseRoutines(ctx con
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_ExerciseRoutine_id(ctx, field)
+			case "active":
+				return ec.fieldContext_ExerciseRoutine_active(ctx, field)
 			case "name":
 				return ec.fieldContext_ExerciseRoutine_name(ctx, field)
 			case "sets":
@@ -6684,6 +6800,13 @@ func (ec *executionContext) _ExerciseRoutine(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "active":
+
+			out.Values[i] = ec._ExerciseRoutine_active(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "name":
 
 			out.Values[i] = ec._ExerciseRoutine_name(ctx, field, obj)
@@ -7302,6 +7425,13 @@ func (ec *executionContext) _WorkoutRoutine(ctx context.Context, sel ast.Selecti
 		case "name":
 
 			out.Values[i] = ec._WorkoutRoutine_name(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "active":
+
+			out.Values[i] = ec._WorkoutRoutine_active(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
