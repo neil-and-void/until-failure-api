@@ -267,6 +267,10 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			wr.ExerciseRoutines[0].ID,
 		).WillReturnRows(exerciseRoutineRow)
 
+		deleteExerciseRoutinesStmt := `UPDATE "exercise_routines" SET "deleted_at"=$1 WHERE (workout_routine_id = $2 AND id NOT IN ($3)) AND "exercise_routines"."deleted_at" IS NULL`
+		mock.ExpectExec(regexp.QuoteMeta(deleteExerciseRoutinesStmt)).
+			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(wr.ID), wr.ExerciseRoutines[0].ID).
+			WillReturnResult(sqlmock.NewResult(1,1))
 		mock.ExpectCommit()
 		
 		var resp UpdateWorkoutRoutine

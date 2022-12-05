@@ -40,8 +40,12 @@ func UpdateWorkoutRoutine(db *gorm.DB, workoutRoutineId string, workoutRoutineNa
 		return err	
 	}
 
+	// exercise routines that are not present in this array are to be deleted
+	var exerciseRoutineIds []uint
+
 	// upsert exercise routines
 	for _, er := range exerciseRoutines {
+		exerciseRoutineIds = append(exerciseRoutineIds, er.ID)
 		err := tx.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "id"}},
 			DoUpdates: clause.AssignmentColumns([]string{"reps", "sets", "name", "active"}),
@@ -50,6 +54,11 @@ func UpdateWorkoutRoutine(db *gorm.DB, workoutRoutineId string, workoutRoutineNa
 			tx.Rollback()
 			return err
 		}
+	}
+
+	if err := tx.Where("workout_routine_id = ? AND id NOT IN ?", workoutRoutineId, exerciseRoutineIds).Delete(&ExerciseRoutine{}).Error; err != nil {
+		tx.Rollback()
+		return err	
 	}
 
 	return tx.Commit().Error	
