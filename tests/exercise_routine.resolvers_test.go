@@ -64,9 +64,9 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnRows(workoutRoutineRow)	
 
 		mock.ExpectBegin()
-		createExerciseRoutineStmt := `INSERT INTO "exercise_routines" ("created_at","updated_at","deleted_at","name","sets","reps","workout_routine_id") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`
+		createExerciseRoutineStmt := `INSERT INTO "exercise_routines" ("created_at","updated_at","deleted_at","name","sets","reps","active","workout_routine_id") VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING "id"`
 		mock.ExpectQuery(regexp.QuoteMeta(createExerciseRoutineStmt)).
-			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), er.Name, er.Sets, er.Reps, er.WorkoutRoutineID).
+			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), er.Name, er.Sets, er.Reps, er.Active, er.WorkoutRoutineID).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(er.ID))	
 		mock.ExpectCommit()
 

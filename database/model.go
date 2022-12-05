@@ -19,6 +19,7 @@ type WorkoutRoutine struct {
 	Name             string `gorm:"not null"`
 	ExerciseRoutines []ExerciseRoutine
 	WorkoutSessions  []WorkoutSession
+	Active       bool      `gorm:"default:true"`
 	UserID           uint
 }
 
@@ -28,6 +29,7 @@ type ExerciseRoutine struct {
 	Sets             uint   `gorm:"not null"`
 	Reps             uint   `gorm:"not null"`
 	Exercises        []Exercise
+	Active       bool      `gorm:"default:true"`
 	WorkoutRoutineID uint
 }
 

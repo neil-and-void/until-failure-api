@@ -66,16 +66,17 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 		c := helpers.NewGqlClient(gormDB, acs)
 
 		mock.ExpectBegin()
-		const createWorkoutRoutineStmnt = `INSERT INTO "workout_routines" ("created_at","updated_at","deleted_at","name","user_id") VALUES ($1,$2,$3,$4,$5) RETURNING "id"`
-		mock.ExpectQuery(regexp.QuoteMeta(createWorkoutRoutineStmnt)).WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), wr.Name, wr.UserID).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(wr.ID))
-		const createExerciseRoutineStmt = `INSERT INTO "exercise_routines" ("created_at","updated_at","deleted_at","name","sets","reps","workout_routine_id") VALUES ($1,$2,$3,$4,$5,$6,$7),($8,$9,$10,$11,$12,$13,$14) ON CONFLICT ("id") DO UPDATE SET "workout_routine_id"="excluded"."workout_routine_id" RETURNING "id"`
+		const createWorkoutRoutineStmnt = `INSERT INTO "workout_routines" ("created_at","updated_at","deleted_at","name","active","user_id") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "id"`
+		mock.ExpectQuery(regexp.QuoteMeta(createWorkoutRoutineStmnt)).WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), wr.Name, wr.Active, wr.UserID).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(wr.ID))
+		const createExerciseRoutineStmt = `INSERT INTO "exercise_routines" ("created_at","updated_at","deleted_at","name","sets","reps","active","workout_routine_id") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16) ON CONFLICT ("id") DO UPDATE SET "workout_routine_id"="excluded"."workout_routine_id" RETURNING "id"`
 		mock.ExpectQuery(regexp.QuoteMeta(createExerciseRoutineStmt)).WithArgs(
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			wr.ExerciseRoutines[0].Name,
 			wr.ExerciseRoutines[0].Sets,
-			wr.ExerciseRoutines[0].Reps,
+			wr.ExerciseRoutines[0].Reps,	
+			wr.ExerciseRoutines[0].Active,
 			wr.ExerciseRoutines[0].WorkoutRoutineID,
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
@@ -83,6 +84,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			wr.ExerciseRoutines[1].Name,
 			wr.ExerciseRoutines[1].Sets,
 			wr.ExerciseRoutines[1].Reps,
+			wr.ExerciseRoutines[1].Active,
 			wr.ExerciseRoutines[1].WorkoutRoutineID).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(wr.ExerciseRoutines[0].ID).AddRow(wr.ExerciseRoutines[1].ID))
 		mock.ExpectCommit()
 
@@ -251,7 +253,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 				wr.ExerciseRoutines[0].DeletedAt,
 				wr.ExerciseRoutines[0].UpdatedAt,
 			)
-		updateExerciseRoutineStmt := `INSERT INTO "exercise_routines" ("created_at","updated_at","deleted_at","name","sets","reps","workout_routine_id","id") VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT ("id") DO UPDATE SET "reps"="excluded"."reps","sets"="excluded"."sets" RETURNING *`
+		updateExerciseRoutineStmt := `INSERT INTO "exercise_routines" ("created_at","updated_at","deleted_at","name","sets","reps","active","workout_routine_id","id") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT ("id") DO UPDATE SET "reps"="excluded"."reps","sets"="excluded"."sets","name"="excluded"."name" RETURNING *`
 		mock.ExpectQuery(regexp.QuoteMeta(updateExerciseRoutineStmt)).
 		WithArgs(
 			sqlmock.AnyArg(), 
@@ -260,6 +262,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			wr.ExerciseRoutines[0].Name,
 			wr.ExerciseRoutines[0].Sets, 
 			wr.ExerciseRoutines[0].Reps,
+			wr.Active,
 			wr.ID,
 			wr.ExerciseRoutines[0].ID,
 		).WillReturnRows(exerciseRoutineRow)

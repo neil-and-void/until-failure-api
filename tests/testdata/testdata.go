@@ -25,6 +25,7 @@ var User = &token.Claims{
 
 var WorkoutRoutine = &database.WorkoutRoutine{
 	Name: "Legs",
+	Active: true,
 	ExerciseRoutines: []database.ExerciseRoutine{
 		{
 			Model: gorm.Model{
@@ -39,6 +40,7 @@ var WorkoutRoutine = &database.WorkoutRoutine{
 			Name:             "squat",
 			Sets:             4,
 			Reps:             6,
+			Active: true,
 			WorkoutRoutineID: 8,
 		},
 		{
@@ -53,6 +55,7 @@ var WorkoutRoutine = &database.WorkoutRoutine{
 			},
 			Name:             "leg extensions",
 			Sets:             4,
+			Active: true,
 			Reps:             6,
 			WorkoutRoutineID: 8,
 		},
