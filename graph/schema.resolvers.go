@@ -699,6 +699,43 @@ func (r *queryResolver) WorkoutRoutines(ctx context.Context) ([]*model.WorkoutRo
 	return workoutRoutines, nil
 }
 
+// WorkoutRoutine is the resolver for the workoutRoutine field.
+func (r *queryResolver) WorkoutRoutine(ctx context.Context, workoutRoutineID string) (*model.WorkoutRoutine, error) {
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.WorkoutRoutine{}, err
+	}
+
+	userId := fmt.Sprintf("%d", u.ID)
+	err = r.ACS.CanAccessWorkoutRoutine(userId, workoutRoutineID)
+	if err != nil {
+		return &model.WorkoutRoutine{}, gqlerror.Errorf("Error Getting Workout Routine: Access Denied")
+	}
+
+	dbWorkoutRoutine, err := database.GetWorkoutRoutine(r.DB, userId, workoutRoutineID)
+	if err != nil {
+		return &model.WorkoutRoutine{}, gqlerror.Errorf("Error Getting Workout Routine")
+	}
+
+	var exerciseRoutines []*model.ExerciseRoutine
+	for _, er := range dbWorkoutRoutine.ExerciseRoutines {
+		exerciseRoutines = append(exerciseRoutines, &model.ExerciseRoutine{
+			ID: fmt.Sprintf("%d", er.ID),
+			Active: er.Active,
+			Name: er.Name,
+			Reps: int(er.Reps),
+			Sets: int(er.Sets),
+		})
+	}
+
+	return &model.WorkoutRoutine{
+		ID: fmt.Sprintf("%d", dbWorkoutRoutine.ID),
+		Name: dbWorkoutRoutine.Name,
+		Active: dbWorkoutRoutine.Active,
+		ExerciseRoutines: exerciseRoutines,
+	}, nil
+}
+
 // ExerciseRoutines is the resolver for the exerciseRoutines field.
 func (r *queryResolver) ExerciseRoutines(ctx context.Context, workoutRoutineID string) ([]*model.ExerciseRoutine, error) {
 	u, err := middleware.GetUser(ctx)

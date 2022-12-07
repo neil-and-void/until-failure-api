@@ -21,7 +21,7 @@ func CreateWorkoutRoutine(db *gorm.DB, routine *WorkoutRoutine) *gorm.DB {
 
 func GetWorkoutRoutine(db *gorm.DB, userId string, workoutRoutineId string) (*WorkoutRoutine, error) {
 	var wr WorkoutRoutine
-	result := db.First(&wr, "user_id = ? AND id = ?", userId, workoutRoutineId)
+	result := db.Preload("ExerciseRoutines").First(&wr, "user_id = ? AND id = ?", userId, workoutRoutineId) // TODO: preload clause might be performance hit
 	return &wr, result.Error
 }
 
@@ -45,12 +45,14 @@ func UpdateWorkoutRoutine(db *gorm.DB, workoutRoutineId string, workoutRoutineNa
 
 	// upsert exercise routines
 	for _, er := range exerciseRoutines {
-		exerciseRoutineIds = append(exerciseRoutineIds, er.ID)
-		err := tx.Clauses(clause.OnConflict{
+		result := tx.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "id"}},
 			DoUpdates: clause.AssignmentColumns([]string{"reps", "sets", "name", "active"}),
-		}).Clauses(clause.Returning{}).Create(er).Error
-		if err != nil {
+		}).Clauses(clause.Returning{}).Create(er)
+		
+		exerciseRoutineIds = append(exerciseRoutineIds, er.ID)
+
+		if err := result.Error; err != nil {
 			tx.Rollback()
 			return err
 		}
