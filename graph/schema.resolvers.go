@@ -24,6 +24,12 @@ import (
 	"gorm.io/gorm"
 )
 
+// Sets is the resolver for the sets field.
+func (r *exerciseResolver) Sets(ctx context.Context, obj *model.Exercise) ([]*model.SetEntry, error) {
+	fmt.Println("slkdfjwue8e WAHHHH")
+	panic(fmt.Errorf("not implemented: Sets - sets"))
+}
+
 // Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, email string, password string) (model.AuthResult, error) {
 	if _, err := mail.ParseAddress(email); err != nil {
@@ -720,18 +726,18 @@ func (r *queryResolver) WorkoutRoutine(ctx context.Context, workoutRoutineID str
 	var exerciseRoutines []*model.ExerciseRoutine
 	for _, er := range dbWorkoutRoutine.ExerciseRoutines {
 		exerciseRoutines = append(exerciseRoutines, &model.ExerciseRoutine{
-			ID: fmt.Sprintf("%d", er.ID),
+			ID:     fmt.Sprintf("%d", er.ID),
 			Active: er.Active,
-			Name: er.Name,
-			Reps: int(er.Reps),
-			Sets: int(er.Sets),
+			Name:   er.Name,
+			Reps:   int(er.Reps),
+			Sets:   int(er.Sets),
 		})
 	}
 
 	return &model.WorkoutRoutine{
-		ID: fmt.Sprintf("%d", dbWorkoutRoutine.ID),
-		Name: dbWorkoutRoutine.Name,
-		Active: dbWorkoutRoutine.Active,
+		ID:               fmt.Sprintf("%d", dbWorkoutRoutine.ID),
+		Name:             dbWorkoutRoutine.Name,
+		Active:           dbWorkoutRoutine.Active,
 		ExerciseRoutines: exerciseRoutines,
 	}, nil
 }
@@ -822,14 +828,20 @@ func (r *queryResolver) WorkoutSession(ctx context.Context, workoutSessionID str
 		return &model.WorkoutSession{}, err
 	}
 
+	r.Resolver.WorkoutSession()
+
 	var dbWorkoutSession database.WorkoutSession
 	err = database.GetWorkoutSession(r.DB, fmt.Sprintf("%d", u.ID), workoutSessionID, &dbWorkoutSession)
 	if err != nil {
 		return &model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Session: Access Denied")
 	}
 
+	// r.Resolver.WorkoutSession().Exercises()
+
 	var exercises []*model.Exercise
 	for _, e := range dbWorkoutSession.Exercises {
+
+		// exercise, err :=
 
 		var setEntries []*model.SetEntry
 		for _, s := range e.Sets {
@@ -980,11 +992,38 @@ func (r *queryResolver) Sets(ctx context.Context, exerciseID string) ([]*model.S
 	return sets, nil
 }
 
+// ExerciseRoutines is the resolver for the exerciseRoutines field.
+func (r *workoutRoutineResolver) ExerciseRoutines(ctx context.Context, obj *model.WorkoutRoutine) ([]*model.ExerciseRoutine, error) {
+	panic(fmt.Errorf("not implemented: ExerciseRoutines - exerciseRoutines"))
+}
+
+// Exercises is the resolver for the exercises field.
+func (r *workoutSessionResolver) Exercises(ctx context.Context, obj *model.WorkoutSession) ([]*model.Exercise, error) {
+	panic(fmt.Errorf("not implemented: Exercises - exercises"))
+	// r.Resolver.Exercise().Sets(ctx)
+}
+
+// Exercise returns generated.ExerciseResolver implementation.
+func (r *Resolver) Exercise() generated.ExerciseResolver { return &exerciseResolver{r} }
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+// WorkoutRoutine returns generated.WorkoutRoutineResolver implementation.
+func (r *Resolver) WorkoutRoutine() generated.WorkoutRoutineResolver {
+	return &workoutRoutineResolver{r}
+}
+
+// WorkoutSession returns generated.WorkoutSessionResolver implementation.
+func (r *Resolver) WorkoutSession() generated.WorkoutSessionResolver {
+	return &workoutSessionResolver{r}
+}
+
+type exerciseResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type workoutRoutineResolver struct{ *Resolver }
+type workoutSessionResolver struct{ *Resolver }

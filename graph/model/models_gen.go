@@ -23,13 +23,6 @@ type AuthSuccess struct {
 
 func (AuthSuccess) IsAuthResult() {}
 
-type Exercise struct {
-	ID                string      `json:"id"`
-	ExerciseRoutineID string      `json:"exerciseRoutineId"`
-	Sets              []*SetEntry `json:"sets"`
-	Notes             string      `json:"notes"`
-}
-
 type ExerciseInput struct {
 	ExerciseRoutineID string           `json:"exerciseRoutineId"`
 	Notes             string           `json:"notes"`
@@ -48,6 +41,13 @@ type ExerciseRoutineInput struct {
 	Name string `json:"name"`
 	Sets int    `json:"sets"`
 	Reps int    `json:"reps"`
+}
+
+type PrevExercise struct {
+	ID                string      `json:"id"`
+	ExerciseRoutineID string      `json:"exerciseRoutineId"`
+	Sets              []*SetEntry `json:"sets"`
+	Notes             string      `json:"notes"`
 }
 
 type RefreshSuccess struct {
@@ -109,24 +109,9 @@ type User struct {
 	Email string `json:"email"`
 }
 
-type WorkoutRoutine struct {
-	ID               string             `json:"id"`
-	Name             string             `json:"name"`
-	Active           bool               `json:"active"`
-	ExerciseRoutines []*ExerciseRoutine `json:"exerciseRoutines"`
-}
-
 type WorkoutRoutineInput struct {
 	Name             string                  `json:"name"`
 	ExerciseRoutines []*ExerciseRoutineInput `json:"exerciseRoutines"`
-}
-
-type WorkoutSession struct {
-	ID               string      `json:"id"`
-	Start            time.Time   `json:"start"`
-	End              *time.Time  `json:"end"`
-	WorkoutRoutineID string      `json:"workoutRoutineId"`
-	Exercises        []*Exercise `json:"exercises"`
 }
 
 type WorkoutSessionInput struct {

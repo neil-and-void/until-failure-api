@@ -60,3 +60,18 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
+  WorkoutRoutine:
+    model: github.com/neilZon/workout-logger-api/graph/model.WorkoutRoutine
+    fields:
+      exerciseRoutines:
+        resolver: true
+  WorkoutSession:
+    model: github.com/neilZon/workout-logger-api/graph/model.WorkoutSession
+    fields:
+      exercises:
+        resolver: true
+  Exercise:
+    model: github.com/neilZon/workout-logger-api/graph/model.Exercise
+    fields:
+      sets:
+        resolver: true
