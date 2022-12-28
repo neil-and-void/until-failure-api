@@ -198,5 +198,3 @@ func (r *queryResolver) Sets(ctx context.Context, exerciseID string) ([]*model.S
 
 	return sets, nil
 }
-
-

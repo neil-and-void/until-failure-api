@@ -74,9 +74,9 @@ func (r *queryResolver) WorkoutRoutines(ctx context.Context) ([]*model.WorkoutRo
 	var workoutRoutines []*model.WorkoutRoutine
 	for _, wr := range dbwr {
 		workoutRoutines = append(workoutRoutines, &model.WorkoutRoutine{
-			ID:               fmt.Sprintf("%d", wr.ID),
-			Name:             wr.Name,
-			Active:           wr.Active,
+			ID:     fmt.Sprintf("%d", wr.ID),
+			Name:   wr.Name,
+			Active: wr.Active,
 		})
 	}
 	return workoutRoutines, nil
@@ -101,9 +101,9 @@ func (r *queryResolver) WorkoutRoutine(ctx context.Context, workoutRoutineID str
 	}
 
 	return &model.WorkoutRoutine{
-		ID:               fmt.Sprintf("%d", dbWorkoutRoutine.ID),
-		Name:             dbWorkoutRoutine.Name,
-		Active:           dbWorkoutRoutine.Active,
+		ID:     fmt.Sprintf("%d", dbWorkoutRoutine.ID),
+		Name:   dbWorkoutRoutine.Name,
+		Active: dbWorkoutRoutine.Active,
 	}, nil
 }
 
@@ -195,4 +195,3 @@ func (r *mutationResolver) DeleteWorkoutRoutine(ctx context.Context, workoutRout
 func (r *workoutSessionResolver) WorkoutRoutine(ctx context.Context, obj *model.WorkoutSession) (*model.WorkoutRoutine, error) {
 	panic(fmt.Errorf("not implemented: WorkoutRoutine - workoutRoutine"))
 }
-

@@ -136,4 +136,3 @@ func (r *workoutRoutineResolver) ExerciseRoutines(ctx context.Context, obj *mode
 
 	return exerciseRoutines, nil
 }
-
