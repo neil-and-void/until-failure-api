@@ -4,24 +4,13 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"time"
 
-	"github.com/graph-gophers/dataloader"
 	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/middleware"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"gorm.io/gorm"
 )
-
-// Exercises is the resolver for the exercises field.
-func (r *queryResolver) Exercises(ctx context.Context, workoutSessionID string) ([]*model.Exercise, error) {
-	exercises, err := r.Resolver.WorkoutSession().Exercises(ctx, &model.WorkoutSession{ID: workoutSessionID})
-	if err != nil {
-		return []*model.Exercise{}, err
-	}
-	return exercises, nil
-}
 
 // AddExercise is the resolver for the addExercise field.
 func (r *mutationResolver) AddExercise(ctx context.Context, workoutSessionID string, exercise model.ExerciseInput) (string, error) {
@@ -201,14 +190,34 @@ func (r *workoutSessionResolver) Exercises(ctx context.Context, obj *model.Worko
 	return exercises, nil
 }
 
-// Prev is the resolver for the prev field.
-func (r *exerciseResolver) Prev(ctx context.Context, obj *model.Exercise, date *time.Time) (*model.PrevExercise, error) {
-	loaders := middleware.GetLoaders(ctx)
-	thunk := loaders.PrevExerciseLoader.Load(ctx, dataloader.StringKey(obj.ID))
-	result, err := thunk()
-
+// PrevExercises is the resolver for the prevExercises field.
+func (r *workoutSessionResolver) PrevExercises(ctx context.Context, obj *model.WorkoutSession) ([]*model.Exercise, error) {
+	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return nil, err
+		return []*model.Exercise{}, err
 	}
-	return result.(*model.PrevExercise), nil
+
+	err = r.ACS.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), obj.ID)
+	if err != nil {
+		return []*model.Exercise{}, gqlerror.Errorf("Error Getting Exercises: Access Denied")
+	}
+
+	if obj.End == nil {
+		return []*model.Exercise{}, nil
+	}
+
+	dbExercises, err := database.GetExercisesBeforeDate(r.DB, obj.ID, *obj.End)
+	if err != nil {
+		return []*model.Exercise{}, gqlerror.Errorf("Error Getting Exercises")
+	}
+	
+	var exercises []*model.Exercise
+	for _, e := range *dbExercises {
+		exercises = append(exercises, &model.Exercise{
+			ID:    fmt.Sprintf("%d", e.ID),
+			Notes: e.Notes,
+		})
+	}
+
+	return exercises, nil
 }

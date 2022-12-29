@@ -68,12 +68,10 @@ func NewGqlClient(gormDB *gorm.DB, acs accesscontroller.AccessControllerService)
 // NewLoaders instantiates data loaders for the middleware
 func NewLoaders(gormDB *gorm.DB) *loader.Loaders {
 	exerciseRoutineReader := &reader.ExerciseRoutineReader{DB: gormDB}
-	PrevExerciseReader := &reader.PrevExerciseReader{DB: gormDB}
 	setEntryReader := &reader.SetEntryReader{DB: gormDB}
 	workoutRoutineReader := &reader.WorkoutRoutineReader{DB: gormDB}
 
 	loaders := &loader.Loaders{
-		PrevExerciseLoader:    dataloader.NewBatchedLoader(PrevExerciseReader.GetPrevExercises),
 		ExerciseRoutineLoader: dataloader.NewBatchedLoader(exerciseRoutineReader.GetExerciseRoutines),
 		SetEntryLoader:        dataloader.NewBatchedLoader(setEntryReader.GetSetEntries),
 		WorkoutRoutineLoader:  dataloader.NewBatchedLoader(workoutRoutineReader.GetWorkoutRoutines),

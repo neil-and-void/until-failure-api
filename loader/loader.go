@@ -6,7 +6,6 @@ import (
 
 type Loaders struct {
 	WorkoutRoutineLoader  *dataloader.Loader
-	PrevExerciseLoader    *dataloader.Loader
 	ExerciseRoutineLoader *dataloader.Loader
 	SetEntryLoader        *dataloader.Loader
 }

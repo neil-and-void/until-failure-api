@@ -11,7 +11,6 @@ import (
 	"github.com/graph-gophers/dataloader"
 	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph/model"
-	"github.com/neilZon/workout-logger-api/middleware"
 	"gorm.io/gorm"
 )
 
@@ -20,10 +19,6 @@ type WorkoutRoutineReader struct {
 }
 
 type ExerciseRoutineReader struct {
-	DB *gorm.DB
-}
-
-type PrevExerciseReader struct {
 	DB *gorm.DB
 }
 
@@ -93,44 +88,6 @@ func (e *ExerciseRoutineReader) GetExerciseRoutines(ctx context.Context, keys da
 		}
 	}
 	
-	return output
-}
-
-func (e *PrevExerciseReader) GetPrevExercises(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	u, err := middleware.GetUser(ctx)
-	if err != nil {
-		return []*dataloader.Result{}
-	}
-
-	prevExerciseIds := []string{}
-	for _, key := range keys {
-		prevExerciseIds = append(prevExerciseIds, key.String())
-	}
-
-	workoutSession := database.WorkoutSession{}
-	database.GetWorkoutSession(e.DB, fmt.Sprintf("%d", u.ID), "", &workoutSession)
-
-	prevExercises, _ := database.GetPrevExercises(e.DB, prevExerciseIds)
-	exerciseById := map[string]*model.PrevExercise{}
-	for _, exercise := range *prevExercises {
-		id := strconv.Itoa(int(exercise.ID))
-		exerciseById[id] = &model.PrevExercise{
-			ID:    id,
-			Notes: exercise.Notes,
-		}
-	}
-
-	var output []*dataloader.Result
-	for _, prevExerciseKey := range keys {
-		exerciseRoutine, ok := exerciseById[prevExerciseKey.String()]
-		if ok {
-			output = append(output, &dataloader.Result{Data: exerciseRoutine, Error: nil})
-		} else {
-			err := fmt.Errorf("prev exercise not found %s", prevExerciseKey.String())
-			output = append(output, &dataloader.Result{Data: nil, Error: err})
-		}
-	}
-
 	return output
 }
 

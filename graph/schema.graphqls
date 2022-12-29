@@ -28,6 +28,7 @@ type WorkoutSession {
   end: Time
   workoutRoutine: WorkoutRoutine!
   exercises: [Exercise!]!
+  prevExercises: [Exercise!]!
 }
 
 type UpdatedWorkoutSession {
@@ -45,7 +46,6 @@ type PrevExercise {
 type Exercise {
   id: ID!
   exerciseRoutine: ExerciseRoutine!
-  prev(date: Time): PrevExercise
   sets: [SetEntry!]!
   notes: String!
 }
@@ -145,7 +145,6 @@ type Query {
   workoutSessions: [WorkoutSession!]!
   workoutSession(workoutSessionId: ID!): WorkoutSession!
   exercise(exerciseId: ID!): Exercise!
-  exercises(workoutSessionId: ID!): [Exercise!]!
   sets(exerciseId: ID!): [SetEntry!]!
 }
 

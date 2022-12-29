@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -142,6 +143,12 @@ func GetExerciseRoutines(db *gorm.DB, workoutRoutineId string) ([]ExerciseRoutin
 	return exerciseRoutines, nil
 }
 
+func GetExerciseRoutineIdsByExercises(db *gorm.DB, exerciseIds []string) (*[]string, error) {
+	exerciseRoutineIds := []string{}
+	err := db.Preload("ExerciseRoutine").Model(Exercise{}).Where("id in ?", exerciseIds).Pluck("exercise_routine.id", exerciseRoutineIds).Error
+	return &exerciseRoutineIds, err
+}
+
 func GetExerciseRoutine(db *gorm.DB, exerciseRoutineId string, er *ExerciseRoutine) error {
 	result := db.Model(ExerciseRoutine{}).Where("id = ?", exerciseRoutineId).First(er)
 	return result.Error
@@ -253,10 +260,15 @@ func GetExercises(db *gorm.DB, exercises *[]Exercise, workoutSessionId string) e
 	return result.Error
 }
 
-func GetPrevExercises(db *gorm.DB, exerciseIds []string) (*[]Exercise, error) {
+func GetExercisesBeforeDate(db *gorm.DB, workoutSessionId string, date time.Time) (*[]Exercise, error) {
 	exercises := []Exercise{}
-	err := db.Preload("WorkoutSession").Where("id IN ?", exerciseIds).Find(&exercises).Error
-	// get the previous time you did each exercise
+	
+	err := db.
+		Model(&Exercise{}).
+		Joins("LEFT JOIN workout_sessions AS ws ON ws.id = exercises.workout_session_id").
+		Where("ws.end IS NOT NULL AND ws.end < ? AND exercises.workout_session_id = ?", date, workoutSessionId).
+		Find(&exercises).Error
+
 	return &exercises, err
 }
 
