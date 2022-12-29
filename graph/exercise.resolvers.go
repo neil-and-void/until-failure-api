@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
+	"github.com/graph-gophers/dataloader"
 	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/middleware"
@@ -96,20 +98,9 @@ func (r *queryResolver) Exercise(ctx context.Context, exerciseID string) (*model
 		return &model.Exercise{}, gqlerror.Errorf("Error Getting Exercise: %s", err.Error())
 	}
 
-	var setEntries []*model.SetEntry
-	for _, s := range exercise.Sets {
-		setEntries = append(setEntries, &model.SetEntry{
-			ID:     fmt.Sprintf("%d", s.ID),
-			Weight: float64(s.Weight),
-			Reps:   int(s.Reps),
-		})
-	}
-
 	return &model.Exercise{
-		ID:                exerciseID,
-		Sets:              setEntries,
-		Notes:             exercise.Notes,
-		ExerciseRoutineID: fmt.Sprintf("%d", exercise.ExerciseRoutineID),
+		ID:    exerciseID,
+		Notes: exercise.Notes,
 	}, nil
 }
 
@@ -201,23 +192,23 @@ func (r *workoutSessionResolver) Exercises(ctx context.Context, obj *model.Worko
 
 	var exercises []*model.Exercise
 	for _, e := range dbExercises {
-
-		var setEntries []*model.SetEntry
-		for _, s := range e.Sets {
-			setEntries = append(setEntries, &model.SetEntry{
-				ID:     fmt.Sprintf("%d", s.ID),
-				Weight: float64(s.Weight),
-				Reps:   int(s.Reps),
-			})
-		}
-
 		exercises = append(exercises, &model.Exercise{
-			ID:                fmt.Sprintf("%d", e.ID),
-			Sets:              setEntries,
-			Notes:             e.Notes,
-			ExerciseRoutineID: fmt.Sprintf("%d", e.ExerciseRoutineID),
+			ID:    fmt.Sprintf("%d", e.ID),
+			Notes: e.Notes,
 		})
 	}
 
 	return exercises, nil
+}
+
+// Prev is the resolver for the prev field.
+func (r *exerciseResolver) Prev(ctx context.Context, obj *model.Exercise, date *time.Time) (*model.PrevExercise, error) {
+	loaders := middleware.GetLoaders(ctx)
+	thunk := loaders.PrevExerciseLoader.Load(ctx, dataloader.StringKey(obj.ID))
+	result, err := thunk()
+
+	if err != nil {
+		return nil, err
+	}
+	return result.(*model.PrevExercise), nil
 }

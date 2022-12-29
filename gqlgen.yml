@@ -70,8 +70,19 @@ models:
     fields:
       exercises:
         resolver: true
+      workoutRoutine:
+        resolver: true
   Exercise:
     model: github.com/neilZon/workout-logger-api/graph/model.Exercise
+    fields:
+      sets:
+        resolver: true
+      prev:
+        resolver: true
+      exerciseRoutine:
+        resolver: true
+  PrevExercise:
+    model: github.com/neilZon/workout-logger-api/graph/model.PrevExercise
     fields:
       sets:
         resolver: true

@@ -49,7 +49,7 @@ func UpdateWorkoutRoutine(db *gorm.DB, workoutRoutineId string, workoutRoutineNa
 			Columns:   []clause.Column{{Name: "id"}},
 			DoUpdates: clause.AssignmentColumns([]string{"reps", "sets", "name", "active"}),
 		}).Clauses(clause.Returning{}).Create(er)
-		
+
 		exerciseRoutineIds = append(exerciseRoutineIds, er.ID)
 
 		if err := result.Error; err != nil {
@@ -147,6 +147,12 @@ func GetExerciseRoutine(db *gorm.DB, exerciseRoutineId string, er *ExerciseRouti
 	return result.Error
 }
 
+func GetExercisesById(db *gorm.DB, ids []string) (*[]Exercise, error) {
+	exercise := []Exercise{}
+	err := db.Preload("ExerciseRoutine").Where("id IN ?", ids).Find(&exercise).Error
+	return &exercise, err
+}
+
 func DeleteExerciseRoutine(db *gorm.DB, exerciseRoutineId string) error {
 	tx := db.Begin()
 	if err := tx.Where("id = ?", exerciseRoutineId).Delete(&ExerciseRoutine{}).Error; err != nil {
@@ -184,10 +190,20 @@ func GetWorkoutSession(db *gorm.DB, userId string, workoutSessionId string, ws *
 	return result.Error
 }
 
+func GetWorkoutSessionOfExercise() error {
+	return nil
+}
+
 func GetWorkoutSessions(db *gorm.DB, userId string) ([]*WorkoutSession, error) {
 	var workoutSessions []*WorkoutSession
-	db.Preload("Exercises.Sets").Where("user_id = ?", userId).Find(&workoutSessions)
+	db.Where("user_id = ?", userId).Find(&workoutSessions)
 	return workoutSessions, nil
+}
+
+func GetWorkoutSessionsById(db *gorm.DB, ids []string) (*[]WorkoutSession, error) {
+	workoutSessions := []WorkoutSession{}
+	err := db.Preload("WorkoutRoutine").Where("id IN ?", ids).Find(&workoutSessions).Error	
+	return &workoutSessions, err
 }
 
 func UpdateWorkoutSession(db *gorm.DB, workoutSessionId string, updatedWorkoutSession *WorkoutSession) error {
@@ -228,13 +244,20 @@ func AddExercise(db *gorm.DB, exercise *Exercise, workoutSessionId string) error
 }
 
 func GetExercise(db *gorm.DB, exercise *Exercise) error {
-	result := db.Preload("Sets").First(exercise)
+	result := db.First(exercise)
 	return result.Error
 }
 
 func GetExercises(db *gorm.DB, exercises *[]Exercise, workoutSessionId string) error {
-	result := db.Preload("Sets").Where("workout_session_id = ?", workoutSessionId).Find(&exercises)
+	result := db.Where("workout_session_id = ?", workoutSessionId).Find(&exercises)
 	return result.Error
+}
+
+func GetPrevExercises(db *gorm.DB, exerciseIds []string) (*[]Exercise, error) {
+	exercises := []Exercise{}
+	err := db.Preload("WorkoutSession").Where("id IN ?", exerciseIds).Find(&exercises).Error
+	// get the previous time you did each exercise
+	return &exercises, err
 }
 
 func UpdateExercise(db *gorm.DB, exerciseId string, updatedExercise *Exercise) error {

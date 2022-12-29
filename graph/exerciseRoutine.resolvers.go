@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/graph-gophers/dataloader"
 	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/middleware"
@@ -40,11 +41,6 @@ func (r *mutationResolver) AddExerciseRoutine(ctx context.Context, workoutRoutin
 	}
 
 	return fmt.Sprintf("%d", dbExerciseRoutine.ID), nil
-}
-
-// ExerciseRoutine is the resolver for the exerciseRoutine field.
-func (r *exerciseResolver) ExerciseRoutine(ctx context.Context, obj *model.Exercise) (*model.ExerciseRoutine, error) {
-	panic(fmt.Errorf("not implemented: ExerciseRoutine - exerciseRoutine"))
 }
 
 // ExerciseRoutines is the resolver for the exerciseRoutines field.
@@ -105,9 +101,19 @@ func (r *mutationResolver) DeleteExerciseRoutine(ctx context.Context, exerciseRo
 	return 1, nil
 }
 
+// ExerciseRoutine is the resolver for the exerciseRoutine field.
+func (r *exerciseResolver) ExerciseRoutine(ctx context.Context, obj *model.Exercise) (*model.ExerciseRoutine, error) {
+	loaders := middleware.GetLoaders(ctx)
+	thunk := loaders.ExerciseRoutineLoader.Load(ctx, dataloader.StringKey(obj.ID))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	return result.(*model.ExerciseRoutine), nil
+}
+
 // ExerciseRoutines is the resolver for the exerciseRoutines field.
 func (r *workoutRoutineResolver) ExerciseRoutines(ctx context.Context, obj *model.WorkoutRoutine) ([]*model.ExerciseRoutine, error) {
-	fmt.Println("THIS THING WAS CALLED", *obj)
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
 		return []*model.ExerciseRoutine{}, err

@@ -11,6 +11,7 @@ require (
 	github.com/rs/cors v1.8.2
 	github.com/stretchr/testify v1.8.0
 	github.com/vektah/gqlparser/v2 v2.5.0
+	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90
 	gorm.io/driver/postgres v1.3.9
 	gorm.io/gorm v1.23.9
 )
@@ -38,6 +39,5 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/lib/pq v1.10.7 // indirect
 	github.com/mitchellh/mapstructure v1.3.1 // indirect
-	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90 // indirect
 	golang.org/x/text v0.3.7 // indirect
 )

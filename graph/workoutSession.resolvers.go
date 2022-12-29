@@ -132,17 +132,10 @@ func (r *queryResolver) WorkoutSessions(ctx context.Context) ([]*model.WorkoutSe
 	for _, ws := range dbWorkoutSessions {
 
 		workoutSession := &model.WorkoutSession{
-			ID:               fmt.Sprintf("%d", ws.ID),
-			Start:            ws.Start,
-			End:              ws.End,
-			WorkoutRoutineID: fmt.Sprintf("%d", ws.WorkoutRoutineID),
+			ID:    fmt.Sprintf("%d", ws.ID),
+			Start: ws.Start,
+			End:   ws.End,
 		}
-
-		exercises, err := r.Resolver.WorkoutSession().Exercises(ctx, workoutSession)
-		if err != nil {
-			return []*model.WorkoutSession{}, nil
-		}
-		workoutSession.Exercises = exercises
 
 		workoutSessions = append(workoutSessions, workoutSession)
 	}
@@ -163,18 +156,9 @@ func (r *queryResolver) WorkoutSession(ctx context.Context, workoutSessionID str
 		return &model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Session: Access Denied")
 	}
 
-	exercises, err := r.Resolver.WorkoutSession().Exercises(ctx, &model.WorkoutSession{
-		ID: workoutSessionID,
-	})
-	if err != nil {
-		return &model.WorkoutSession{}, err
-	}
-
 	return &model.WorkoutSession{
-		ID:               fmt.Sprintf("%d", dbWorkoutSession.ID),
-		Start:            dbWorkoutSession.Start,
-		End:              dbWorkoutSession.End,
-		WorkoutRoutineID: fmt.Sprintf("%d", dbWorkoutSession.WorkoutRoutineID),
-		Exercises:        exercises,
+		ID:        fmt.Sprintf("%d", dbWorkoutSession.ID),
+		Start:     dbWorkoutSession.Start,
+		End:       dbWorkoutSession.End,
 	}, nil
 }

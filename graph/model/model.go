@@ -10,17 +10,23 @@ type WorkoutRoutine struct {
 }
 
 type WorkoutSession struct {
-	ID               string      `json:"id"`
-	Start            time.Time   `json:"start"`
-	End              *time.Time  `json:"end"`
-	WorkoutRoutineID string      `json:"workoutRoutineId"`
-	Exercises        []*Exercise `json:"exercises"`
+	ID             string         `json:"id"`
+	Start          time.Time      `json:"start"`
+	End            *time.Time     `json:"end"`
+	WorkoutRoutine WorkoutRoutine `json:"workoutRoutine"`
+	Exercises      []*Exercise    `json:"exercises"`
 }
 
 type Exercise struct {
-	ID                string        `json:"id"`
-	ExerciseRoutineID string        `json:"exerciseRoutineId"`
-	Prev              *PrevExercise `json:"prev"`
-	Sets              []*SetEntry   `json:"sets"`
-	Notes             string        `json:"notes"`
+	ID              string          `json:"id"`
+	ExerciseRoutine ExerciseRoutine `json:"exerciseRoutine"`
+	Prev            *PrevExercise   `json:"prev"`
+	Sets            []*SetEntry     `json:"sets"`
+	Notes           string          `json:"notes"`
+}
+
+type PrevExercise struct {
+	ID    string      `json:"id"`
+	Sets  []*SetEntry `json:"sets"`
+	Notes string      `json:"notes"`
 }

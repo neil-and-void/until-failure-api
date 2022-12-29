@@ -12,26 +12,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// Sets is the resolver for the sets field.
-func (r *exerciseResolver) Sets(ctx context.Context, obj *model.Exercise) ([]*model.SetEntry, error) {
-	var dbSetEntries []database.SetEntry
-	err := database.GetSets(r.DB, &dbSetEntries, obj.ID)
-	if err != nil {
-		return []*model.SetEntry{}, nil
-	}
-
-	var setEntries []*model.SetEntry
-	for _, s := range dbSetEntries {
-		setEntries = append(setEntries, &model.SetEntry{
-			ID:     fmt.Sprintf("%d", s.ID),
-			Weight: float64(s.Weight),
-			Reps:   int(s.Reps),
-		})
-	}
-
-	return setEntries, nil
-}
-
 // AddSet is the resolver for the addSet field.
 func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *model.SetEntryInput) (string, error) {
 	u, err := middleware.GetUser(ctx)
@@ -69,6 +49,44 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *m
 	}
 
 	return fmt.Sprintf("%d", dbSet.ID), nil
+}
+
+// Sets is the resolver for the sets field.
+func (r *queryResolver) Sets(ctx context.Context, exerciseID string) ([]*model.SetEntry, error) {
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return []*model.SetEntry{}, err
+	}
+
+	exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, 64)
+	if err != nil {
+		return []*model.SetEntry{}, gqlerror.Errorf("Error Getting Sets: Invalid Exercise ID")
+	}
+	exercise := database.Exercise{
+		Model: gorm.Model{
+			ID: uint(exerciseIDUint),
+		},
+	}
+	err = database.GetExercise(r.DB, &exercise)
+	if err != nil {
+		return []*model.SetEntry{}, gqlerror.Errorf("Error Getting Sets")
+	}
+
+	err = r.ACS.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", exercise.WorkoutSessionID))
+	if err != nil {
+		return []*model.SetEntry{}, gqlerror.Errorf("Error Getting Sets: Access Denied")
+	}
+
+	var sets []*model.SetEntry
+	for _, s := range exercise.Sets {
+		sets = append(sets, &model.SetEntry{
+			ID:     fmt.Sprintf("%d", s.ID),
+			Reps:   int(s.Reps),
+			Weight: float64(s.Weight),
+		})
+	}
+
+	return sets, nil
 }
 
 // UpdateSet is the resolver for the updateSet field.
@@ -161,40 +179,41 @@ func (r *mutationResolver) DeleteSet(ctx context.Context, setID string) (int, er
 	return 1, nil
 }
 
-// Sets is the resolver for the sets field.
-func (r *queryResolver) Sets(ctx context.Context, exerciseID string) ([]*model.SetEntry, error) {
-	u, err := middleware.GetUser(ctx)
+func (r *prevExerciseResolver) Sets(ctx context.Context, obj *model.PrevExercise) ([]*model.SetEntry, error) {
+	var dbSetEntries []database.SetEntry
+	err := database.GetSets(r.DB, &dbSetEntries, obj.ID)
 	if err != nil {
-		return []*model.SetEntry{}, err
+		return []*model.SetEntry{}, nil
 	}
 
-	exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, 64)
-	if err != nil {
-		return []*model.SetEntry{}, gqlerror.Errorf("Error Getting Sets: Invalid Exercise ID")
-	}
-	exercise := database.Exercise{
-		Model: gorm.Model{
-			ID: uint(exerciseIDUint),
-		},
-	}
-	err = database.GetExercise(r.DB, &exercise)
-	if err != nil {
-		return []*model.SetEntry{}, gqlerror.Errorf("Error Getting Sets")
-	}
-
-	err = r.ACS.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", exercise.WorkoutSessionID))
-	if err != nil {
-		return []*model.SetEntry{}, gqlerror.Errorf("Error Getting Sets: Access Denied")
-	}
-
-	var sets []*model.SetEntry
-	for _, s := range exercise.Sets {
-		sets = append(sets, &model.SetEntry{
+	var setEntries []*model.SetEntry
+	for _, s := range dbSetEntries {
+		setEntries = append(setEntries, &model.SetEntry{
 			ID:     fmt.Sprintf("%d", s.ID),
-			Reps:   int(s.Reps),
 			Weight: float64(s.Weight),
+			Reps:   int(s.Reps),
 		})
 	}
 
-	return sets, nil
+	return setEntries, nil
+}
+
+// Sets is the resolver for the sets field.
+func (r *exerciseResolver) Sets(ctx context.Context, obj *model.Exercise) ([]*model.SetEntry, error) {
+	var dbSetEntries []database.SetEntry
+	err := database.GetSets(r.DB, &dbSetEntries, obj.ID)
+	if err != nil {
+		return []*model.SetEntry{}, nil
+	}
+
+	var setEntries []*model.SetEntry
+	for _, s := range dbSetEntries {
+		setEntries = append(setEntries, &model.SetEntry{
+			ID:     fmt.Sprintf("%d", s.ID),
+			Weight: float64(s.Weight),
+			Reps:   int(s.Reps),
+		})
+	}
+
+	return setEntries, nil
 }

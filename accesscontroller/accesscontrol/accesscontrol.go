@@ -12,6 +12,11 @@ type AccessController struct {
 	DB *gorm.DB
 }
 
+// CanAccessExercise implements accesscontroller.AccessControllerService
+func (*AccessController) CanAccessExercise(userId string, exerciseId string) error {
+	panic("unimplemented")
+}
+
 func (ac *AccessController) CanAccessWorkoutRoutine(userId string, workoutRoutineId string) error {
 	_, err := database.GetWorkoutRoutine(ac.DB, userId, workoutRoutineId)
 	if errors.Is(err, gorm.ErrRecordNotFound) {

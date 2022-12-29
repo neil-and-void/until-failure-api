@@ -54,8 +54,13 @@ func main() {
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 	})
 
+	loaders := helpers.NewLoaders(db)
+
+	dataloaderMiddleware := middleware.DataloaderMiddleware(loaders, srv)
+	authMiddleware := middleware.AuthMiddleware(dataloaderMiddleware)
+
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", c.Handler(middleware.AuthMiddleware(srv)))
+	http.Handle("/query", c.Handler(authMiddleware))
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))

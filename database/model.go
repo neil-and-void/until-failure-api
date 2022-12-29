@@ -37,17 +37,20 @@ type WorkoutSession struct {
 	gorm.Model
 	Start            time.Time `gorm:"not null"`
 	End              *time.Time
+	WorkoutRoutine	 WorkoutRoutine
+	Exercises        []Exercise
 	WorkoutRoutineID uint
 	UserID           uint
-	Exercises        []Exercise
 }
 
 type Exercise struct {
 	gorm.Model
-	WorkoutSessionID  uint
-	ExerciseRoutineID uint
-	Notes             string     `gorm:"size:512"`
+	WorkoutSession WorkoutSession
+	ExerciseRoutine ExerciseRoutine
 	Sets              []SetEntry `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	Notes             string     `gorm:"size:512"`
+	ExerciseRoutineID uint
+	WorkoutSessionID  uint
 }
 
 type SetEntry struct {

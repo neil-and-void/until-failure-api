@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/graph-gophers/dataloader"
 	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/middleware"
@@ -193,5 +194,11 @@ func (r *mutationResolver) DeleteWorkoutRoutine(ctx context.Context, workoutRout
 
 // WorkoutRoutine is the resolver for the workoutRoutine field.
 func (r *workoutSessionResolver) WorkoutRoutine(ctx context.Context, obj *model.WorkoutSession) (*model.WorkoutRoutine, error) {
-	panic(fmt.Errorf("not implemented: WorkoutRoutine - workoutRoutine"))
+	loaders := middleware.GetLoaders(ctx)
+	thunk := loaders.WorkoutRoutineLoader.Load(ctx, dataloader.StringKey(obj.ID))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	return result.(*model.WorkoutRoutine), nil
 }

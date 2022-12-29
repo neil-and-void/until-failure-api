@@ -10,11 +10,14 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/graph-gophers/dataloader"
 	"github.com/neilZon/workout-logger-api/accesscontroller"
 	"github.com/neilZon/workout-logger-api/common"
 	"github.com/neilZon/workout-logger-api/graph"
 	"github.com/neilZon/workout-logger-api/graph/generated"
+	"github.com/neilZon/workout-logger-api/loader"
 	"github.com/neilZon/workout-logger-api/middleware"
+	"github.com/neilZon/workout-logger-api/reader"
 	"github.com/neilZon/workout-logger-api/token"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"gorm.io/driver/postgres"
@@ -60,6 +63,22 @@ func NewGqlServer(gormDB *gorm.DB, acs accesscontroller.AccessControllerService)
 func NewGqlClient(gormDB *gorm.DB, acs accesscontroller.AccessControllerService) *client.Client {
 	srv := NewGqlServer(gormDB, acs)
 	return client.New(srv)
+}
+
+// NewLoaders instantiates data loaders for the middleware
+func NewLoaders(gormDB *gorm.DB) *loader.Loaders {
+	exerciseRoutineReader := &reader.ExerciseRoutineReader{DB: gormDB}
+	PrevExerciseReader := &reader.PrevExerciseReader{DB: gormDB}
+	setEntryReader := &reader.SetEntryReader{DB: gormDB}
+	workoutRoutineReader := &reader.WorkoutRoutineReader{DB: gormDB}
+
+	loaders := &loader.Loaders{
+		PrevExerciseLoader:    dataloader.NewBatchedLoader(PrevExerciseReader.GetPrevExercises),
+		ExerciseRoutineLoader: dataloader.NewBatchedLoader(exerciseRoutineReader.GetExerciseRoutines),
+		SetEntryLoader:        dataloader.NewBatchedLoader(setEntryReader.GetSetEntries),
+		WorkoutRoutineLoader:  dataloader.NewBatchedLoader(workoutRoutineReader.GetWorkoutRoutines),
+	}
+	return loaders
 }
 
 func AddContext(u *token.Claims) client.Option {

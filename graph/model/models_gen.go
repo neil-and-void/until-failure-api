@@ -43,13 +43,6 @@ type ExerciseRoutineInput struct {
 	Reps int    `json:"reps"`
 }
 
-type PrevExercise struct {
-	ID                string      `json:"id"`
-	ExerciseRoutineID string      `json:"exerciseRoutineId"`
-	Sets              []*SetEntry `json:"sets"`
-	Notes             string      `json:"notes"`
-}
-
 type RefreshSuccess struct {
 	AccessToken string `json:"accessToken"`
 }
