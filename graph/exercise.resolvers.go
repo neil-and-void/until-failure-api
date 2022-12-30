@@ -77,7 +77,7 @@ func (r *queryResolver) Exercise(ctx context.Context, exerciseID string) (*model
 			ID: uint(exerciseIDUint),
 		},
 	}
-	err = database.GetExercise(r.DB, exercise)
+	err = database.GetExercise(r.DB, exercise, false)
 	if err != nil {
 		return &model.Exercise{}, gqlerror.Errorf("Error Getting Exercise: %s", err.Error())
 	}
@@ -106,7 +106,7 @@ func (r *mutationResolver) UpdateExercise(ctx context.Context, exerciseID string
 			ID: uint(exerciseIDUint),
 		},
 	}
-	err = database.GetExercise(r.DB, &dbExercise)
+	err = database.GetExercise(r.DB, &dbExercise, false)
 	if err != nil {
 		return &model.UpdatedExercise{}, gqlerror.Errorf("Error Updating Exercise")
 	}
@@ -143,7 +143,7 @@ func (r *mutationResolver) DeleteExercise(ctx context.Context, exerciseID string
 			ID: uint(exerciseIDUint),
 		},
 	}
-	err = database.GetExercise(r.DB, &dbExercise)
+	err = database.GetExercise(r.DB, &dbExercise, false)
 	if err != nil {
 		return 0, gqlerror.Errorf("Error Deleting Exercise")
 	}

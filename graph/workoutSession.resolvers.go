@@ -145,20 +145,19 @@ func (r *queryResolver) WorkoutSessions(ctx context.Context) ([]*model.WorkoutSe
 
 // WorkoutSession is the resolver for the workoutSession field.
 func (r *queryResolver) WorkoutSession(ctx context.Context, workoutSessionID string) (*model.WorkoutSession, error) {
-	u, err := middleware.GetUser(ctx)
+	_, err := middleware.GetUser(ctx)
 	if err != nil {
 		return &model.WorkoutSession{}, err
 	}
 
-	var dbWorkoutSession database.WorkoutSession
-	err = database.GetWorkoutSession(r.DB, fmt.Sprintf("%d", u.ID), workoutSessionID, &dbWorkoutSession)
+	workoutSession, err := database.GetWorkoutSession(r.DB, workoutSessionID)
 	if err != nil {
 		return &model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Session: Access Denied")
 	}
 
 	return &model.WorkoutSession{
-		ID:        fmt.Sprintf("%d", dbWorkoutSession.ID),
-		Start:     dbWorkoutSession.Start,
-		End:       dbWorkoutSession.End,
+		ID:        fmt.Sprintf("%d", workoutSession.ID),
+		Start:     workoutSession.Start,
+		End:       workoutSession.End,
 	}, nil
 }

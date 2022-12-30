@@ -96,15 +96,15 @@ func (r *queryResolver) WorkoutRoutine(ctx context.Context, workoutRoutineID str
 		return &model.WorkoutRoutine{}, gqlerror.Errorf("Error Getting Workout Routine: Access Denied")
 	}
 
-	dbWorkoutRoutine, err := database.GetWorkoutRoutine(r.DB, userId, workoutRoutineID)
+	workoutRoutine, err := database.GetWorkoutRoutine(r.DB, workoutRoutineID)
 	if err != nil {
 		return &model.WorkoutRoutine{}, gqlerror.Errorf("Error Getting Workout Routine")
 	}
 
 	return &model.WorkoutRoutine{
-		ID:     fmt.Sprintf("%d", dbWorkoutRoutine.ID),
-		Name:   dbWorkoutRoutine.Name,
-		Active: dbWorkoutRoutine.Active,
+		ID:     fmt.Sprintf("%d", workoutRoutine.ID),
+		Name:   workoutRoutine.Name,
+		Active: workoutRoutine.Active,
 	}, nil
 }
 

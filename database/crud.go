@@ -20,9 +20,9 @@ func CreateWorkoutRoutine(db *gorm.DB, routine *WorkoutRoutine) *gorm.DB {
 	return result
 }
 
-func GetWorkoutRoutine(db *gorm.DB, userId string, workoutRoutineId string) (*WorkoutRoutine, error) {
+func GetWorkoutRoutine(db *gorm.DB, workoutRoutineId string) (*WorkoutRoutine, error) {
 	var wr WorkoutRoutine
-	result := db.Preload("ExerciseRoutines").First(&wr, "user_id = ? AND id = ?", userId, workoutRoutineId) // TODO: preload clause might be performance hit
+	result := db.Preload("ExerciseRoutines").First(&wr, "id = ?", workoutRoutineId) // TODO: preload clause might be performance hit
 	return &wr, result.Error
 }
 
@@ -192,9 +192,11 @@ func AddWorkoutSession(db *gorm.DB, workout *WorkoutSession) error {
 	return result.Error
 }
 
-func GetWorkoutSession(db *gorm.DB, userId string, workoutSessionId string, ws *WorkoutSession) error {
-	result := db.First(ws, "user_id = ? AND id = ?", userId, workoutSessionId)
-	return result.Error
+func GetWorkoutSession(db *gorm.DB, workoutSessionId string) (*WorkoutSession, error) {
+	workoutSession := WorkoutSession{}
+	err := db.Where("id = ?", workoutSessionId).First(&workoutSession).Error
+
+	return &workoutSession, err
 }
 
 func GetWorkoutSessionOfExercise() error {
@@ -250,7 +252,10 @@ func AddExercise(db *gorm.DB, exercise *Exercise, workoutSessionId string) error
 	return result.Error
 }
 
-func GetExercise(db *gorm.DB, exercise *Exercise) error {
+func GetExercise(db *gorm.DB, exercise *Exercise, preloadSets bool) error {
+	if preloadSets {
+		db = db.Preload("Sets")
+	}
 	result := db.First(exercise)
 	return result.Error
 }
