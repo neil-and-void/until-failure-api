@@ -64,19 +64,10 @@ func TestSetEntryResolvers(t *testing.T) {
 			WithArgs(e.ID).
 			WillReturnRows(exerciseRow)
 
-		setEntryRows := sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "weight", "reps", "exercise_id"})
-		for _, s := range e.Sets {
-			setEntryRows.AddRow(s.ID, s.CreatedAt, s.DeletedAt, s.UpdatedAt, s.Weight, s.Reps, s.ExerciseID)
-		}
-		const getSetEntries = `SELECT * FROM "set_entries" WHERE "set_entries"."exercise_id" = $1 AND "set_entries"."deleted_at" IS NULL`
-		mock.ExpectQuery(regexp.QuoteMeta(getSetEntries)).
-			WithArgs(e.ID).
-			WillReturnRows(setEntryRows)
-
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
 		mock.ExpectBegin()
 		addSetEntriesQuery := `INSERT INTO "set_entries" ("created_at","updated_at","deleted_at","weight","reps","exercise_id") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "id"`
@@ -130,19 +121,10 @@ func TestSetEntryResolvers(t *testing.T) {
 			WithArgs(e.ID).
 			WillReturnRows(exerciseRow)
 
-		setEntryRows := sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "weight", "reps", "exercise_id"})
-		for _, s := range e.Sets {
-			setEntryRows.AddRow(s.ID, s.CreatedAt, s.DeletedAt, s.UpdatedAt, s.Weight, s.Reps, s.ExerciseID)
-		}
-		const getSetEntries = `SELECT * FROM "set_entries" WHERE "set_entries"."exercise_id" = $1 AND "set_entries"."deleted_at" IS NULL`
-		mock.ExpectQuery(regexp.QuoteMeta(getSetEntries)).
-			WithArgs(e.ID).
-			WillReturnRows(setEntryRows)
-
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
 		var resp AddSetEntryResp
 		err := c.Post(`
@@ -180,7 +162,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			&resp,
 			helpers.AddContext(u),
 		)
-		require.EqualError(t, err, "[{\"message\":\"Error Adding Set record not found\",\"path\":[\"addSet\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Error Adding Set: record not found\",\"path\":[\"addSet\"]}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -201,19 +183,10 @@ func TestSetEntryResolvers(t *testing.T) {
 			WithArgs(e.ID).
 			WillReturnRows(exerciseRow)
 
-		setEntryRows := sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "weight", "reps", "exercise_id"})
-		for _, s := range e.Sets {
-			setEntryRows.AddRow(s.ID, s.CreatedAt, s.DeletedAt, s.UpdatedAt, s.Weight, s.Reps, s.ExerciseID)
-		}
-		const getSetEntries = `SELECT * FROM "set_entries" WHERE "set_entries"."exercise_id" = $1 AND "set_entries"."deleted_at" IS NULL`
-		mock.ExpectQuery(regexp.QuoteMeta(getSetEntries)).
-			WithArgs(e.ID).
-			WillReturnRows(setEntryRows)
-
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
 		mock.ExpectBegin()
 		addSetEntriesQuery := `INSERT INTO "set_entries" ("created_at","updated_at","deleted_at","weight","reps","exercise_id") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "id"`
@@ -264,7 +237,7 @@ func TestSetEntryResolvers(t *testing.T) {
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
 		var resp GetSetEntriesResp
 		c.MustPost(`
@@ -363,19 +336,10 @@ func TestSetEntryResolvers(t *testing.T) {
 			WithArgs(s.ExerciseID).
 			WillReturnRows(exerciseRows)
 
-		setEntryRows = sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "weight", "reps", "exercise_id"})
-		for _, s := range e.Sets {
-			setEntryRows.AddRow(s.ID, s.CreatedAt, s.DeletedAt, s.UpdatedAt, s.Weight, s.Reps, s.ExerciseID)
-		}
-		const getSetEntries = `SELECT * FROM "set_entries" WHERE "set_entries"."exercise_id" = $1 AND "set_entries"."deleted_at" IS NULL`
-		mock.ExpectQuery(regexp.QuoteMeta(getSetEntries)).
-			WithArgs(e.ID).
-			WillReturnRows(setEntryRows)
-
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
 		setEntryRow := sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "weight", "reps", "exercise_id"}).
 			AddRow(s.ID, s.CreatedAt, s.DeletedAt, s.UpdatedAt, s.Weight, s.Reps, s.ExerciseID)
@@ -450,16 +414,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			WithArgs(s.ExerciseID).
 			WillReturnRows(exerciseRows)
 
-		setEntryRows = sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "weight", "reps", "exercise_id"})
-		for _, s := range e.Sets {
-			setEntryRows.AddRow(s.ID, s.CreatedAt, s.DeletedAt, s.UpdatedAt, s.Weight, s.Reps, s.ExerciseID)
-		}
-		const getSetEntries = `SELECT * FROM "set_entries" WHERE "set_entries"."exercise_id" = $1 AND "set_entries"."deleted_at" IS NULL`
-		mock.ExpectQuery(regexp.QuoteMeta(getSetEntries)).
-			WithArgs(e.ID).
-			WillReturnRows(setEntryRows)
-
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnError(gorm.ErrRecordNotFound)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", ws.ID)).WillReturnError(gorm.ErrRecordNotFound)
 
 		var resp UpdateSetResp
 		err := c.Post(`
@@ -501,19 +456,10 @@ func TestSetEntryResolvers(t *testing.T) {
 			WithArgs(s.ExerciseID).
 			WillReturnRows(exerciseRows)
 
-		setEntryRows = sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "weight", "reps", "exercise_id"})
-		for _, s := range e.Sets {
-			setEntryRows.AddRow(s.ID, s.CreatedAt, s.DeletedAt, s.UpdatedAt, s.Weight, s.Reps, s.ExerciseID)
-		}
-		const getSetEntries = `SELECT * FROM "set_entries" WHERE "set_entries"."exercise_id" = $1 AND "set_entries"."deleted_at" IS NULL`
-		mock.ExpectQuery(regexp.QuoteMeta(getSetEntries)).
-			WithArgs(e.ID).
-			WillReturnRows(setEntryRows)
-
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
 		mock.ExpectBegin()
 		updateSetQuery := `UPDATE "set_entries" SET "updated_at"=$1,"weight"=$2 WHERE id = $3 AND "set_entries"."deleted_at" IS NULL RETURNING *`
@@ -562,19 +508,10 @@ func TestSetEntryResolvers(t *testing.T) {
 			WithArgs(s.ExerciseID).
 			WillReturnRows(exerciseRows)
 
-		setEntryRows = sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "weight", "reps", "exercise_id"})
-		for _, s := range e.Sets {
-			setEntryRows.AddRow(s.ID, s.CreatedAt, s.DeletedAt, s.UpdatedAt, s.Weight, s.Reps, s.ExerciseID)
-		}
-		const getSetEntries = `SELECT * FROM "set_entries" WHERE "set_entries"."exercise_id" = $1 AND "set_entries"."deleted_at" IS NULL`
-		mock.ExpectQuery(regexp.QuoteMeta(getSetEntries)).
-			WithArgs(e.ID).
-			WillReturnRows(setEntryRows)
-
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
 
 		mock.ExpectBegin()
 		deleteSetQuery := `UPDATE "set_entries" SET "deleted_at"=$1 WHERE id = $2 AND "set_entries"."deleted_at" IS NULL`
@@ -639,16 +576,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			WithArgs(s.ExerciseID).
 			WillReturnRows(exerciseRows)
 
-		setEntryRows = sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "weight", "reps", "exercise_id"})
-		for _, s := range e.Sets {
-			setEntryRows.AddRow(s.ID, s.CreatedAt, s.DeletedAt, s.UpdatedAt, s.Weight, s.Reps, s.ExerciseID)
-		}
-		const getSetEntries = `SELECT * FROM "set_entries" WHERE "set_entries"."exercise_id" = $1 AND "set_entries"."deleted_at" IS NULL`
-		mock.ExpectQuery(regexp.QuoteMeta(getSetEntries)).
-			WithArgs(e.ID).
-			WillReturnRows(setEntryRows)
-
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnError(gorm.ErrRecordNotFound)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", ws.ID)).WillReturnError(gorm.ErrRecordNotFound)
 
 		var resp DeleteSetResp
 		err := c.Post(`

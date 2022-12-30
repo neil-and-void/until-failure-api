@@ -28,11 +28,10 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *m
 			ID: uint(exerciseIDUint),
 		},
 	}
-	err = database.GetExercise(r.DB, &exercise)
+	err = database.GetExercise(r.DB, &exercise, false)
 	if err != nil {
-		return "", gqlerror.Errorf("Error Adding Set %s", err)
+		return "", gqlerror.Errorf("Error Adding Set: %s", err)
 	}
-
 	err = r.ACS.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", exercise.WorkoutSessionID))
 	if err != nil {
 		return "", gqlerror.Errorf("Error Adding Set: Access Denied")
@@ -45,6 +44,7 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *m
 	}
 	err = database.AddSet(r.DB, &dbSet)
 	if err != nil {
+		fmt.Println(err)
 		return "", gqlerror.Errorf("Error Adding Set")
 	}
 
@@ -67,7 +67,7 @@ func (r *queryResolver) Sets(ctx context.Context, exerciseID string) ([]*model.S
 			ID: uint(exerciseIDUint),
 		},
 	}
-	err = database.GetExercise(r.DB, &exercise)
+	err = database.GetExercise(r.DB, &exercise, true)
 	if err != nil {
 		return []*model.SetEntry{}, gqlerror.Errorf("Error Getting Sets")
 	}
@@ -107,7 +107,7 @@ func (r *mutationResolver) UpdateSet(ctx context.Context, setID string, set mode
 			ID: setEntry.ExerciseID,
 		},
 	}
-	err = database.GetExercise(r.DB, &exercise)
+	err = database.GetExercise(r.DB, &exercise, false)
 	if err != nil {
 		return &model.SetEntry{}, gqlerror.Errorf("Error Updating Set")
 	}
@@ -161,7 +161,7 @@ func (r *mutationResolver) DeleteSet(ctx context.Context, setID string) (int, er
 			ID: setEntry.ExerciseID,
 		},
 	}
-	err = database.GetExercise(r.DB, &exercise)
+	err = database.GetExercise(r.DB, &exercise, false)
 	if err != nil {
 		return 0, gqlerror.Errorf("Error Deleting Set")
 	}
