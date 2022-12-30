@@ -5,6 +5,7 @@ import (
 
 	"github.com/neilZon/workout-logger-api/accesscontroller"
 	"github.com/neilZon/workout-logger-api/database"
+	"github.com/neilZon/workout-logger-api/helpers"
 	"gorm.io/gorm"
 )
 
@@ -18,27 +19,24 @@ func (*AccessController) CanAccessExercise(userId string, exerciseId string) err
 }
 
 func (ac *AccessController) CanAccessWorkoutRoutine(userId string, workoutRoutineId string) error {
-	_, err := database.GetWorkoutRoutine(ac.DB, userId, workoutRoutineId)
+	workoutRoutine, err := database.GetWorkoutRoutine(ac.DB, workoutRoutineId)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return errors.New("Access Denied")
-	}
-	if err != nil {
 		return err
 	}
-
+	if helpers.UIntToString(workoutRoutine.UserID) != userId {
+		return errors.New("Access Denied")
+	}
 	return nil
 }
 
 func (ac *AccessController) CanAccessWorkoutSession(userId string, workoutSessionId string) error {
-	var ws database.WorkoutSession
-	err := database.GetWorkoutSession(ac.DB, userId, workoutSessionId, &ws)
+	workoutSession, err := database.GetWorkoutSession(ac.DB, workoutSessionId)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return errors.New("Access Denied")
-	}
-	if err != nil {
 		return err
 	}
-
+	if helpers.UIntToString(workoutSession.UserID) != userId {
+		return errors.New("Access Denied")
+	}
 	return nil
 }
 
