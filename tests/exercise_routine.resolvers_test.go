@@ -59,9 +59,9 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		c := helpers.NewGqlClient(gormDB, acs)
 
 		workoutRoutineRow := sqlmock.
-			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at"}).
-			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnRows(workoutRoutineRow)
+			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at", "user_id", "active"}).
+			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt, wr.UserID, wr.Active)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", wr.ID)).WillReturnRows(workoutRoutineRow)
 
 		mock.ExpectBegin()
 		createExerciseRoutineStmt := `INSERT INTO "exercise_routines" ("created_at","updated_at","deleted_at","name","sets","reps","active","workout_routine_id") VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING "id"`
@@ -121,7 +121,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		acs := accesscontrol.NewAccessControllerService(gormDB)
 		c := helpers.NewGqlClient(gormDB, acs)
 
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnError(gorm.ErrRecordNotFound)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", wr.ID)).WillReturnError(gorm.ErrRecordNotFound)
 
 		var resp AddExerciseRoutine
 		mutation := fmt.Sprintf(`
@@ -152,14 +152,14 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		c := helpers.NewGqlClient(gormDB, acs)
 
 		workoutRoutineRow := sqlmock.
-			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at"}).
-			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnRows(workoutRoutineRow)
+			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at", "user_id", "active"}).
+			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt, wr.UserID, wr.Active)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", wr.ID)).WillReturnRows(workoutRoutineRow)
 
 		exerciseRoutineRow := sqlmock.
 			NewRows([]string{"id", "name", "sets", "reps", "created_at", "deleted_at", "updated_at"}).
 			AddRow(er.ID, er.Name, er.Sets, er.Reps, er.CreatedAt, er.DeletedAt, er.UpdatedAt)
-		const exerciseRoutineQuery = `SELECT exercise_routines.id, exercise_routines.name, exercise_routines.sets, exercise_routines.reps, exercise_routines.created_at, exercise_routines.updated_at, exercise_routines.deleted_at FROM "workout_routines" left join exercise_routines on workout_routines.id = exercise_routines.workout_routine_id WHERE exercise_routines.workout_routine_id = $1 AND "workout_routines"."deleted_at" IS NULL`
+		const exerciseRoutineQuery = `SELECT * FROM "exercise_routines" WHERE workout_routine_id = $1 AND "exercise_routines"."deleted_at" IS NULL`
 		mock.ExpectQuery(regexp.QuoteMeta(exerciseRoutineQuery)).WithArgs(fmt.Sprintf("%d", wr.ID)).WillReturnRows(exerciseRoutineRow)
 
 		var resp GetExerciseRoutineResp
@@ -185,7 +185,11 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		acs := accesscontrol.NewAccessControllerService(gormDB)
 		c := helpers.NewGqlClient(gormDB, acs)
 
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", 1234)).WillReturnError(gorm.ErrRecordNotFound)
+		incorrectUserId := 66
+		workoutRoutineRow := sqlmock.
+			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at", "user_id", "active"}).
+			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt, incorrectUserId, wr.Active)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", wr.ID)).WillReturnRows(workoutRoutineRow)
 
 		var resp GetExerciseRoutineResp
 		query := fmt.Sprintf(`query ExerciseRoutines {
@@ -193,7 +197,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 				id
 				name
 			}
-		}`, 1234)
+		}`, er.WorkoutRoutineID)
 		err = c.Post(query, &resp, helpers.AddContext(u))
 
 		err = mock.ExpectationsWereMet() // make sure all expectations were met
@@ -208,11 +212,11 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		c := helpers.NewGqlClient(gormDB, acs)
 
 		workoutRoutineRow := sqlmock.
-			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at"}).
-			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", wr.ID)).WillReturnRows(workoutRoutineRow)
+			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at", "user_id", "active"}).
+			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt, wr.UserID, wr.Active)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", wr.ID)).WillReturnRows(workoutRoutineRow)
 
-		const exerciseRoutineQuery = `SELECT exercise_routines.id, exercise_routines.name, exercise_routines.sets, exercise_routines.reps, exercise_routines.created_at, exercise_routines.updated_at, exercise_routines.deleted_at FROM "workout_routines" left join exercise_routines on workout_routines.id = exercise_routines.workout_routine_id WHERE exercise_routines.workout_routine_id = $1 AND "workout_routines"."deleted_at" IS NULL`
+		const exerciseRoutineQuery = `SELECT * FROM "exercise_routines" WHERE workout_routine_id = $1 AND "exercise_routines"."deleted_at" IS NULL`
 		mock.ExpectQuery(regexp.QuoteMeta(exerciseRoutineQuery)).WithArgs(fmt.Sprintf("%d", wr.ID)).WillReturnError(gorm.ErrInvalidTransaction)
 
 		var resp GetExerciseRoutineResp
@@ -246,9 +250,9 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta(exerciseRoutineQuery)).WithArgs(fmt.Sprintf("%d", er.ID)).WillReturnRows(exerciseRoutineRow)
 
 		workoutRoutineRow := sqlmock.
-			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at"}).
-			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", er.WorkoutRoutineID)).WillReturnRows(workoutRoutineRow)
+			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at", "user_id", "active"}).
+			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt, wr.UserID, wr.Active)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", wr.ID)).WillReturnRows(workoutRoutineRow)
 
 		mock.ExpectBegin()
 		deleteExerciseRoutineQuery := `UPDATE "exercise_routines" SET "deleted_at"=$1 WHERE id = $2 AND "exercise_routines"."deleted_at" IS NULL`
@@ -319,7 +323,11 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		const exerciseRoutineQuery = `SELECT * FROM "exercise_routines" WHERE id = $1 AND "exercise_routines"."deleted_at" IS NULL ORDER BY "exercise_routines"."id" LIMIT 1`
 		mock.ExpectQuery(regexp.QuoteMeta(exerciseRoutineQuery)).WithArgs(fmt.Sprintf("%d", er.ID)).WillReturnRows(exerciseRoutineRow)
 
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", er.WorkoutRoutineID)).WillReturnError(gorm.ErrRecordNotFound)
+		incorrectUserId := 66
+		workoutRoutineRow := sqlmock.
+			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at", "user_id", "active"}).
+			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt, incorrectUserId, wr.Active)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", wr.ID)).WillReturnRows(workoutRoutineRow)
 
 		var resp DeleteExerciseRoutineResp
 		gqlQuery := fmt.Sprintf(`
@@ -349,9 +357,9 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta(exerciseRoutineQuery)).WithArgs(fmt.Sprintf("%d", er.ID)).WillReturnRows(exerciseRoutineRow)
 
 		workoutRoutineRow := sqlmock.
-			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at", "user_id"}).
-			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt, wr.UserID)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", er.WorkoutRoutineID)).WillReturnRows(workoutRoutineRow)
+			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at", "user_id", "active"}).
+			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt, wr.UserID, wr.Active)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(fmt.Sprintf("%d", wr.ID)).WillReturnRows(workoutRoutineRow)
 
 		mock.ExpectBegin()
 		deleteExerciseRoutineQuery := `UPDATE "exercise_routines" SET "deleted_at"=$1 WHERE id = $2 AND "exercise_routines"."deleted_at" IS NULL`

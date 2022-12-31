@@ -123,24 +123,14 @@ func UpdateExerciseRoutine(db *gorm.DB, exerciseRoutineId string, exerciseRoutin
 	return result.Error
 }
 
-func GetExerciseRoutines(db *gorm.DB, workoutRoutineId string) ([]ExerciseRoutine, error) {
-	result := db.Model(&WorkoutRoutine{}). // todo: change to use .Preload()
-						Select("exercise_routines.id, exercise_routines.name, exercise_routines.sets, exercise_routines.reps, exercise_routines.created_at, exercise_routines.updated_at, exercise_routines.deleted_at").
-						Joins("left join exercise_routines on workout_routines.id = exercise_routines.workout_routine_id").
-						Where("exercise_routines.workout_routine_id = ?", workoutRoutineId)
-	rows, err := result.Rows()
-	if err != nil {
-		return []ExerciseRoutine{}, err
-	}
-	defer rows.Close()
+func GetExerciseRoutines(db *gorm.DB, workoutRoutineId string) (*[]ExerciseRoutine, error) {
+	exerciseRoutines := []ExerciseRoutine{}
 
-	exerciseRoutines := make([]ExerciseRoutine, 0)
-	for rows.Next() {
-		var er ExerciseRoutine
-		db.ScanRows(rows, &er)
-		exerciseRoutines = append(exerciseRoutines, er)
-	}
-	return exerciseRoutines, nil
+	err := db.
+		Where("workout_routine_id = ?", workoutRoutineId).
+		Find(&exerciseRoutines).Error
+
+	return &exerciseRoutines, err
 }
 
 func GetExerciseRoutineIdsByExercises(db *gorm.DB, exerciseIds []string) (*[]string, error) {

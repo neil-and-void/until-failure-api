@@ -56,13 +56,13 @@ func (r *queryResolver) ExerciseRoutines(ctx context.Context, workoutRoutineID s
 		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Exercise Routine: Access Denied")
 	}
 
-	erdb, err := database.GetExerciseRoutines(r.DB, workoutRoutineID)
+	dbExerciseRoutines, err := database.GetExerciseRoutines(r.DB, workoutRoutineID)
 	if err != nil {
 		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Exercise Routine")
 	}
 
 	exerciseRoutines := make([]*model.ExerciseRoutine, 0)
-	for _, er := range erdb {
+	for _, er := range *dbExerciseRoutines {
 		exerciseRoutines = append(exerciseRoutines, &model.ExerciseRoutine{
 			ID:   fmt.Sprintf("%d", er.ID),
 			Name: er.Name,
@@ -125,13 +125,13 @@ func (r *workoutRoutineResolver) ExerciseRoutines(ctx context.Context, obj *mode
 		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Exercise Routine: Access Denied")
 	}
 
-	erdb, err := database.GetExerciseRoutines(r.DB, obj.ID)
+	dbExerciseRoutines, err := database.GetExerciseRoutines(r.DB, obj.ID)
 	if err != nil {
 		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Exercise Routine")
 	}
 
 	exerciseRoutines := make([]*model.ExerciseRoutine, 0)
-	for _, er := range erdb {
+	for _, er := range *dbExerciseRoutines {
 		exerciseRoutines = append(exerciseRoutines, &model.ExerciseRoutine{
 			ID:   fmt.Sprintf("%d", er.ID),
 			Name: er.Name,
