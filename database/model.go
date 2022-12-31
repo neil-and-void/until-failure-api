@@ -8,15 +8,15 @@ import (
 
 type User struct {
 	gorm.Model
-	Name            string `gorm:"not null"`
-	Email           string `gorm:"unique;not null"`
-	Password        string `gorm:"not null"`
+	Name            string `gorm:"not null;type:varchar(50)"`
+	Email           string `gorm:"unique;not null;type:varchar(80)"`
+	Password        string `gorm:"not null;size:type:varchar(32)"`
 	WorkoutRoutines []WorkoutRoutine
 }
 
 type WorkoutRoutine struct {
 	gorm.Model
-	Name             string `gorm:"not null"`
+	Name             string `gorm:"not null;size:32"`
 	ExerciseRoutines []ExerciseRoutine
 	WorkoutSessions  []WorkoutSession
 	Active           bool `gorm:"default:true"`
@@ -25,7 +25,7 @@ type WorkoutRoutine struct {
 
 type ExerciseRoutine struct {
 	gorm.Model
-	Name             string `gorm:"not null"`
+	Name             string `gorm:"not null;size:32"`
 	Sets             uint   `gorm:"not null"`
 	Reps             uint   `gorm:"not null"`
 	Exercises        []Exercise
