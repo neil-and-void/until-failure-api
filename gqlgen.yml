@@ -72,12 +72,12 @@ models:
         resolver: true
       workoutRoutine:
         resolver: true
+      prevExercises:
+        resolver: true
   Exercise:
     model: github.com/neilZon/workout-logger-api/graph/model.Exercise
     fields:
       sets:
-        resolver: true
-      prev:
         resolver: true
       exerciseRoutine:
         resolver: true
