@@ -142,9 +142,8 @@ type ComplexityRoot struct {
 	}
 
 	WorkoutRoutineConnection struct {
-		Edges      func(childComplexity int) int
-		PageInfo   func(childComplexity int) int
-		TotalCount func(childComplexity int) int
+		Edges    func(childComplexity int) int
+		PageInfo func(childComplexity int) int
 	}
 
 	WorkoutRoutineEdge struct {
@@ -162,9 +161,8 @@ type ComplexityRoot struct {
 	}
 
 	WorkoutSessionConnection struct {
-		Edges      func(childComplexity int) int
-		PageInfo   func(childComplexity int) int
-		TotalCount func(childComplexity int) int
+		Edges    func(childComplexity int) int
+		PageInfo func(childComplexity int) int
 	}
 
 	WorkoutSessionEdge struct {
@@ -741,13 +739,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.WorkoutRoutineConnection.PageInfo(childComplexity), true
 
-	case "WorkoutRoutineConnection.totalCount":
-		if e.complexity.WorkoutRoutineConnection.TotalCount == nil {
-			break
-		}
-
-		return e.complexity.WorkoutRoutineConnection.TotalCount(childComplexity), true
-
 	case "WorkoutRoutineEdge.cursor":
 		if e.complexity.WorkoutRoutineEdge.Cursor == nil {
 			break
@@ -817,13 +808,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.WorkoutSessionConnection.PageInfo(childComplexity), true
-
-	case "WorkoutSessionConnection.totalCount":
-		if e.complexity.WorkoutSessionConnection.TotalCount == nil {
-			break
-		}
-
-		return e.complexity.WorkoutSessionConnection.TotalCount(childComplexity), true
 
 	case "WorkoutSessionEdge.cursor":
 		if e.complexity.WorkoutSessionEdge.Cursor == nil {
@@ -934,7 +918,6 @@ type User {
 }
 
 type WorkoutRoutineConnection {
-  totalCount: Int!
   edges: [WorkoutRoutineEdge!]!
   pageInfo: PageInfo!
 }
@@ -960,7 +943,6 @@ type ExerciseRoutine {
 }
 
 type WorkoutSessionConnection {
-  totalCount: Int!
   edges: [WorkoutRoutineEdge!]!
   pageInfo: PageInfo!
 }
@@ -3287,8 +3269,6 @@ func (ec *executionContext) fieldContext_Query_workoutRoutines(ctx context.Conte
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "totalCount":
-				return ec.fieldContext_WorkoutRoutineConnection_totalCount(ctx, field)
 			case "edges":
 				return ec.fieldContext_WorkoutRoutineConnection_edges(ctx, field)
 			case "pageInfo":
@@ -3482,8 +3462,6 @@ func (ec *executionContext) fieldContext_Query_workoutSessions(ctx context.Conte
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "totalCount":
-				return ec.fieldContext_WorkoutSessionConnection_totalCount(ctx, field)
 			case "edges":
 				return ec.fieldContext_WorkoutSessionConnection_edges(ctx, field)
 			case "pageInfo":
@@ -4545,50 +4523,6 @@ func (ec *executionContext) fieldContext_WorkoutRoutine_exerciseRoutines(ctx con
 	return fc, nil
 }
 
-func (ec *executionContext) _WorkoutRoutineConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *model.WorkoutRoutineConnection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_WorkoutRoutineConnection_totalCount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TotalCount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_WorkoutRoutineConnection_totalCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "WorkoutRoutineConnection",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _WorkoutRoutineConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.WorkoutRoutineConnection) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_WorkoutRoutineConnection_edges(ctx, field)
 	if err != nil {
@@ -5073,50 +5007,6 @@ func (ec *executionContext) fieldContext_WorkoutSession_prevExercises(ctx contex
 				return ec.fieldContext_Exercise_notes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Exercise", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _WorkoutSessionConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *model.WorkoutSessionConnection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_WorkoutSessionConnection_totalCount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TotalCount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_WorkoutSessionConnection_totalCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "WorkoutSessionConnection",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -8497,13 +8387,6 @@ func (ec *executionContext) _WorkoutRoutineConnection(ctx context.Context, sel a
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("WorkoutRoutineConnection")
-		case "totalCount":
-
-			out.Values[i] = ec._WorkoutRoutineConnection_totalCount(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "edges":
 
 			out.Values[i] = ec._WorkoutRoutineConnection_edges(ctx, field, obj)
@@ -8673,13 +8556,6 @@ func (ec *executionContext) _WorkoutSessionConnection(ctx context.Context, sel a
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("WorkoutSessionConnection")
-		case "totalCount":
-
-			out.Values[i] = ec._WorkoutSessionConnection_totalCount(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "edges":
 
 			out.Values[i] = ec._WorkoutSessionConnection_edges(ctx, field, obj)

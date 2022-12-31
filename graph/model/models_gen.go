@@ -120,9 +120,8 @@ type User struct {
 }
 
 type WorkoutRoutineConnection struct {
-	TotalCount int                   `json:"totalCount"`
-	Edges      []*WorkoutRoutineEdge `json:"edges"`
-	PageInfo   *PageInfo             `json:"pageInfo"`
+	Edges    []*WorkoutRoutineEdge `json:"edges"`
+	PageInfo *PageInfo             `json:"pageInfo"`
 }
 
 type WorkoutRoutineEdge struct {
@@ -136,9 +135,8 @@ type WorkoutRoutineInput struct {
 }
 
 type WorkoutSessionConnection struct {
-	TotalCount int                   `json:"totalCount"`
-	Edges      []*WorkoutRoutineEdge `json:"edges"`
-	PageInfo   *PageInfo             `json:"pageInfo"`
+	Edges    []*WorkoutRoutineEdge `json:"edges"`
+	PageInfo *PageInfo             `json:"pageInfo"`
 }
 
 type WorkoutSessionEdge struct {
