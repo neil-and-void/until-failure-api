@@ -83,13 +83,18 @@ type ComplexityRoot struct {
 		DeleteSet             func(childComplexity int, setID string) int
 		DeleteWorkoutRoutine  func(childComplexity int, workoutRoutineID string) int
 		DeleteWorkoutSession  func(childComplexity int, workoutSessionID string) int
-		Login                 func(childComplexity int, email string, password string) int
+		Login                 func(childComplexity int, loginInput model.LoginInput) int
 		RefreshAccessToken    func(childComplexity int, refreshToken string) int
-		Signup                func(childComplexity int, email string, name string, password string, confirmPassword string) int
+		Signup                func(childComplexity int, signupInput model.SignupInput) int
 		UpdateExercise        func(childComplexity int, exerciseID string, exercise model.UpdateExerciseInput) int
 		UpdateSet             func(childComplexity int, setID string, set model.UpdateSetEntryInput) int
 		UpdateWorkoutRoutine  func(childComplexity int, workoutRoutine model.UpdateWorkoutRoutineInput) int
 		UpdateWorkoutSession  func(childComplexity int, workoutSessionID string, updateWorkoutSessionInput model.UpdateWorkoutSessionInput) int
+	}
+
+	PageInfo struct {
+		HasNextPage func(childComplexity int) int
+		StartCursor func(childComplexity int) int
 	}
 
 	Query struct {
@@ -136,6 +141,17 @@ type ComplexityRoot struct {
 		Name             func(childComplexity int) int
 	}
 
+	WorkoutRoutineConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	WorkoutRoutineEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
 	WorkoutSession struct {
 		End            func(childComplexity int) int
 		Exercises      func(childComplexity int) int
@@ -144,6 +160,17 @@ type ComplexityRoot struct {
 		Start          func(childComplexity int) int
 		WorkoutRoutine func(childComplexity int) int
 	}
+
+	WorkoutSessionConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	WorkoutSessionEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
 }
 
 type ExerciseResolver interface {
@@ -151,8 +178,8 @@ type ExerciseResolver interface {
 	Sets(ctx context.Context, obj *model.Exercise) ([]*model.SetEntry, error)
 }
 type MutationResolver interface {
-	Login(ctx context.Context, email string, password string) (model.AuthResult, error)
-	Signup(ctx context.Context, email string, name string, password string, confirmPassword string) (model.AuthResult, error)
+	Login(ctx context.Context, loginInput model.LoginInput) (model.AuthResult, error)
+	Signup(ctx context.Context, signupInput model.SignupInput) (model.AuthResult, error)
 	RefreshAccessToken(ctx context.Context, refreshToken string) (*model.RefreshSuccess, error)
 	CreateWorkoutRoutine(ctx context.Context, routine model.WorkoutRoutineInput) (*model.WorkoutRoutine, error)
 	UpdateWorkoutRoutine(ctx context.Context, workoutRoutine model.UpdateWorkoutRoutineInput) (*model.WorkoutRoutine, error)
@@ -170,10 +197,10 @@ type MutationResolver interface {
 	DeleteSet(ctx context.Context, setID string) (int, error)
 }
 type QueryResolver interface {
-	WorkoutRoutines(ctx context.Context) ([]*model.WorkoutRoutine, error)
+	WorkoutRoutines(ctx context.Context) (*model.WorkoutRoutineConnection, error)
 	WorkoutRoutine(ctx context.Context, workoutRoutineID string) (*model.WorkoutRoutine, error)
 	ExerciseRoutines(ctx context.Context, workoutRoutineID string) ([]*model.ExerciseRoutine, error)
-	WorkoutSessions(ctx context.Context) ([]*model.WorkoutSession, error)
+	WorkoutSessions(ctx context.Context) (*model.WorkoutSessionConnection, error)
 	WorkoutSession(ctx context.Context, workoutSessionID string) (*model.WorkoutSession, error)
 	Exercise(ctx context.Context, exerciseID string) (*model.Exercise, error)
 	Sets(ctx context.Context, exerciseID string) ([]*model.SetEntry, error)
@@ -416,7 +443,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Login(childComplexity, args["email"].(string), args["password"].(string)), true
+		return e.complexity.Mutation.Login(childComplexity, args["loginInput"].(model.LoginInput)), true
 
 	case "Mutation.refreshAccessToken":
 		if e.complexity.Mutation.RefreshAccessToken == nil {
@@ -440,7 +467,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Signup(childComplexity, args["email"].(string), args["name"].(string), args["password"].(string), args["confirmPassword"].(string)), true
+		return e.complexity.Mutation.Signup(childComplexity, args["signupInput"].(model.SignupInput)), true
 
 	case "Mutation.updateExercise":
 		if e.complexity.Mutation.UpdateExercise == nil {
@@ -489,6 +516,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UpdateWorkoutSession(childComplexity, args["workoutSessionId"].(string), args["updateWorkoutSessionInput"].(model.UpdateWorkoutSessionInput)), true
+
+	case "PageInfo.hasNextPage":
+		if e.complexity.PageInfo.HasNextPage == nil {
+			break
+		}
+
+		return e.complexity.PageInfo.HasNextPage(childComplexity), true
+
+	case "PageInfo.startCursor":
+		if e.complexity.PageInfo.StartCursor == nil {
+			break
+		}
+
+		return e.complexity.PageInfo.StartCursor(childComplexity), true
 
 	case "Query.exercise":
 		if e.complexity.Query.Exercise == nil {
@@ -676,6 +717,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.WorkoutRoutine.Name(childComplexity), true
 
+	case "WorkoutRoutineConnection.edges":
+		if e.complexity.WorkoutRoutineConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.WorkoutRoutineConnection.Edges(childComplexity), true
+
+	case "WorkoutRoutineConnection.pageInfo":
+		if e.complexity.WorkoutRoutineConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.WorkoutRoutineConnection.PageInfo(childComplexity), true
+
+	case "WorkoutRoutineConnection.totalCount":
+		if e.complexity.WorkoutRoutineConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.WorkoutRoutineConnection.TotalCount(childComplexity), true
+
+	case "WorkoutRoutineEdge.cursor":
+		if e.complexity.WorkoutRoutineEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.WorkoutRoutineEdge.Cursor(childComplexity), true
+
+	case "WorkoutRoutineEdge.node":
+		if e.complexity.WorkoutRoutineEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.WorkoutRoutineEdge.Node(childComplexity), true
+
 	case "WorkoutSession.end":
 		if e.complexity.WorkoutSession.End == nil {
 			break
@@ -718,6 +794,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.WorkoutSession.WorkoutRoutine(childComplexity), true
 
+	case "WorkoutSessionConnection.edges":
+		if e.complexity.WorkoutSessionConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.WorkoutSessionConnection.Edges(childComplexity), true
+
+	case "WorkoutSessionConnection.pageInfo":
+		if e.complexity.WorkoutSessionConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.WorkoutSessionConnection.PageInfo(childComplexity), true
+
+	case "WorkoutSessionConnection.totalCount":
+		if e.complexity.WorkoutSessionConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.WorkoutSessionConnection.TotalCount(childComplexity), true
+
+	case "WorkoutSessionEdge.cursor":
+		if e.complexity.WorkoutSessionEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.WorkoutSessionEdge.Cursor(childComplexity), true
+
+	case "WorkoutSessionEdge.node":
+		if e.complexity.WorkoutSessionEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.WorkoutSessionEdge.Node(childComplexity), true
+
 	}
 	return 0, false
 }
@@ -728,7 +839,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputExerciseInput,
 		ec.unmarshalInputExerciseRoutineInput,
+		ec.unmarshalInputLoginInput,
 		ec.unmarshalInputSetEntryInput,
+		ec.unmarshalInputSignupInput,
 		ec.unmarshalInputUpdateExerciseInput,
 		ec.unmarshalInputUpdateExerciseRoutineInput,
 		ec.unmarshalInputUpdateSetEntryInput,
@@ -799,10 +912,26 @@ var sources = []*ast.Source{
 	{Name: "../schema.graphqls", Input: `### TYPES ###
 scalar Time
 
+type PageInfo {
+  hasNextPage: Boolean!
+  startCursor: String!
+}
+
 type User {
   id: ID!
   name: String!
   email: String!
+}
+
+type WorkoutRoutineConnection {
+  totalCount: Int!
+  edges: [WorkoutRoutineEdge!]!
+  pageInfo: PageInfo!
+}
+
+type WorkoutRoutineEdge {
+  node: WorkoutRoutine!
+  cursor: ID!
 }
 
 type WorkoutRoutine {
@@ -818,6 +947,17 @@ type ExerciseRoutine {
   name: String!
   sets: Int!
   reps: Int!
+}
+
+type WorkoutSessionConnection {
+  totalCount: Int!
+  edges: [WorkoutRoutineEdge!]!
+  pageInfo: PageInfo!
+}
+
+type WorkoutSessionEdge {
+  node: WorkoutSession!
+  cursor: ID!
 }
 
 type WorkoutSession {
@@ -871,6 +1011,18 @@ type RefreshSuccess {
 ### END TYPES ###
 
 ### INPUTS ###
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input SignupInput {
+  email: String!
+  name: String!
+  password: String!
+  confirmPassword: String!
+}
 
 input WorkoutRoutineInput {
   name: String!
@@ -931,23 +1083,18 @@ input UpdateSetEntryInput {
 ### END INPUTS ###
 
 type Query {
-  workoutRoutines: [WorkoutRoutine!]!
+  workoutRoutines: WorkoutRoutineConnection!
   workoutRoutine(workoutRoutineId: ID!): WorkoutRoutine!
   exerciseRoutines(workoutRoutineId: ID!): [ExerciseRoutine!]!
-  workoutSessions: [WorkoutSession!]!
+  workoutSessions: WorkoutSessionConnection!
   workoutSession(workoutSessionId: ID!): WorkoutSession!
   exercise(exerciseId: ID!): Exercise!
   sets(exerciseId: ID!): [SetEntry!]!
 }
 
 type Mutation {
-  login(email: String!, password: String!): AuthResult!
-  signup(
-    email: String!
-    name: String!
-    password: String!
-    confirmPassword: String!
-  ): AuthResult!
+  login(loginInput: LoginInput!): AuthResult!
+  signup(signupInput: SignupInput!): AuthResult!
   refreshAccessToken(refreshToken: String!): RefreshSuccess!
 
   createWorkoutRoutine(routine: WorkoutRoutineInput!): WorkoutRoutine!
@@ -960,10 +1107,6 @@ type Mutation {
     workoutRoutineId: ID!
     exerciseRoutine: ExerciseRoutineInput!
   ): ID!
-  # updateExerciseRoutine(
-  #   exerciseRoutineId: ID!
-  #   updateExerciseRoutineInput: UpdateExerciseRoutineInput!
-  # ): ExerciseRoutine!
   deleteExerciseRoutine(exerciseRoutineId: ID!): Int!
 
   addWorkoutSession(workout: WorkoutSessionInput!): ID!
@@ -1173,24 +1316,15 @@ func (ec *executionContext) field_Mutation_deleteWorkoutSession_args(ctx context
 func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["email"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+	var arg0 model.LoginInput
+	if tmp, ok := rawArgs["loginInput"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("loginInput"))
+		arg0, err = ec.unmarshalNLoginInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐLoginInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["email"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["password"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["password"] = arg1
+	args["loginInput"] = arg0
 	return args, nil
 }
 
@@ -1212,42 +1346,15 @@ func (ec *executionContext) field_Mutation_refreshAccessToken_args(ctx context.C
 func (ec *executionContext) field_Mutation_signup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["email"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+	var arg0 model.SignupInput
+	if tmp, ok := rawArgs["signupInput"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("signupInput"))
+		arg0, err = ec.unmarshalNSignupInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSignupInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["email"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["name"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["name"] = arg1
-	var arg2 string
-	if tmp, ok := rawArgs["password"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
-		arg2, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["password"] = arg2
-	var arg3 string
-	if tmp, ok := rawArgs["confirmPassword"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("confirmPassword"))
-		arg3, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["confirmPassword"] = arg3
+	args["signupInput"] = arg0
 	return args, nil
 }
 
@@ -2028,7 +2135,7 @@ func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Login(rctx, fc.Args["email"].(string), fc.Args["password"].(string))
+		return ec.resolvers.Mutation().Login(rctx, fc.Args["loginInput"].(model.LoginInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2083,7 +2190,7 @@ func (ec *executionContext) _Mutation_signup(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Signup(rctx, fc.Args["email"].(string), fc.Args["name"].(string), fc.Args["password"].(string), fc.Args["confirmPassword"].(string))
+		return ec.resolvers.Mutation().Signup(rctx, fc.Args["signupInput"].(model.SignupInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2995,6 +3102,94 @@ func (ec *executionContext) fieldContext_Mutation_deleteSet(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _PageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *model.PageInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HasNextPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageInfo_startCursor(ctx context.Context, field graphql.CollectedField, obj *model.PageInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageInfo_startCursor(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StartCursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageInfo_startCursor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_workoutRoutines(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_workoutRoutines(ctx, field)
 	if err != nil {
@@ -3021,9 +3216,9 @@ func (ec *executionContext) _Query_workoutRoutines(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.WorkoutRoutine)
+	res := resTmp.(*model.WorkoutRoutineConnection)
 	fc.Result = res
-	return ec.marshalNWorkoutRoutine2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutineᚄ(ctx, field.Selections, res)
+	return ec.marshalNWorkoutRoutineConnection2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutineConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_workoutRoutines(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3034,16 +3229,14 @@ func (ec *executionContext) fieldContext_Query_workoutRoutines(ctx context.Conte
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_WorkoutRoutine_id(ctx, field)
-			case "name":
-				return ec.fieldContext_WorkoutRoutine_name(ctx, field)
-			case "active":
-				return ec.fieldContext_WorkoutRoutine_active(ctx, field)
-			case "exerciseRoutines":
-				return ec.fieldContext_WorkoutRoutine_exerciseRoutines(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_WorkoutRoutineConnection_totalCount(ctx, field)
+			case "edges":
+				return ec.fieldContext_WorkoutRoutineConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_WorkoutRoutineConnection_pageInfo(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type WorkoutRoutine", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type WorkoutRoutineConnection", field.Name)
 		},
 	}
 	return fc, nil
@@ -3207,9 +3400,9 @@ func (ec *executionContext) _Query_workoutSessions(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.WorkoutSession)
+	res := resTmp.(*model.WorkoutSessionConnection)
 	fc.Result = res
-	return ec.marshalNWorkoutSession2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSessionᚄ(ctx, field.Selections, res)
+	return ec.marshalNWorkoutSessionConnection2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSessionConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_workoutSessions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3220,20 +3413,14 @@ func (ec *executionContext) fieldContext_Query_workoutSessions(ctx context.Conte
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_WorkoutSession_id(ctx, field)
-			case "start":
-				return ec.fieldContext_WorkoutSession_start(ctx, field)
-			case "end":
-				return ec.fieldContext_WorkoutSession_end(ctx, field)
-			case "workoutRoutine":
-				return ec.fieldContext_WorkoutSession_workoutRoutine(ctx, field)
-			case "exercises":
-				return ec.fieldContext_WorkoutSession_exercises(ctx, field)
-			case "prevExercises":
-				return ec.fieldContext_WorkoutSession_prevExercises(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_WorkoutSessionConnection_totalCount(ctx, field)
+			case "edges":
+				return ec.fieldContext_WorkoutSessionConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_WorkoutSessionConnection_pageInfo(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type WorkoutSession", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type WorkoutSessionConnection", field.Name)
 		},
 	}
 	return fc, nil
@@ -4278,6 +4465,248 @@ func (ec *executionContext) fieldContext_WorkoutRoutine_exerciseRoutines(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _WorkoutRoutineConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *model.WorkoutRoutineConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WorkoutRoutineConnection_totalCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WorkoutRoutineConnection_totalCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WorkoutRoutineConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WorkoutRoutineConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.WorkoutRoutineConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WorkoutRoutineConnection_edges(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Edges, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.WorkoutRoutineEdge)
+	fc.Result = res
+	return ec.marshalNWorkoutRoutineEdge2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutineEdgeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WorkoutRoutineConnection_edges(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WorkoutRoutineConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_WorkoutRoutineEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_WorkoutRoutineEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type WorkoutRoutineEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WorkoutRoutineConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.WorkoutRoutineConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WorkoutRoutineConnection_pageInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PageInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PageInfo)
+	fc.Result = res
+	return ec.marshalNPageInfo2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐPageInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WorkoutRoutineConnection_pageInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WorkoutRoutineConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WorkoutRoutineEdge_node(ctx context.Context, field graphql.CollectedField, obj *model.WorkoutRoutineEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WorkoutRoutineEdge_node(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Node, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.WorkoutRoutine)
+	fc.Result = res
+	return ec.marshalNWorkoutRoutine2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutine(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WorkoutRoutineEdge_node(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WorkoutRoutineEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_WorkoutRoutine_id(ctx, field)
+			case "name":
+				return ec.fieldContext_WorkoutRoutine_name(ctx, field)
+			case "active":
+				return ec.fieldContext_WorkoutRoutine_active(ctx, field)
+			case "exerciseRoutines":
+				return ec.fieldContext_WorkoutRoutine_exerciseRoutines(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type WorkoutRoutine", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WorkoutRoutineEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *model.WorkoutRoutineEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WorkoutRoutineEdge_cursor(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Cursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WorkoutRoutineEdge_cursor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WorkoutRoutineEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _WorkoutSession_id(ctx context.Context, field graphql.CollectedField, obj *model.WorkoutSession) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_WorkoutSession_id(ctx, field)
 	if err != nil {
@@ -4564,6 +4993,252 @@ func (ec *executionContext) fieldContext_WorkoutSession_prevExercises(ctx contex
 				return ec.fieldContext_Exercise_notes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Exercise", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WorkoutSessionConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *model.WorkoutSessionConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WorkoutSessionConnection_totalCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WorkoutSessionConnection_totalCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WorkoutSessionConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WorkoutSessionConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.WorkoutSessionConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WorkoutSessionConnection_edges(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Edges, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.WorkoutRoutineEdge)
+	fc.Result = res
+	return ec.marshalNWorkoutRoutineEdge2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutineEdgeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WorkoutSessionConnection_edges(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WorkoutSessionConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_WorkoutRoutineEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_WorkoutRoutineEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type WorkoutRoutineEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WorkoutSessionConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.WorkoutSessionConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WorkoutSessionConnection_pageInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PageInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PageInfo)
+	fc.Result = res
+	return ec.marshalNPageInfo2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐPageInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WorkoutSessionConnection_pageInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WorkoutSessionConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WorkoutSessionEdge_node(ctx context.Context, field graphql.CollectedField, obj *model.WorkoutSessionEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WorkoutSessionEdge_node(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Node, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.WorkoutSession)
+	fc.Result = res
+	return ec.marshalNWorkoutSession2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSession(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WorkoutSessionEdge_node(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WorkoutSessionEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_WorkoutSession_id(ctx, field)
+			case "start":
+				return ec.fieldContext_WorkoutSession_start(ctx, field)
+			case "end":
+				return ec.fieldContext_WorkoutSession_end(ctx, field)
+			case "workoutRoutine":
+				return ec.fieldContext_WorkoutSession_workoutRoutine(ctx, field)
+			case "exercises":
+				return ec.fieldContext_WorkoutSession_exercises(ctx, field)
+			case "prevExercises":
+				return ec.fieldContext_WorkoutSession_prevExercises(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type WorkoutSession", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WorkoutSessionEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *model.WorkoutSessionEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WorkoutSessionEdge_cursor(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Cursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WorkoutSessionEdge_cursor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WorkoutSessionEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -6430,6 +7105,42 @@ func (ec *executionContext) unmarshalInputExerciseRoutineInput(ctx context.Conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputLoginInput(ctx context.Context, obj interface{}) (model.LoginInput, error) {
+	var it model.LoginInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"email", "password"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "email":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			it.Email, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "password":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			it.Password, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSetEntryInput(ctx context.Context, obj interface{}) (model.SetEntryInput, error) {
 	var it model.SetEntryInput
 	asMap := map[string]interface{}{}
@@ -6457,6 +7168,58 @@ func (ec *executionContext) unmarshalInputSetEntryInput(ctx context.Context, obj
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reps"))
 			it.Reps, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputSignupInput(ctx context.Context, obj interface{}) (model.SignupInput, error) {
+	var it model.SignupInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"email", "name", "password", "confirmPassword"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "email":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			it.Email, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "password":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			it.Password, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "confirmPassword":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("confirmPassword"))
+			it.ConfirmPassword, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7158,6 +7921,41 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 	return out
 }
 
+var pageInfoImplementors = []string{"PageInfo"}
+
+func (ec *executionContext) _PageInfo(ctx context.Context, sel ast.SelectionSet, obj *model.PageInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, pageInfoImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PageInfo")
+		case "hasNextPage":
+
+			out.Values[i] = ec._PageInfo_hasNextPage(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "startCursor":
+
+			out.Values[i] = ec._PageInfo_startCursor(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var queryImplementors = []string{"Query"}
 
 func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -7609,6 +8407,83 @@ func (ec *executionContext) _WorkoutRoutine(ctx context.Context, sel ast.Selecti
 	return out
 }
 
+var workoutRoutineConnectionImplementors = []string{"WorkoutRoutineConnection"}
+
+func (ec *executionContext) _WorkoutRoutineConnection(ctx context.Context, sel ast.SelectionSet, obj *model.WorkoutRoutineConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, workoutRoutineConnectionImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("WorkoutRoutineConnection")
+		case "totalCount":
+
+			out.Values[i] = ec._WorkoutRoutineConnection_totalCount(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "edges":
+
+			out.Values[i] = ec._WorkoutRoutineConnection_edges(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "pageInfo":
+
+			out.Values[i] = ec._WorkoutRoutineConnection_pageInfo(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var workoutRoutineEdgeImplementors = []string{"WorkoutRoutineEdge"}
+
+func (ec *executionContext) _WorkoutRoutineEdge(ctx context.Context, sel ast.SelectionSet, obj *model.WorkoutRoutineEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, workoutRoutineEdgeImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("WorkoutRoutineEdge")
+		case "node":
+
+			out.Values[i] = ec._WorkoutRoutineEdge_node(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "cursor":
+
+			out.Values[i] = ec._WorkoutRoutineEdge_cursor(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var workoutSessionImplementors = []string{"WorkoutSession"}
 
 func (ec *executionContext) _WorkoutSession(ctx context.Context, sel ast.SelectionSet, obj *model.WorkoutSession) graphql.Marshaler {
@@ -7697,6 +8572,83 @@ func (ec *executionContext) _WorkoutSession(ctx context.Context, sel ast.Selecti
 				return innerFunc(ctx)
 
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var workoutSessionConnectionImplementors = []string{"WorkoutSessionConnection"}
+
+func (ec *executionContext) _WorkoutSessionConnection(ctx context.Context, sel ast.SelectionSet, obj *model.WorkoutSessionConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, workoutSessionConnectionImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("WorkoutSessionConnection")
+		case "totalCount":
+
+			out.Values[i] = ec._WorkoutSessionConnection_totalCount(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "edges":
+
+			out.Values[i] = ec._WorkoutSessionConnection_edges(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "pageInfo":
+
+			out.Values[i] = ec._WorkoutSessionConnection_pageInfo(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var workoutSessionEdgeImplementors = []string{"WorkoutSessionEdge"}
+
+func (ec *executionContext) _WorkoutSessionEdge(ctx context.Context, sel ast.SelectionSet, obj *model.WorkoutSessionEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, workoutSessionEdgeImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("WorkoutSessionEdge")
+		case "node":
+
+			out.Values[i] = ec._WorkoutSessionEdge_node(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "cursor":
+
+			out.Values[i] = ec._WorkoutSessionEdge_cursor(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8266,6 +9218,21 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) unmarshalNLoginInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐLoginInput(ctx context.Context, v interface{}) (model.LoginInput, error) {
+	res, err := ec.unmarshalInputLoginInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNPageInfo2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐPageInfo(ctx context.Context, sel ast.SelectionSet, v *model.PageInfo) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PageInfo(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNRefreshSuccess2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐRefreshSuccess(ctx context.Context, sel ast.SelectionSet, v model.RefreshSuccess) graphql.Marshaler {
 	return ec._RefreshSuccess(ctx, sel, &v)
 }
@@ -8358,6 +9325,11 @@ func (ec *executionContext) unmarshalNSetEntryInput2ᚕᚖgithubᚗcomᚋneilZon
 func (ec *executionContext) unmarshalNSetEntryInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntryInput(ctx context.Context, v interface{}) (*model.SetEntryInput, error) {
 	res, err := ec.unmarshalInputSetEntryInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNSignupInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSignupInput(ctx context.Context, v interface{}) (model.SignupInput, error) {
+	res, err := ec.unmarshalInputSignupInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -8464,7 +9436,31 @@ func (ec *executionContext) marshalNWorkoutRoutine2githubᚗcomᚋneilZonᚋwork
 	return ec._WorkoutRoutine(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNWorkoutRoutine2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutineᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.WorkoutRoutine) graphql.Marshaler {
+func (ec *executionContext) marshalNWorkoutRoutine2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutine(ctx context.Context, sel ast.SelectionSet, v *model.WorkoutRoutine) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._WorkoutRoutine(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNWorkoutRoutineConnection2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutineConnection(ctx context.Context, sel ast.SelectionSet, v model.WorkoutRoutineConnection) graphql.Marshaler {
+	return ec._WorkoutRoutineConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNWorkoutRoutineConnection2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutineConnection(ctx context.Context, sel ast.SelectionSet, v *model.WorkoutRoutineConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._WorkoutRoutineConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNWorkoutRoutineEdge2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutineEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.WorkoutRoutineEdge) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -8488,7 +9484,7 @@ func (ec *executionContext) marshalNWorkoutRoutine2ᚕᚖgithubᚗcomᚋneilZon�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNWorkoutRoutine2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutine(ctx, sel, v[i])
+			ret[i] = ec.marshalNWorkoutRoutineEdge2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutineEdge(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8508,14 +9504,14 @@ func (ec *executionContext) marshalNWorkoutRoutine2ᚕᚖgithubᚗcomᚋneilZon�
 	return ret
 }
 
-func (ec *executionContext) marshalNWorkoutRoutine2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutine(ctx context.Context, sel ast.SelectionSet, v *model.WorkoutRoutine) graphql.Marshaler {
+func (ec *executionContext) marshalNWorkoutRoutineEdge2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutineEdge(ctx context.Context, sel ast.SelectionSet, v *model.WorkoutRoutineEdge) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._WorkoutRoutine(ctx, sel, v)
+	return ec._WorkoutRoutineEdge(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNWorkoutRoutineInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutineInput(ctx context.Context, v interface{}) (model.WorkoutRoutineInput, error) {
@@ -8527,50 +9523,6 @@ func (ec *executionContext) marshalNWorkoutSession2githubᚗcomᚋneilZonᚋwork
 	return ec._WorkoutSession(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNWorkoutSession2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSessionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.WorkoutSession) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNWorkoutSession2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSession(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
 func (ec *executionContext) marshalNWorkoutSession2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSession(ctx context.Context, sel ast.SelectionSet, v *model.WorkoutSession) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -8579,6 +9531,20 @@ func (ec *executionContext) marshalNWorkoutSession2ᚖgithubᚗcomᚋneilZonᚋw
 		return graphql.Null
 	}
 	return ec._WorkoutSession(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNWorkoutSessionConnection2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSessionConnection(ctx context.Context, sel ast.SelectionSet, v model.WorkoutSessionConnection) graphql.Marshaler {
+	return ec._WorkoutSessionConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNWorkoutSessionConnection2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSessionConnection(ctx context.Context, sel ast.SelectionSet, v *model.WorkoutSessionConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._WorkoutSessionConnection(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNWorkoutSessionInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSessionInput(ctx context.Context, v interface{}) (model.WorkoutSessionInput, error) {

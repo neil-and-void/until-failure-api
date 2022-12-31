@@ -117,30 +117,31 @@ func (r *mutationResolver) DeleteWorkoutSession(ctx context.Context, workoutSess
 }
 
 // WorkoutSessions is the resolver for the workoutSessions field.
-func (r *queryResolver) WorkoutSessions(ctx context.Context) ([]*model.WorkoutSession, error) {
-	u, err := middleware.GetUser(ctx)
-	if err != nil {
-		return []*model.WorkoutSession{}, err
-	}
+func (r *queryResolver) WorkoutSessions(ctx context.Context) (*model.WorkoutSessionConnection, error) {
+	panic("somthi")
+	// u, err := middleware.GetUser(ctx)
+	// if err != nil {
+	// 	return []*model.WorkoutSession{}, err
+	// }
 
-	dbWorkoutSessions, err := database.GetWorkoutSessions(r.DB, fmt.Sprintf("%d", u.ID))
-	if err != nil {
-		return []*model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Sessions")
-	}
+	// dbWorkoutSessions, err := database.GetWorkoutSessions(r.DB, fmt.Sprintf("%d", u.ID))
+	// if err != nil {
+	// 	return []*model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Sessions")
+	// }
 
-	var workoutSessions []*model.WorkoutSession
-	for _, ws := range dbWorkoutSessions {
+	// var workoutSessions []*model.WorkoutSession
+	// for _, ws := range dbWorkoutSessions {
 
-		workoutSession := &model.WorkoutSession{
-			ID:    fmt.Sprintf("%d", ws.ID),
-			Start: ws.Start,
-			End:   ws.End,
-		}
+	// 	workoutSession := &model.WorkoutSession{
+	// 		ID:    fmt.Sprintf("%d", ws.ID),
+	// 		Start: ws.Start,
+	// 		End:   ws.End,
+	// 	}
 
-		workoutSessions = append(workoutSessions, workoutSession)
-	}
+	// 	workoutSessions = append(workoutSessions, workoutSession)
+	// }
 
-	return workoutSessions, nil
+	// return workoutSessions, nil
 }
 
 // WorkoutSession is the resolver for the workoutSession field.

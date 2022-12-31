@@ -31,4 +31,3 @@ type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type workoutRoutineResolver struct{ *Resolver }
 type workoutSessionResolver struct{ *Resolver }
-type prevExerciseResolver struct{ *Resolver }

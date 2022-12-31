@@ -43,6 +43,16 @@ type ExerciseRoutineInput struct {
 	Reps int    `json:"reps"`
 }
 
+type LoginInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type PageInfo struct {
+	HasNextPage bool   `json:"hasNextPage"`
+	StartCursor string `json:"startCursor"`
+}
+
 type RefreshSuccess struct {
 	AccessToken string `json:"accessToken"`
 }
@@ -56,6 +66,13 @@ type SetEntry struct {
 type SetEntryInput struct {
 	Weight float64 `json:"weight"`
 	Reps   int     `json:"reps"`
+}
+
+type SignupInput struct {
+	Email           string `json:"email"`
+	Name            string `json:"name"`
+	Password        string `json:"password"`
+	ConfirmPassword string `json:"confirmPassword"`
 }
 
 type UpdateExerciseInput struct {
@@ -102,9 +119,31 @@ type User struct {
 	Email string `json:"email"`
 }
 
+type WorkoutRoutineConnection struct {
+	TotalCount int                   `json:"totalCount"`
+	Edges      []*WorkoutRoutineEdge `json:"edges"`
+	PageInfo   *PageInfo             `json:"pageInfo"`
+}
+
+type WorkoutRoutineEdge struct {
+	Node   *WorkoutRoutine `json:"node"`
+	Cursor string          `json:"cursor"`
+}
+
 type WorkoutRoutineInput struct {
 	Name             string                  `json:"name"`
 	ExerciseRoutines []*ExerciseRoutineInput `json:"exerciseRoutines"`
+}
+
+type WorkoutSessionConnection struct {
+	TotalCount int                   `json:"totalCount"`
+	Edges      []*WorkoutRoutineEdge `json:"edges"`
+	PageInfo   *PageInfo             `json:"pageInfo"`
+}
+
+type WorkoutSessionEdge struct {
+	Node   *WorkoutSession `json:"node"`
+	Cursor string          `json:"cursor"`
 }
 
 type WorkoutSessionInput struct {

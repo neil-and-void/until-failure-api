@@ -60,27 +60,28 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine mod
 }
 
 // WorkoutRoutines is the resolver for the workoutRoutines field.
-func (r *queryResolver) WorkoutRoutines(ctx context.Context) ([]*model.WorkoutRoutine, error) {
-	u, err := middleware.GetUser(ctx)
-	if err != nil {
-		return []*model.WorkoutRoutine{}, err
-	}
+func (r *queryResolver) WorkoutRoutines(ctx context.Context) (*model.WorkoutRoutineConnection, error) {
+	panic("")
+	// u, err := middleware.GetUser(ctx)
+	// if err != nil {
+	// 	return &model.WorkoutRoutineConnection{}, err
+	// }
 
-	dbwr, err := database.GetWorkoutRoutines(r.DB, fmt.Sprintf("%d", u.ID))
-	if err != nil {
-		return []*model.WorkoutRoutine{}, gqlerror.Errorf("Error Getting Workout Routine")
-	}
+	// dbwr, err := database.GetWorkoutRoutines(r.DB, fmt.Sprintf("%d", u.ID))
+	// if err != nil {
+	// 	return &model.WorkoutRoutineConnection{}, gqlerror.Errorf("Error Getting Workout Routine")
+	// }
 
-	// map database workout routine to graphql workout routine
-	var workoutRoutines []*model.WorkoutRoutine
-	for _, wr := range dbwr {
-		workoutRoutines = append(workoutRoutines, &model.WorkoutRoutine{
-			ID:     fmt.Sprintf("%d", wr.ID),
-			Name:   wr.Name,
-			Active: wr.Active,
-		})
-	}
-	return workoutRoutines, nil
+	// // map database workout routine to graphql workout routine
+	// var workoutRoutines []*model.WorkoutRoutine
+	// for _, wr := range dbwr {
+	// 	workoutRoutines = append(workoutRoutines, &model.WorkoutRoutine{
+	// 		ID:     fmt.Sprintf("%d", wr.ID),
+	// 		Name:   wr.Name,
+	// 		Active: wr.Active,
+	// 	})
+	// }
+	// return workoutRoutines, nil
 }
 
 // WorkoutRoutine is the resolver for the workoutRoutine field.

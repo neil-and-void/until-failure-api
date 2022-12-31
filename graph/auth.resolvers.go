@@ -17,12 +17,12 @@ import (
 )
 
 // Login is the resolver for the login field.
-func (r *mutationResolver) Login(ctx context.Context, email string, password string) (model.AuthResult, error) {
-	if _, err := mail.ParseAddress(email); err != nil {
+func (r *mutationResolver) Login(ctx context.Context, loginInput model.LoginInput) (model.AuthResult, error) {
+	if _, err := mail.ParseAddress(loginInput.Email); err != nil {
 		return nil, gqlerror.Errorf("Not a valid email")
 	}
 
-	dbUser, err := database.GetUserByEmail(r.DB, email)
+	dbUser, err := database.GetUserByEmail(r.DB, loginInput.Email)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, gqlerror.Errorf("Email does not exist")
 	}
@@ -30,7 +30,7 @@ func (r *mutationResolver) Login(ctx context.Context, email string, password str
 		return nil, gqlerror.Errorf("Error Logging In")
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(loginInput.Password)); err != nil {
 		return nil, gqlerror.Errorf("Incorrect Password")
 	}
 	c := &token.Credentials{
@@ -49,33 +49,34 @@ func (r *mutationResolver) Login(ctx context.Context, email string, password str
 }
 
 // Signup is the resolver for the signup field.
-func (r *mutationResolver) Signup(ctx context.Context, email string, name string, password string, confirmPassword string) (model.AuthResult, error) {
-	if password != confirmPassword {
+func (r *mutationResolver) Signup(ctx context.Context, signupInput model.SignupInput) (model.AuthResult, error) {
+
+	if signupInput.Password != signupInput.ConfirmPassword {
 		return nil, gqlerror.Errorf("Passwords don't match")
 	}
 
 	// check strength
-	if !utils.IsStrong(password) {
+	if !utils.IsStrong(signupInput.Password) {
 		return nil, gqlerror.Errorf("Password needs at least 1 number and 8 - 16 characters")
 	}
 
-	if _, err := mail.ParseAddress(email); err != nil {
+	if _, err := mail.ParseAddress(signupInput.Email); err != nil {
 		return nil, gqlerror.Errorf("Not a valid email")
 	}
 
 	// check if user was found from query
-	dbUser, err := database.GetUserByEmail(r.DB, email)
+	dbUser, err := database.GetUserByEmail(r.DB, signupInput.Email)
 	if dbUser.ID != 0 {
 		return nil, gqlerror.Errorf("Email already exists")
 	}
 
 	// Hashing the password with the default cost of 10
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(signupInput.Password), bcrypt.DefaultCost)
 	if err != nil {
 		panic(err)
 	}
 
-	u := database.User{Name: name, Email: email, Password: string(hashedPassword)}
+	u := database.User{Name: signupInput.Name, Email: signupInput.Email, Password: string(hashedPassword)}
 	err = r.DB.Create(&u).Error
 	if err != nil {
 		return nil, gqlerror.Errorf(err.Error())
