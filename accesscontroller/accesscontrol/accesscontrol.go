@@ -40,6 +40,14 @@ func (ac *AccessController) CanAccessWorkoutSession(userId string, workoutSessio
 	return nil
 }
 
+func (ac *AccessController) CanAccessExerciseRoutine(userId string, exerciseId string) error {
+	panic("unimplemented")
+}
+
+func (ac *AccessController) CanAccessSetEntry(userId string, exerciseId string) error {
+	panic("unimplemented")
+}
+
 func NewAccessControllerService(db *gorm.DB) accesscontroller.AccessControllerService {
 	return &AccessController{
 		DB: db,
