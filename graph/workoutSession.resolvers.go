@@ -117,7 +117,7 @@ func (r *mutationResolver) DeleteWorkoutSession(ctx context.Context, workoutSess
 }
 
 // WorkoutSessions is the resolver for the workoutSessions field.
-func (r *queryResolver) WorkoutSessions(ctx context.Context) (*model.WorkoutSessionConnection, error) {
+func (r *queryResolver) WorkoutSessions(ctx context.Context, limit int, after *string) (*model.WorkoutSessionConnection, error) {
 	panic("somthi")
 	// u, err := middleware.GetUser(ctx)
 	// if err != nil {

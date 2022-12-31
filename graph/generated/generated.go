@@ -102,9 +102,9 @@ type ComplexityRoot struct {
 		ExerciseRoutines func(childComplexity int, workoutRoutineID string) int
 		Sets             func(childComplexity int, exerciseID string) int
 		WorkoutRoutine   func(childComplexity int, workoutRoutineID string) int
-		WorkoutRoutines  func(childComplexity int) int
+		WorkoutRoutines  func(childComplexity int, limit int, after *string) int
 		WorkoutSession   func(childComplexity int, workoutSessionID string) int
-		WorkoutSessions  func(childComplexity int) int
+		WorkoutSessions  func(childComplexity int, limit int, after *string) int
 	}
 
 	RefreshSuccess struct {
@@ -197,10 +197,10 @@ type MutationResolver interface {
 	DeleteSet(ctx context.Context, setID string) (int, error)
 }
 type QueryResolver interface {
-	WorkoutRoutines(ctx context.Context) (*model.WorkoutRoutineConnection, error)
+	WorkoutRoutines(ctx context.Context, limit int, after *string) (*model.WorkoutRoutineConnection, error)
 	WorkoutRoutine(ctx context.Context, workoutRoutineID string) (*model.WorkoutRoutine, error)
 	ExerciseRoutines(ctx context.Context, workoutRoutineID string) ([]*model.ExerciseRoutine, error)
-	WorkoutSessions(ctx context.Context) (*model.WorkoutSessionConnection, error)
+	WorkoutSessions(ctx context.Context, limit int, after *string) (*model.WorkoutSessionConnection, error)
 	WorkoutSession(ctx context.Context, workoutSessionID string) (*model.WorkoutSession, error)
 	Exercise(ctx context.Context, exerciseID string) (*model.Exercise, error)
 	Sets(ctx context.Context, exerciseID string) ([]*model.SetEntry, error)
@@ -584,7 +584,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.WorkoutRoutines(childComplexity), true
+		args, err := ec.field_Query_workoutRoutines_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.WorkoutRoutines(childComplexity, args["limit"].(int), args["after"].(*string)), true
 
 	case "Query.workoutSession":
 		if e.complexity.Query.WorkoutSession == nil {
@@ -603,7 +608,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.WorkoutSessions(childComplexity), true
+		args, err := ec.field_Query_workoutSessions_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.WorkoutSessions(childComplexity, args["limit"].(int), args["after"].(*string)), true
 
 	case "RefreshSuccess.accessToken":
 		if e.complexity.RefreshSuccess.AccessToken == nil {
@@ -1083,10 +1093,10 @@ input UpdateSetEntryInput {
 ### END INPUTS ###
 
 type Query {
-  workoutRoutines: WorkoutRoutineConnection!
+  workoutRoutines(limit: Int!, after: String): WorkoutRoutineConnection!
   workoutRoutine(workoutRoutineId: ID!): WorkoutRoutine!
   exerciseRoutines(workoutRoutineId: ID!): [ExerciseRoutine!]!
-  workoutSessions: WorkoutSessionConnection!
+  workoutSessions(limit: Int!, after: String): WorkoutSessionConnection!
   workoutSession(workoutSessionId: ID!): WorkoutSession!
   exercise(exerciseId: ID!): Exercise!
   sets(exerciseId: ID!): [SetEntry!]!
@@ -1520,6 +1530,30 @@ func (ec *executionContext) field_Query_workoutRoutine_args(ctx context.Context,
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_workoutRoutines_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["after"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["after"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_workoutSession_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1532,6 +1566,30 @@ func (ec *executionContext) field_Query_workoutSession_args(ctx context.Context,
 		}
 	}
 	args["workoutSessionId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_workoutSessions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["after"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["after"] = arg1
 	return args, nil
 }
 
@@ -3204,7 +3262,7 @@ func (ec *executionContext) _Query_workoutRoutines(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().WorkoutRoutines(rctx)
+		return ec.resolvers.Query().WorkoutRoutines(rctx, fc.Args["limit"].(int), fc.Args["after"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3238,6 +3296,17 @@ func (ec *executionContext) fieldContext_Query_workoutRoutines(ctx context.Conte
 			}
 			return nil, fmt.Errorf("no field named %q was found under type WorkoutRoutineConnection", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_workoutRoutines_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -3388,7 +3457,7 @@ func (ec *executionContext) _Query_workoutSessions(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().WorkoutSessions(rctx)
+		return ec.resolvers.Query().WorkoutSessions(rctx, fc.Args["limit"].(int), fc.Args["after"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3422,6 +3491,17 @@ func (ec *executionContext) fieldContext_Query_workoutSessions(ctx context.Conte
 			}
 			return nil, fmt.Errorf("no field named %q was found under type WorkoutSessionConnection", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_workoutSessions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }

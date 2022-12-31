@@ -60,7 +60,7 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine mod
 }
 
 // WorkoutRoutines is the resolver for the workoutRoutines field.
-func (r *queryResolver) WorkoutRoutines(ctx context.Context) (*model.WorkoutRoutineConnection, error) {
+func (r *queryResolver) WorkoutRoutines(ctx context.Context, limit int, after *string) (*model.WorkoutRoutineConnection, error) {
 	panic("")
 	// u, err := middleware.GetUser(ctx)
 	// if err != nil {
