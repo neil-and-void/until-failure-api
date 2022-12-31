@@ -188,11 +188,11 @@ func (s *SetEntrySliceReader) GetSetEntrySlices(ctx context.Context, keys datalo
 	for _, key := range keys {
 		exerciseIds = append(exerciseIds, key.String())
 	}
-
+	fmt.Println(exerciseIds)
 	setEntries, _ := database.GetSetsByExerciseId(s.DB, exerciseIds)
 	exerciseSlicesByWorkoutSession := map[string][]*model.SetEntry{}
 	for _, setEntry := range *setEntries {
-		id := fmt.Sprintf("%d", setEntry.ExerciseID)
+		id := utils.UIntToString(setEntry.ExerciseID)
 
 		if _, ok := exerciseSlicesByWorkoutSession[id]; ok {
 			exerciseSlicesByWorkoutSession[id] = append(exerciseSlicesByWorkoutSession[id], &model.SetEntry{
@@ -200,6 +200,14 @@ func (s *SetEntrySliceReader) GetSetEntrySlices(ctx context.Context, keys datalo
 				Weight: float64(setEntry.Weight),
 				Reps: int(setEntry.Reps),
 			})
+		} else {
+			exerciseSlicesByWorkoutSession[id] = []*model.SetEntry{
+				{
+					ID: id,
+					Weight: float64(setEntry.Weight),
+					Reps: int(setEntry.Reps),
+				},
+			}
 		}
 	}
 

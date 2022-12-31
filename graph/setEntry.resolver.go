@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/graph-gophers/dataloader"
 	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/middleware"
@@ -181,20 +182,11 @@ func (r *mutationResolver) DeleteSet(ctx context.Context, setID string) (int, er
 
 // Sets is the resolver for the sets field.
 func (r *exerciseResolver) Sets(ctx context.Context, obj *model.Exercise) ([]*model.SetEntry, error) {
-	var dbSetEntries []database.SetEntry
-	err := database.GetSets(r.DB, &dbSetEntries, obj.ID)
+	loaders := middleware.GetLoaders(ctx)
+	thunk := loaders.SetEntrySliceLoader.Load(ctx, dataloader.StringKey(obj.ID))
+	result, err := thunk()
 	if err != nil {
-		return []*model.SetEntry{}, nil
+		return nil, err
 	}
-
-	var setEntries []*model.SetEntry
-	for _, s := range dbSetEntries {
-		setEntries = append(setEntries, &model.SetEntry{
-			ID:     fmt.Sprintf("%d", s.ID),
-			Weight: float64(s.Weight),
-			Reps:   int(s.Reps),
-		})
-	}
-
-	return setEntries, nil
+	return result.([]*model.SetEntry), nil
 }

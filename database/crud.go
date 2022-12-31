@@ -320,7 +320,7 @@ func GetSets(db *gorm.DB, s *[]SetEntry, exerciseId string) error {
 func GetSetsByExerciseId(db *gorm.DB, exerciseIds []string) (*[]SetEntry, error) {
 	setEntries := []SetEntry{}
 	err := db.
-		Where("exericse_id IN ?", exerciseIds).
+		Where("exercise_id IN ?", exerciseIds).
 		Find(&setEntries).Error
 	return &setEntries, err	
 }
