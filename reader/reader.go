@@ -18,11 +18,23 @@ type WorkoutRoutineReader struct {
 	DB *gorm.DB
 }
 
+type ExerciseRoutineSliceReader struct {
+	DB *gorm.DB
+}
+
 type ExerciseRoutineReader struct {
 	DB *gorm.DB
 }
 
-type SetEntryReader struct {
+type ExerciseSliceReader struct {
+	DB *gorm.DB
+}
+
+type PrevExerciseSliceReader struct {
+	DB *gorm.DB
+}
+
+type SetEntrySliceReader struct {
 	DB *gorm.DB
 }
 
@@ -54,6 +66,41 @@ func (w *WorkoutRoutineReader) GetWorkoutRoutines(ctx context.Context, keys data
 			output = append(output, &dataloader.Result{Data: nil, Error: err})
 		}
 	}
+	return output
+}
+
+func (e *ExerciseRoutineSliceReader) GetExerciseRoutineSlices(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	workoutRoutineIds := []string{}
+	for _, key := range keys {
+		workoutRoutineIds = append(workoutRoutineIds, key.String())
+	}
+
+	exerciseRoutines, _ := database.GetExerciseRoutinesByWorkoutRoutineId(e.DB, workoutRoutineIds)
+	exerciseRoutinesByWorkoutRoutineId := map[string][]*model.ExerciseRoutine{}
+	for _, exerciseRoutine := range *exerciseRoutines {
+		id := fmt.Sprintf("%d", exerciseRoutine.WorkoutRoutineID)
+
+		if _, ok := exerciseRoutinesByWorkoutRoutineId[id]; ok {
+			exerciseRoutinesByWorkoutRoutineId[id] = append(exerciseRoutinesByWorkoutRoutineId[id], &model.ExerciseRoutine{
+				ID: id,
+				Active: exerciseRoutine.Active,
+				Name: exerciseRoutine.Name,
+				Sets: int(exerciseRoutine.Sets),
+				Reps: int(exerciseRoutine.Reps),
+			})
+		}
+	}
+
+	var output []*dataloader.Result
+	for _, workoutRoutineKey := range keys {
+		if exerciseRoutineSlice, ok := exerciseRoutinesByWorkoutRoutineId[workoutRoutineKey.String()]; ok {
+			output = append(output, &dataloader.Result{Data: exerciseRoutineSlice, Error: nil})
+		} else {
+			err := fmt.Errorf("exercise routine slice not found %s", workoutRoutineKey.String())
+			output = append(output, &dataloader.Result{Data: nil, Error: err})	
+		}
+	}
+
 	return output
 }
 
@@ -91,6 +138,71 @@ func (e *ExerciseRoutineReader) GetExerciseRoutines(ctx context.Context, keys da
 	return output
 }
 
-func (e *SetEntryReader) GetSetEntries(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	panic("something")
+func (e *ExerciseSliceReader) GetExerciseSlices(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	workoutSessionIds := []string{}
+	for _, key := range keys {
+		workoutSessionIds = append(workoutSessionIds, key.String())
+	}
+
+	exercises, _ := database.GetExercisesByWorkoutSessionId(e.DB, workoutSessionIds)
+	exerciseSlicesByWorkoutSession := map[string][]*model.Exercise{}
+	for _, exercise := range *exercises {
+		id := fmt.Sprintf("%d", exercise.WorkoutSessionID)
+
+		if _, ok := exerciseSlicesByWorkoutSession[id]; ok {
+			exerciseSlicesByWorkoutSession[id] = append(exerciseSlicesByWorkoutSession[id], &model.Exercise{
+				ID: id,
+				Notes: exercise.Notes,
+			})
+		}
+	}
+
+	var output []*dataloader.Result
+	for _, workoutSessionKey := range keys {
+		if exerciseRoutineSlice, ok := exerciseSlicesByWorkoutSession[workoutSessionKey.String()]; ok {
+			output = append(output, &dataloader.Result{Data: exerciseRoutineSlice, Error: nil})
+		} else {
+			err := fmt.Errorf("exercise slice not found %s", workoutSessionKey.String())
+			output = append(output, &dataloader.Result{Data: nil, Error: err})	
+		}	
+	}
+
+	return output
+}
+
+func (p *PrevExerciseSliceReader) GetPrevExerciseSlices(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	panic("unimplemented")
+}
+
+func (s *SetEntrySliceReader) GetSetEntrySlices(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {	
+	exerciseIds := []string{}
+	for _, key := range keys {
+		exerciseIds = append(exerciseIds, key.String())
+	}
+
+	setEntries, _ := database.GetSetsByExerciseId(s.DB, exerciseIds)
+	exerciseSlicesByWorkoutSession := map[string][]*model.SetEntry{}
+	for _, setEntry := range *setEntries {
+		id := fmt.Sprintf("%d", setEntry.ExerciseID)
+
+		if _, ok := exerciseSlicesByWorkoutSession[id]; ok {
+			exerciseSlicesByWorkoutSession[id] = append(exerciseSlicesByWorkoutSession[id], &model.SetEntry{
+				ID: id,
+				Weight: float64(setEntry.Weight),
+				Reps: int(setEntry.Reps),
+			})
+		}
+	}
+
+	var output []*dataloader.Result
+	for _, exerciseKey := range keys {
+		if setEntrySlice, ok := exerciseSlicesByWorkoutSession[exerciseKey.String()]; ok {
+			output = append(output, &dataloader.Result{Data: setEntrySlice, Error: nil})
+		} else {
+			err := fmt.Errorf("exercise slice not found %s", exerciseKey.String())
+			output = append(output, &dataloader.Result{Data: nil, Error: err})	
+		}		
+	}
+
+	return output	
 }

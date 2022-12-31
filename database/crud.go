@@ -139,6 +139,12 @@ func GetExerciseRoutineIdsByExercises(db *gorm.DB, exerciseIds []string) (*[]str
 	return &exerciseRoutineIds, err
 }
 
+func GetExerciseRoutinesByWorkoutRoutineId(db *gorm.DB, workoutRoutineIds []string) (*[]ExerciseRoutine, error) {
+	exerciseRoutine := []ExerciseRoutine{}
+	err := db.Where("workout_routine_id IN ?", workoutRoutineIds).Find(&exerciseRoutine).Error
+	return &exerciseRoutine, err
+}
+
 func GetExerciseRoutine(db *gorm.DB, exerciseRoutineId string, er *ExerciseRoutine) error {
 	result := db.Model(ExerciseRoutine{}).Where("id = ?", exerciseRoutineId).First(er)
 	return result.Error
@@ -255,6 +261,14 @@ func GetExercises(db *gorm.DB, exercises *[]Exercise, workoutSessionId string) e
 	return result.Error
 }
 
+func GetExercisesByWorkoutSessionId(db *gorm.DB, workoutSessionIds []string) (*[]Exercise, error) {
+	exercises := []Exercise{}
+	err := db.
+		Where("workout_session_id IN ?", workoutSessionIds).
+		Find(&exercises).Error
+	return &exercises, err
+}
+
 func GetExercisesBeforeDate(db *gorm.DB, workoutSessionId string, date time.Time) (*[]Exercise, error) {
 	exercises := []Exercise{}
 	
@@ -296,6 +310,14 @@ func AddSet(db *gorm.DB, set *SetEntry) error {
 func GetSets(db *gorm.DB, s *[]SetEntry, exerciseId string) error {
 	result := db.Where("exercise_id = ?", exerciseId).Find(&s)
 	return result.Error
+}
+
+func GetSetsByExerciseId(db *gorm.DB, exerciseIds []string) (*[]SetEntry, error) {
+	setEntries := []SetEntry{}
+	err := db.
+		Where("exericse_id IN ?", exerciseIds).
+		Find(&setEntries).Error
+	return &setEntries, err	
 }
 
 func GetSet(db *gorm.DB, s *SetEntry, setId string) error {
