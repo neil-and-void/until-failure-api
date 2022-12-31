@@ -81,6 +81,16 @@ func (e *ExerciseRoutineSliceReader) GetExerciseRoutineSlices(ctx context.Contex
 		id := fmt.Sprintf("%d", exerciseRoutine.WorkoutRoutineID)
 
 		if _, ok := exerciseRoutinesByWorkoutRoutineId[id]; ok {
+			exerciseRoutinesByWorkoutRoutineId[id] = []*model.ExerciseRoutine{
+				{
+					ID: id,
+					Active: exerciseRoutine.Active,
+					Name: exerciseRoutine.Name,
+					Sets: int(exerciseRoutine.Sets),
+					Reps: int(exerciseRoutine.Reps),
+				},
+			}
+		} else {
 			exerciseRoutinesByWorkoutRoutineId[id] = append(exerciseRoutinesByWorkoutRoutineId[id], &model.ExerciseRoutine{
 				ID: id,
 				Active: exerciseRoutine.Active,
@@ -91,6 +101,7 @@ func (e *ExerciseRoutineSliceReader) GetExerciseRoutineSlices(ctx context.Contex
 		}
 	}
 
+	fmt.Println(exerciseRoutinesByWorkoutRoutineId)
 	var output []*dataloader.Result
 	for _, workoutRoutineKey := range keys {
 		if exerciseRoutineSlice, ok := exerciseRoutinesByWorkoutRoutineId[workoutRoutineKey.String()]; ok {

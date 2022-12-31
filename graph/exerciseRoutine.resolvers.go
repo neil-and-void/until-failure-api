@@ -113,32 +113,17 @@ func (r *exerciseResolver) ExerciseRoutine(ctx context.Context, obj *model.Exerc
 }
 
 // ExerciseRoutines is the resolver for the exerciseRoutines field.
-func (r *workoutRoutineResolver) ExerciseRoutines(ctx context.Context, obj *model.WorkoutRoutine) ([]*model.ExerciseRoutine, error) {
-	u, err := middleware.GetUser(ctx)
+func (r *workoutRoutineResolver) ExerciseRoutines(ctx context.Context, obj *model.WorkoutRoutine) ([]*model.ExerciseRoutine, error) {	
+	_, err := middleware.GetUser(ctx)
 	if err != nil {
 		return []*model.ExerciseRoutine{}, err
 	}
 
-	userId := fmt.Sprintf("%d", u.ID)
-	err = r.ACS.CanAccessWorkoutRoutine(userId, obj.ID)
+	loaders := middleware.GetLoaders(ctx)
+	thunk := loaders.ExerciseRoutineSliceLoader.Load(ctx, dataloader.StringKey(obj.ID))
+	result, err := thunk()
 	if err != nil {
-		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Exercise Routine: Access Denied")
+		return nil, err
 	}
-
-	dbExerciseRoutines, err := database.GetExerciseRoutines(r.DB, obj.ID)
-	if err != nil {
-		return []*model.ExerciseRoutine{}, gqlerror.Errorf("Error Getting Exercise Routine")
-	}
-
-	exerciseRoutines := make([]*model.ExerciseRoutine, 0)
-	for _, er := range *dbExerciseRoutines {
-		exerciseRoutines = append(exerciseRoutines, &model.ExerciseRoutine{
-			ID:   fmt.Sprintf("%d", er.ID),
-			Name: er.Name,
-			Sets: int(er.Sets),
-			Reps: int(er.Reps),
-		})
-	}
-
-	return exerciseRoutines, nil
+	return result.([]*model.ExerciseRoutine), nil
 }

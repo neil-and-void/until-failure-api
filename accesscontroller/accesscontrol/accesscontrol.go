@@ -5,7 +5,7 @@ import (
 
 	"github.com/neilZon/workout-logger-api/accesscontroller"
 	"github.com/neilZon/workout-logger-api/database"
-	"github.com/neilZon/workout-logger-api/helpers"
+	"github.com/neilZon/workout-logger-api/utils"
 	"gorm.io/gorm"
 )
 
@@ -23,7 +23,8 @@ func (ac *AccessController) CanAccessWorkoutRoutine(userId string, workoutRoutin
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
-	if helpers.UIntToString(workoutRoutine.UserID) != userId {
+
+	if utils.UIntToString(workoutRoutine.UserID) != userId {
 		return errors.New("Access Denied")
 	}
 	return nil
@@ -34,7 +35,7 @@ func (ac *AccessController) CanAccessWorkoutSession(userId string, workoutSessio
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
-	if helpers.UIntToString(workoutSession.UserID) != userId {
+	if utils.UIntToString(workoutSession.UserID) != userId {
 		return errors.New("Access Denied")
 	}
 	return nil

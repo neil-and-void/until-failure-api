@@ -3,7 +3,6 @@ scalar Time
 
 type PageInfo {
   hasNextPage: Boolean!
-  startCursor: String!
 }
 
 type User {

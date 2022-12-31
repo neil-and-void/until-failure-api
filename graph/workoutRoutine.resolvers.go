@@ -7,8 +7,10 @@ import (
 
 	"github.com/graph-gophers/dataloader"
 	"github.com/neilZon/workout-logger-api/database"
+	"github.com/neilZon/workout-logger-api/errors"
 	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/middleware"
+	"github.com/neilZon/workout-logger-api/utils"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"gorm.io/gorm"
 )
@@ -60,28 +62,46 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine mod
 }
 
 // WorkoutRoutines is the resolver for the workoutRoutines field.
-func (r *queryResolver) WorkoutRoutines(ctx context.Context, limit int, after *string) (*model.WorkoutRoutineConnection, error) {
-	panic("")
-	// u, err := middleware.GetUser(ctx)
-	// if err != nil {
-	// 	return &model.WorkoutRoutineConnection{}, err
-	// }
+func (r *queryResolver) WorkoutRoutines(ctx context.Context, limit int, after *string) (*model.WorkoutRoutineConnection, error) {	
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.WorkoutRoutineConnection{}, err
+	}
 
-	// dbwr, err := database.GetWorkoutRoutines(r.DB, fmt.Sprintf("%d", u.ID))
-	// if err != nil {
-	// 	return &model.WorkoutRoutineConnection{}, gqlerror.Errorf("Error Getting Workout Routine")
-	// }
+	if limit <= 0 || limit > 50 {
+		return &model.WorkoutRoutineConnection{}, fmt.Errorf(errors.GetWorkoutRoutinesError, "limit needs to be between 1 to 50")
+	}
 
-	// // map database workout routine to graphql workout routine
-	// var workoutRoutines []*model.WorkoutRoutine
-	// for _, wr := range dbwr {
-	// 	workoutRoutines = append(workoutRoutines, &model.WorkoutRoutine{
-	// 		ID:     fmt.Sprintf("%d", wr.ID),
-	// 		Name:   wr.Name,
-	// 		Active: wr.Active,
-	// 	})
-	// }
-	// return workoutRoutines, nil
+	var dbWorkoutRoutines []database.WorkoutRoutine
+	cursor := ""
+	if after != nil && *after != "" {
+		cursor = *after
+	}
+	
+	dbWorkoutRoutines, err = database.GetWorkoutRoutines(r.DB, utils.UIntToString(u.ID), cursor, limit)
+
+	if err != nil {
+		return &model.WorkoutRoutineConnection{}, gqlerror.Errorf("Error Getting Workout Routine")
+	}
+
+	var edges []*model.WorkoutRoutineEdge
+	for _, workoutRoutine := range dbWorkoutRoutines {
+		edges = append(edges, &model.WorkoutRoutineEdge{
+			Cursor: utils.UIntToString(workoutRoutine.ID),
+			Node: &model.WorkoutRoutine{
+				ID:     utils.UIntToString(workoutRoutine.ID),
+				Name:   workoutRoutine.Name,
+				Active: workoutRoutine.Active,
+			},
+		})
+	}
+
+	return &model.WorkoutRoutineConnection{
+		Edges: edges,
+		PageInfo: &model.PageInfo{
+			HasNextPage: true,
+		},
+	}, nil
 }
 
 // WorkoutRoutine is the resolver for the workoutRoutine field.

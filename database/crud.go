@@ -27,9 +27,14 @@ func GetWorkoutRoutine(db *gorm.DB, workoutRoutineId string) (*WorkoutRoutine, e
 }
 
 // Workout Routine
-func GetWorkoutRoutines(db *gorm.DB, userId string) ([]*WorkoutRoutine, error) {
-	var workoutRoutines []*WorkoutRoutine
-	result := db.Preload("ExerciseRoutines").Where("user_id = ?", userId).Find(&workoutRoutines)
+func GetWorkoutRoutines(db *gorm.DB, userId string, cursor string, limit int) ([]WorkoutRoutine, error) {
+	var workoutRoutines []WorkoutRoutine
+	if len(cursor) == 0 {
+		db = db.Where("user_id = ?", userId)
+	} else {
+		db = db.Where("user_id = ? AND id > ?", userId, cursor)
+	}
+	result := db.Order("id").Limit(limit).Find(&workoutRoutines)
 	return workoutRoutines, result.Error
 }
 
