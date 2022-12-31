@@ -11,6 +11,7 @@ import (
 	"github.com/neilZon/workout-logger-api/accesscontroller/accesscontrol"
 	"github.com/neilZon/workout-logger-api/helpers"
 	"github.com/neilZon/workout-logger-api/tests/testdata"
+	"github.com/neilZon/workout-logger-api/utils"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
@@ -484,7 +485,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
 		updateWorkoutSessionStmt := `UPDATE "workout_sessions" SET "updated_at"=$1,"end"=$2 WHERE id = $3 AND "workout_sessions"."deleted_at" IS NULL RETURNING *`
 		mock.ExpectQuery(regexp.QuoteMeta(updateWorkoutSessionStmt)).
-			WithArgs(sqlmock.AnyArg(), ws.End, helpers.UIntToString(ws.ID)).
+			WithArgs(sqlmock.AnyArg(), ws.End, utils.UIntToString(ws.ID)).
 			WillReturnRows(updatedWorkoutSessionRow)
 
 		mock.ExpectCommit()
@@ -574,7 +575,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 
 		updateWorkoutSessionStmt := `UPDATE "workout_sessions" SET "updated_at"=$1,"end"=$2 WHERE id = $3 AND "workout_sessions"."deleted_at" IS NULL RETURNING *`
 		mock.ExpectQuery(regexp.QuoteMeta(updateWorkoutSessionStmt)).
-			WithArgs(sqlmock.AnyArg(), ws.End, helpers.UIntToString(ws.ID)).
+			WithArgs(sqlmock.AnyArg(), ws.End, utils.UIntToString(ws.ID)).
 			WillReturnError(gorm.ErrInvalidTransaction)
 
 		mock.ExpectRollback()
@@ -611,18 +612,18 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 
 		mock.ExpectBegin()
 		deleteWorkoutSessionQuery := `UPDATE "workout_sessions" SET "deleted_at"=$1 WHERE id = $2 AND "workout_sessions"."deleted_at" IS NULL`
-		mock.ExpectExec(regexp.QuoteMeta(deleteWorkoutSessionQuery)).WithArgs(sqlmock.AnyArg(), helpers.UIntToString(ws.ID)).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(regexp.QuoteMeta(deleteWorkoutSessionQuery)).WithArgs(sqlmock.AnyArg(), utils.UIntToString(ws.ID)).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		exerciseRows := sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "workout_session_id", "exercise_routine_id"})
 		for _, e := range ws.Exercises {
 			exerciseRows.AddRow(e.ID, e.CreatedAt, e.DeletedAt, e.UpdatedAt, e.WorkoutSessionID, e.ExerciseRoutineID)
 		}
 		deleteExerciseQuery := `UPDATE "exercises" SET "deleted_at"=$1 WHERE workout_session_id = $2 AND "exercises"."deleted_at" IS NULL RETURNING *`
-		mock.ExpectQuery(regexp.QuoteMeta(deleteExerciseQuery)).WithArgs(sqlmock.AnyArg(), helpers.UIntToString(ws.ID)).WillReturnRows(exerciseRows)
+		mock.ExpectQuery(regexp.QuoteMeta(deleteExerciseQuery)).WithArgs(sqlmock.AnyArg(), utils.UIntToString(ws.ID)).WillReturnRows(exerciseRows)
 
 		deleteSetEntryQuery := `UPDATE "set_entries" SET "deleted_at"=$1 WHERE exercise_id IN ($2,$3) AND "set_entries"."deleted_at" IS NULL`
 		mock.ExpectExec(regexp.QuoteMeta(deleteSetEntryQuery)).
-			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(ws.Exercises[0].ID), helpers.UIntToString(ws.Exercises[1].ID)).
+			WithArgs(sqlmock.AnyArg(), utils.UIntToString(ws.Exercises[0].ID), utils.UIntToString(ws.Exercises[1].ID)).
 			WillReturnResult(sqlmock.NewResult(1, 2))
 
 		mock.ExpectCommit()
@@ -689,7 +690,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 
 		mock.ExpectBegin()
 		deleteWorkoutSessionQuery := `UPDATE "workout_sessions" SET "deleted_at"=$1 WHERE id = $2 AND "workout_sessions"."deleted_at" IS NULL`
-		mock.ExpectExec(regexp.QuoteMeta(deleteWorkoutSessionQuery)).WithArgs(sqlmock.AnyArg(), helpers.UIntToString(ws.ID)).WillReturnError(gorm.ErrInvalidTransaction)
+		mock.ExpectExec(regexp.QuoteMeta(deleteWorkoutSessionQuery)).WithArgs(sqlmock.AnyArg(), utils.UIntToString(ws.ID)).WillReturnError(gorm.ErrInvalidTransaction)
 		mock.ExpectRollback()
 
 		gqlQuery := fmt.Sprintf(`mutation DeleteWorkoutSession {

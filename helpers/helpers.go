@@ -3,8 +3,6 @@ package helpers
 import (
 	"context"
 	"errors"
-	"fmt"
-	"strconv"
 
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql"
@@ -90,16 +88,4 @@ func AddContext(u *token.Claims) client.Option {
 		ctx := context.WithValue(bd.HTTP.Context(), middleware.UserCtxKey, u)
 		bd.HTTP = bd.HTTP.WithContext(ctx)
 	}
-}
-
-func StringToUInt(s string) uint {
-	num, err := strconv.ParseUint(s, 10, strconv.IntSize)
-	if err != nil {
-		panic(err)
-	}
-	return uint(num)
-}
-
-func UIntToString(num uint) string {
-	return fmt.Sprintf("%d", num)
 }

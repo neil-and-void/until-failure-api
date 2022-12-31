@@ -10,6 +10,7 @@ import (
 	"github.com/neilZon/workout-logger-api/accesscontroller/accesscontrol"
 	"github.com/neilZon/workout-logger-api/helpers"
 	"github.com/neilZon/workout-logger-api/tests/testdata"
+	"github.com/neilZon/workout-logger-api/utils"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
@@ -107,7 +108,7 @@ func TestExerciseResolvers(t *testing.T) {
 			helpers.AddContext(u),
 		)
 
-		require.Equal(t, resp.AddExercise, helpers.UIntToString(e.ID))
+		require.Equal(t, resp.AddExercise, utils.UIntToString(e.ID))
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -454,12 +455,12 @@ func TestExerciseResolvers(t *testing.T) {
 		mock.ExpectBegin()
 		deleteExerciseQuery := `UPDATE "exercises" SET "deleted_at"=$1 WHERE id = $2 AND "exercises"."deleted_at" IS NULL`
 		mock.ExpectExec(regexp.QuoteMeta(deleteExerciseQuery)).
-			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(e.ID)).
+			WithArgs(sqlmock.AnyArg(), utils.UIntToString(e.ID)).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		deleteSetQuery := `UPDATE "set_entries" SET "deleted_at"=$1 WHERE exercise_id = $2 AND "set_entries"."deleted_at" IS NULL`
 		mock.ExpectExec(regexp.QuoteMeta(deleteSetQuery)).
-			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(e.ID)).
+			WithArgs(sqlmock.AnyArg(), utils.UIntToString(e.ID)).
 			WillReturnResult(sqlmock.NewResult(1, 2))
 		mock.ExpectCommit()
 
@@ -551,7 +552,7 @@ func TestExerciseResolvers(t *testing.T) {
 		mock.ExpectBegin()
 		deleteExerciseQuery := `UPDATE "exercises" SET "deleted_at"=$1 WHERE id = $2 AND "exercises"."deleted_at" IS NULL`
 		mock.ExpectExec(regexp.QuoteMeta(deleteExerciseQuery)).
-			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(e.ID)).
+			WithArgs(sqlmock.AnyArg(), utils.UIntToString(e.ID)).
 			WillReturnError(gorm.ErrInvalidTransaction)
 
 		mock.ExpectRollback()
@@ -593,12 +594,12 @@ func TestExerciseResolvers(t *testing.T) {
 		mock.ExpectBegin()
 		deleteExerciseQuery := `UPDATE "exercises" SET "deleted_at"=$1 WHERE id = $2 AND "exercises"."deleted_at" IS NULL`
 		mock.ExpectExec(regexp.QuoteMeta(deleteExerciseQuery)).
-			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(e.ID)).
+			WithArgs(sqlmock.AnyArg(), utils.UIntToString(e.ID)).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		deleteSetQuery := `UPDATE "set_entries" SET "deleted_at"=$1 WHERE exercise_id = $2 AND "set_entries"."deleted_at" IS NULL`
 		mock.ExpectExec(regexp.QuoteMeta(deleteSetQuery)).
-			WithArgs(sqlmock.AnyArg(), helpers.UIntToString(e.ID)).
+			WithArgs(sqlmock.AnyArg(), utils.UIntToString(e.ID)).
 			WillReturnError(gorm.ErrInvalidTransaction)
 		mock.ExpectRollback()
 
