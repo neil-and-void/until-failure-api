@@ -37,12 +37,6 @@ type UpdatedWorkoutSession {
   end: Time
 }
 
-type PrevExercise {
-  id: ID!
-  sets: [SetEntry!]!
-  notes: String!
-}
-
 type Exercise {
   id: ID!
   exerciseRoutine: ExerciseRoutine!

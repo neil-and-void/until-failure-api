@@ -247,7 +247,7 @@ func DeleteWorkoutSession(db *gorm.DB, workoutSessionId string) error {
 	return tx.Commit().Error
 }
 
-func AddExercise(db *gorm.DB, exercise *Exercise, workoutSessionId string) error {
+func AddExercise(db *gorm.DB, exercise *Exercise) error {
 	result := db.Create(exercise)
 	return result.Error
 }

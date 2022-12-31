@@ -13,9 +13,6 @@ func (r *Resolver) Exercise() generated.ExerciseResolver { return &exerciseResol
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
-// PrevExercise returns generated.PrevExerciseResolver implementation.
-func (r *Resolver) PrevExercise() generated.PrevExerciseResolver { return &prevExerciseResolver{r} }
-
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
@@ -31,7 +28,7 @@ func (r *Resolver) WorkoutSession() generated.WorkoutSessionResolver {
 
 type exerciseResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
-type prevExerciseResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type workoutRoutineResolver struct{ *Resolver }
 type workoutSessionResolver struct{ *Resolver }
+type prevExerciseResolver struct{ *Resolver }

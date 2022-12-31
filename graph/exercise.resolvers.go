@@ -52,7 +52,7 @@ func (r *mutationResolver) AddExercise(ctx context.Context, workoutSessionID str
 		Notes:             exercise.Notes,
 	}
 
-	err = database.AddExercise(r.DB, dbExercise, workoutSessionID)
+	err = database.AddExercise(r.DB, dbExercise)
 	if err != nil {
 		return "", gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
 	}

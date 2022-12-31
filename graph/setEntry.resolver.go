@@ -179,25 +179,6 @@ func (r *mutationResolver) DeleteSet(ctx context.Context, setID string) (int, er
 	return 1, nil
 }
 
-func (r *prevExerciseResolver) Sets(ctx context.Context, obj *model.PrevExercise) ([]*model.SetEntry, error) {
-	var dbSetEntries []database.SetEntry
-	err := database.GetSets(r.DB, &dbSetEntries, obj.ID)
-	if err != nil {
-		return []*model.SetEntry{}, nil
-	}
-
-	var setEntries []*model.SetEntry
-	for _, s := range dbSetEntries {
-		setEntries = append(setEntries, &model.SetEntry{
-			ID:     fmt.Sprintf("%d", s.ID),
-			Weight: float64(s.Weight),
-			Reps:   int(s.Reps),
-		})
-	}
-
-	return setEntries, nil
-}
-
 // Sets is the resolver for the sets field.
 func (r *exerciseResolver) Sets(ctx context.Context, obj *model.Exercise) ([]*model.SetEntry, error) {
 	var dbSetEntries []database.SetEntry

@@ -39,7 +39,6 @@ type Config struct {
 type ResolverRoot interface {
 	Exercise() ExerciseResolver
 	Mutation() MutationResolver
-	PrevExercise() PrevExerciseResolver
 	Query() QueryResolver
 	WorkoutRoutine() WorkoutRoutineResolver
 	WorkoutSession() WorkoutSessionResolver
@@ -91,12 +90,6 @@ type ComplexityRoot struct {
 		UpdateSet             func(childComplexity int, setID string, set model.UpdateSetEntryInput) int
 		UpdateWorkoutRoutine  func(childComplexity int, workoutRoutine model.UpdateWorkoutRoutineInput) int
 		UpdateWorkoutSession  func(childComplexity int, workoutSessionID string, updateWorkoutSessionInput model.UpdateWorkoutSessionInput) int
-	}
-
-	PrevExercise struct {
-		ID    func(childComplexity int) int
-		Notes func(childComplexity int) int
-		Sets  func(childComplexity int) int
 	}
 
 	Query struct {
@@ -175,9 +168,6 @@ type MutationResolver interface {
 	AddSet(ctx context.Context, exerciseID string, set *model.SetEntryInput) (string, error)
 	UpdateSet(ctx context.Context, setID string, set model.UpdateSetEntryInput) (*model.SetEntry, error)
 	DeleteSet(ctx context.Context, setID string) (int, error)
-}
-type PrevExerciseResolver interface {
-	Sets(ctx context.Context, obj *model.PrevExercise) ([]*model.SetEntry, error)
 }
 type QueryResolver interface {
 	WorkoutRoutines(ctx context.Context) ([]*model.WorkoutRoutine, error)
@@ -499,27 +489,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UpdateWorkoutSession(childComplexity, args["workoutSessionId"].(string), args["updateWorkoutSessionInput"].(model.UpdateWorkoutSessionInput)), true
-
-	case "PrevExercise.id":
-		if e.complexity.PrevExercise.ID == nil {
-			break
-		}
-
-		return e.complexity.PrevExercise.ID(childComplexity), true
-
-	case "PrevExercise.notes":
-		if e.complexity.PrevExercise.Notes == nil {
-			break
-		}
-
-		return e.complexity.PrevExercise.Notes(childComplexity), true
-
-	case "PrevExercise.sets":
-		if e.complexity.PrevExercise.Sets == nil {
-			break
-		}
-
-		return e.complexity.PrevExercise.Sets(childComplexity), true
 
 	case "Query.exercise":
 		if e.complexity.Query.Exercise == nil {
@@ -864,12 +833,6 @@ type UpdatedWorkoutSession {
   id: ID!
   start: Time!
   end: Time
-}
-
-type PrevExercise {
-  id: ID!
-  sets: [SetEntry!]!
-  notes: String!
 }
 
 type Exercise {
@@ -3028,146 +2991,6 @@ func (ec *executionContext) fieldContext_Mutation_deleteSet(ctx context.Context,
 	if fc.Args, err = ec.field_Mutation_deleteSet_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _PrevExercise_id(ctx context.Context, field graphql.CollectedField, obj *model.PrevExercise) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrevExercise_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PrevExercise_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PrevExercise",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _PrevExercise_sets(ctx context.Context, field graphql.CollectedField, obj *model.PrevExercise) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrevExercise_sets(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.PrevExercise().Sets(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.SetEntry)
-	fc.Result = res
-	return ec.marshalNSetEntry2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntryᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PrevExercise_sets(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PrevExercise",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_SetEntry_id(ctx, field)
-			case "weight":
-				return ec.fieldContext_SetEntry_weight(ctx, field)
-			case "reps":
-				return ec.fieldContext_SetEntry_reps(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type SetEntry", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _PrevExercise_notes(ctx context.Context, field graphql.CollectedField, obj *model.PrevExercise) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrevExercise_notes(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Notes, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PrevExercise_notes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PrevExercise",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
 	}
 	return fc, nil
 }
@@ -7323,61 +7146,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var prevExerciseImplementors = []string{"PrevExercise"}
-
-func (ec *executionContext) _PrevExercise(ctx context.Context, sel ast.SelectionSet, obj *model.PrevExercise) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, prevExerciseImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("PrevExercise")
-		case "id":
-
-			out.Values[i] = ec._PrevExercise_id(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "sets":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._PrevExercise_sets(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
-		case "notes":
-
-			out.Values[i] = ec._PrevExercise_notes(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
