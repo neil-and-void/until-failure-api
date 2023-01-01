@@ -84,7 +84,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 
 		require.Equal(t, resp.AddSet, utils.UIntToString(s.ID), "Created Id's don't match")
@@ -136,7 +136,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 		require.EqualError(t, err, "[{\"message\":\"Error Adding Set\",\"path\":[\"addSet\"]}]")
 
@@ -159,7 +159,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 		require.EqualError(t, err, "[{\"message\":\"Reps needs to be between 0 and 9999\",\"path\":[\"addSet\"]}]")
 
@@ -181,7 +181,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 		require.EqualError(t, err, "[{\"message\":\"Reps needs to be between 0 and 9999\",\"path\":[\"addSet\"]}]")
 
@@ -203,7 +203,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 		require.EqualError(t, err, "[{\"message\":\"Weight needs to be between 0 and 9999\",\"path\":[\"addSet\"]}]")
 
@@ -225,7 +225,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 		require.EqualError(t, err, "[{\"message\":\"Weight needs to be between 0 and 9999\",\"path\":[\"addSet\"]}]")
 
@@ -252,7 +252,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 		require.EqualError(t, err, "[{\"message\":\"Error Adding Set: record not found\",\"path\":[\"addSet\"]}]")
 
@@ -294,7 +294,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 		require.EqualError(t, err, "[{\"message\":\"Error Adding Set\",\"path\":[\"addSet\"]}]")
 
@@ -342,7 +342,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 
 		err := mock.ExpectationsWereMet()
@@ -410,7 +410,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 		require.EqualError(t, err, "[{\"message\":\"Error Getting Sets: Access Denied\",\"path\":[\"sets\"]}]")
 	})
@@ -460,7 +460,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 
 		err := mock.ExpectationsWereMet()
@@ -526,7 +526,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 		require.EqualError(t, err, "[{\"message\":\"Error Updating Set: Access Denied\",\"path\":[\"updateSet\"]}]")
 
@@ -552,7 +552,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 
 		require.EqualError(t, err, "[{\"message\":\"Reps needs to be between 0 and 9999\",\"path\":[\"updateSet\"]}]")
@@ -579,7 +579,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 
 		require.EqualError(t, err, "[{\"message\":\"Reps needs to be between 0 and 9999\",\"path\":[\"updateSet\"]}]")
@@ -606,7 +606,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 
 		require.EqualError(t, err, "[{\"message\":\"Weight needs to be between 0 and 9999\",\"path\":[\"updateSet\"]}]")
@@ -633,7 +633,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 
 		require.EqualError(t, err, "[{\"message\":\"Weight needs to be between 0 and 9999\",\"path\":[\"updateSet\"]}]")
@@ -687,7 +687,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 		require.EqualError(t, err, "[{\"message\":\"Error Updating Set\",\"path\":[\"updateSet\"]}]")
 
@@ -735,7 +735,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 
 		err := mock.ExpectationsWereMet()
@@ -793,7 +793,7 @@ func TestSetEntryResolvers(t *testing.T) {
 			}
 			`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 		require.EqualError(t, err, "[{\"message\":\"Error Deleting Set: Access Denied\",\"path\":[\"deleteSet\"]}]")
 

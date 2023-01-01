@@ -105,7 +105,7 @@ func TestExerciseResolvers(t *testing.T) {
 				)
 			}`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 
 		require.Equal(t, resp.AddExercise, utils.UIntToString(e.ID))
@@ -166,7 +166,7 @@ func TestExerciseResolvers(t *testing.T) {
 			}`,
 			1233,
 		)
-		err = c.Post(gqlMutation, &resp, helpers.AddContext(u))
+		err = c.Post(gqlMutation, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 		require.EqualError(t, err, "[{\"message\":\"Error Adding Exercise: Access Denied\",\"path\":[\"addExercise\"]}]")
 	})
 
@@ -202,7 +202,7 @@ func TestExerciseResolvers(t *testing.T) {
 			}`,
 			e.ID,
 		)
-		c.MustPost(gqlQuery, &resp, helpers.AddContext(u))
+		c.MustPost(gqlQuery, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -268,7 +268,7 @@ func TestExerciseResolvers(t *testing.T) {
 			}`,
 			exerciseId,
 		)
-		err = c.Post(gqlQuery, &resp, helpers.AddContext(u))
+		err = c.Post(gqlQuery, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 		require.EqualError(t, err, "[{\"message\":\"Error Getting Exercise: Access Denied\",\"path\":[\"exercise\"]}]")
 
 		err = mock.ExpectationsWereMet()
@@ -315,7 +315,7 @@ func TestExerciseResolvers(t *testing.T) {
 			e.ID,
 			updatedNote,
 		)
-		c.MustPost(gqlQuery, &resp, helpers.AddContext(u))
+		c.MustPost(gqlQuery, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -378,7 +378,7 @@ func TestExerciseResolvers(t *testing.T) {
 			e.ID,
 			updatedNote,
 		)
-		err := c.Post(gqlQuery, &resp, helpers.AddContext(u))
+		err := c.Post(gqlQuery, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 		require.EqualError(t, err, "[{\"message\":\"Error Updating Exercise: Access Denied\",\"path\":[\"updateExercise\"]}]")
 
 		err = mock.ExpectationsWereMet()
@@ -425,7 +425,7 @@ func TestExerciseResolvers(t *testing.T) {
 			e.ID,
 			updatedNote,
 		)
-		err := c.Post(gqlQuery, &resp, helpers.AddContext(u))
+		err := c.Post(gqlQuery, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 		require.EqualError(t, err, "[{\"message\":\"Error Updating Exercise\",\"path\":[\"updateExercise\"]}]")
 
 		err = mock.ExpectationsWereMet()
@@ -471,7 +471,7 @@ func TestExerciseResolvers(t *testing.T) {
 			}`,
 			e.ID,
 		)
-		c.MustPost(gqlQuery, &resp, helpers.AddContext(u))
+		c.MustPost(gqlQuery, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -522,7 +522,7 @@ func TestExerciseResolvers(t *testing.T) {
 			}`,
 			e.ID,
 		)
-		err := c.Post(gqlQuery, &resp, helpers.AddContext(u))
+		err := c.Post(gqlQuery, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 		require.EqualError(t, err, "[{\"message\":\"Error Deleting Exercise: Access Denied\",\"path\":[\"deleteExercise\"]}]")
 
 		err = mock.ExpectationsWereMet()
@@ -564,7 +564,7 @@ func TestExerciseResolvers(t *testing.T) {
 			}`,
 			e.ID,
 		)
-		err := c.Post(gqlQuery, &resp, helpers.AddContext(u))
+		err := c.Post(gqlQuery, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 		require.EqualError(t, err, "[{\"message\":\"Error Deleting Exercise\",\"path\":[\"deleteExercise\"]}]")
 
 		err = mock.ExpectationsWereMet()
@@ -610,7 +610,7 @@ func TestExerciseResolvers(t *testing.T) {
 			}`,
 			e.ID,
 		)
-		err := c.Post(gqlQuery, &resp, helpers.AddContext(u))
+		err := c.Post(gqlQuery, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 		require.EqualError(t, err, "[{\"message\":\"Error Deleting Exercise\",\"path\":[\"deleteExercise\"]}]")
 
 		err = mock.ExpectationsWereMet()

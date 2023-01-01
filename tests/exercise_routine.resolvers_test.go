@@ -83,7 +83,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 			`,
 			er.WorkoutRoutineID, er.Sets, er.Reps, er.Name,
 		)
-		c.MustPost(mutation, &resp, helpers.AddContext(u))
+		c.MustPost(mutation, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 
 		err = mock.ExpectationsWereMet() // make sure all expectations were met
 		if err != nil {
@@ -136,7 +136,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 			`,
 			er.WorkoutRoutineID, er.Sets, er.Reps, er.Name,
 		)
-		err := c.Post(mutation, &resp, helpers.AddContext(u))
+		err := c.Post(mutation, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 		require.EqualError(t, err, "[{\"message\":\"Error Adding Exercise Routine: Access Denied\",\"path\":[\"addExerciseRoutine\"]}]")
 
 		err = mock.ExpectationsWereMet()
@@ -173,7 +173,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 			}`,
 			er.WorkoutRoutineID,
 		)
-		c.MustPost(query, &resp, helpers.AddContext(u))
+		c.MustPost(query, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 
 		err = mock.ExpectationsWereMet() // make sure all expectations were met
 		if err != nil {
@@ -199,7 +199,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 				name
 			}
 		}`, er.WorkoutRoutineID)
-		err = c.Post(query, &resp, helpers.AddContext(u))
+		err = c.Post(query, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 
 		err = mock.ExpectationsWereMet() // make sure all expectations were met
 		if err != nil {
@@ -230,7 +230,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 			}`,
 			er.WorkoutRoutineID,
 		)
-		err := c.Post(query, &resp, helpers.AddContext(u))
+		err := c.Post(query, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 		require.EqualError(t, err, "[{\"message\":\"Error Getting Exercise Routine\",\"path\":[\"exerciseRoutines\"]}]")
 
 		err = mock.ExpectationsWereMet()
@@ -284,7 +284,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 			}`,
 			er.ID,
 		)
-		c.MustPost(gqlQuery, &resp, helpers.AddContext(u))
+		c.MustPost(gqlQuery, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -337,7 +337,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 			}`,
 			er.ID,
 		)
-		err := c.Post(gqlQuery, &resp, helpers.AddContext(u))
+		err := c.Post(gqlQuery, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 		require.EqualError(t, err, "[{\"message\":\"Error Deleting Exercise Routine: Access Denied\",\"path\":[\"deleteExerciseRoutine\"]}]")
 
 		err = mock.ExpectationsWereMet()
@@ -386,7 +386,7 @@ func TestExerciseRoutineResolvers(t *testing.T) {
 			}`,
 			er.ID,
 		)
-		err := c.Post(gqlQuery, &resp, helpers.AddContext(u))
+		err := c.Post(gqlQuery, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 		require.EqualError(t, err, "[{\"message\":\"Error Deleting Exercise Routine\",\"path\":[\"deleteExerciseRoutine\"]}]")
 
 		err = mock.ExpectationsWereMet()

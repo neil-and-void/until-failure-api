@@ -83,9 +83,10 @@ func NewLoaders(gormDB *gorm.DB) *loader.Loaders {
 	return loaders
 }
 
-func AddContext(u *token.Claims) client.Option {
+func AddContext(u *token.Claims, l *loader.Loaders) client.Option {
 	return func(bd *client.Request) {
 		ctx := context.WithValue(bd.HTTP.Context(), middleware.UserCtxKey, u)
+		ctx = context.WithValue(ctx, middleware.LoadersKey, l)
 		bd.HTTP = bd.HTTP.WithContext(ctx)
 	}
 }

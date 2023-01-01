@@ -145,7 +145,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 				}) 
 			}`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 
 		err = mock.ExpectationsWereMet()
@@ -231,7 +231,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 				}) 
 			}`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 		require.EqualError(t, err, "[{\"message\":\"Error Adding Workout Session\",\"path\":[\"addWorkoutSession\"]}]")
 
@@ -298,7 +298,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 				}) 
 			}`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 		require.EqualError(t, err, "[{\"message\":\"Error Adding Workout Session\",\"path\":[\"addWorkoutSession\"]}]")
 
@@ -359,7 +359,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 				}
 			}`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 
 		err = mock.ExpectationsWereMet()
@@ -428,7 +428,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 				}
 			}`,
 			&resp,
-			helpers.AddContext(u),
+			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
 		)
 
 		err = mock.ExpectationsWereMet()
@@ -501,7 +501,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 				}
 			}`, ws.ID, ws.End.Format(time.RFC3339))
 		var resp UpdateWorkoutSession
-		c.MustPost(gqlQuery, &resp, helpers.AddContext(u))
+		c.MustPost(gqlQuery, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -552,7 +552,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 				}
 			}`, ws.ID, ws.End.Format(time.RFC3339))
 		var resp UpdateWorkoutSession
-		err := c.Post(gqlQuery, &resp, helpers.AddContext(u))
+		err := c.Post(gqlQuery, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 		require.EqualError(t, err, "[{\"message\":\"Error Updating Workout Session: Access Denied\",\"path\":[\"updateWorkoutSession\"]}]")
 
 		err = mock.ExpectationsWereMet()
@@ -591,7 +591,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 				}
 			}`, ws.ID, ws.End.Format(time.RFC3339))
 		var resp UpdateWorkoutSession
-		err := c.Post(gqlQuery, &resp, helpers.AddContext(u))
+		err := c.Post(gqlQuery, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 		require.EqualError(t, err, "[{\"message\":\"Error Updating Workout Session\",\"path\":[\"updateWorkoutSession\"]}]")
 
 		err = mock.ExpectationsWereMet()
@@ -632,7 +632,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 			deleteWorkoutSession(workoutSessionId: "%d")
 		}`, ws.ID)
 		var resp DeleteWorkoutSessionResp
-		c.MustPost(gqlQuery, &resp, helpers.AddContext(u))
+		c.MustPost(gqlQuery, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -669,7 +669,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 			deleteWorkoutSession(workoutSessionId: "%d")
 		}`, ws.ID)
 		var resp DeleteWorkoutSessionResp
-		err := c.Post(gqlQuery, &resp, helpers.AddContext(u))
+		err := c.Post(gqlQuery, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 		require.EqualError(t, err, "[{\"message\":\"Error Deleting Workout Session: Access Denied\",\"path\":[\"deleteWorkoutSession\"]}]")
 
 		err = mock.ExpectationsWereMet()
@@ -697,7 +697,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 			deleteWorkoutSession(workoutSessionId: "%d")
 		}`, ws.ID)
 		var resp DeleteWorkoutSessionResp
-		err := c.Post(gqlQuery, &resp, helpers.AddContext(u))
+		err := c.Post(gqlQuery, &resp, helpers.AddContext(u, helpers.NewLoaders(gormDB)))
 		require.EqualError(t, err, "[{\"message\":\"Error Deleting Workout Session\",\"path\":[\"deleteWorkoutSession\"]}]")
 
 		err = mock.ExpectationsWereMet()
