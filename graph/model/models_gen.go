@@ -134,7 +134,7 @@ type WorkoutRoutineInput struct {
 }
 
 type WorkoutSessionConnection struct {
-	Edges    []*WorkoutRoutineEdge `json:"edges"`
+	Edges    []*WorkoutSessionEdge `json:"edges"`
 	PageInfo *PageInfo             `json:"pageInfo"`
 }
 

@@ -934,7 +934,7 @@ type ExerciseRoutine {
 }
 
 type WorkoutSessionConnection {
-  edges: [WorkoutRoutineEdge!]!
+  edges: [WorkoutSessionEdge!]!
   pageInfo: PageInfo!
 }
 
@@ -4983,9 +4983,9 @@ func (ec *executionContext) _WorkoutSessionConnection_edges(ctx context.Context,
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.WorkoutRoutineEdge)
+	res := resTmp.([]*model.WorkoutSessionEdge)
 	fc.Result = res
-	return ec.marshalNWorkoutRoutineEdge2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutineEdgeᚄ(ctx, field.Selections, res)
+	return ec.marshalNWorkoutSessionEdge2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSessionEdgeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_WorkoutSessionConnection_edges(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4997,11 +4997,11 @@ func (ec *executionContext) fieldContext_WorkoutSessionConnection_edges(ctx cont
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "node":
-				return ec.fieldContext_WorkoutRoutineEdge_node(ctx, field)
+				return ec.fieldContext_WorkoutSessionEdge_node(ctx, field)
 			case "cursor":
-				return ec.fieldContext_WorkoutRoutineEdge_cursor(ctx, field)
+				return ec.fieldContext_WorkoutSessionEdge_cursor(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type WorkoutRoutineEdge", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type WorkoutSessionEdge", field.Name)
 		},
 	}
 	return fc, nil
@@ -9437,6 +9437,60 @@ func (ec *executionContext) marshalNWorkoutSessionConnection2ᚖgithubᚗcomᚋn
 		return graphql.Null
 	}
 	return ec._WorkoutSessionConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNWorkoutSessionEdge2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSessionEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.WorkoutSessionEdge) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNWorkoutSessionEdge2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSessionEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNWorkoutSessionEdge2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSessionEdge(ctx context.Context, sel ast.SelectionSet, v *model.WorkoutSessionEdge) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._WorkoutSessionEdge(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNWorkoutSessionInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSessionInput(ctx context.Context, v interface{}) (model.WorkoutSessionInput, error) {

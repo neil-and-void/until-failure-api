@@ -37,7 +37,7 @@ type ExerciseRoutine {
 }
 
 type WorkoutSessionConnection {
-  edges: [WorkoutRoutineEdge!]!
+  edges: [WorkoutSessionEdge!]!
   pageInfo: PageInfo!
 }
 
