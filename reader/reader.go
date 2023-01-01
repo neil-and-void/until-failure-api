@@ -117,7 +117,7 @@ func (e *ExerciseRoutineReader) GetExerciseRoutines(ctx context.Context, keys da
 	for _, key := range keys {
 		exerciseIds = append(exerciseIds, key.String())
 	}
-	fmt.Println(exerciseIds)
+	
 	exercises, _ := database.GetExercisesById(e.DB, exerciseIds)
 
 	// convert to graphql models and store in a dict with workout routine id as key
@@ -196,7 +196,7 @@ func (s *SetEntrySliceReader) GetSetEntrySlices(ctx context.Context, keys datalo
 	for _, key := range keys {
 		exerciseIds = append(exerciseIds, key.String())
 	}
-	fmt.Println(exerciseIds)	
+
 	setEntries, _ := database.GetSetsByExerciseId(s.DB, exerciseIds)
 	setEntrySlicesByExerciseId := map[string][]*model.SetEntry{}
 	for _, setEntry := range *setEntries {
@@ -218,7 +218,7 @@ func (s *SetEntrySliceReader) GetSetEntrySlices(ctx context.Context, keys datalo
 			}
 		}
 	}
-	fmt.Println("wtf;sjof as98dfuy as", setEntrySlicesByExerciseId)
+	
 	var output []*dataloader.Result
 	for _, exerciseKey := range keys {
 		if setEntrySlice, ok := setEntrySlicesByExerciseId[exerciseKey.String()]; ok {
