@@ -3,14 +3,13 @@ package graph
 import (
 	"context"
 	"errors"
-	"net/mail"
 	"os"
 
 	"github.com/neilZon/workout-logger-api/config"
 	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/token"
-	"github.com/neilZon/workout-logger-api/utils"
+	"github.com/neilZon/workout-logger-api/validator"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -18,10 +17,6 @@ import (
 
 // Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, loginInput model.LoginInput) (model.AuthResult, error) {
-	if _, err := mail.ParseAddress(loginInput.Email); err != nil {
-		return nil, gqlerror.Errorf("Not a valid email")
-	}
-
 	dbUser, err := database.GetUserByEmail(r.DB, loginInput.Email)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, gqlerror.Errorf("Email does not exist")
@@ -50,18 +45,8 @@ func (r *mutationResolver) Login(ctx context.Context, loginInput model.LoginInpu
 
 // Signup is the resolver for the signup field.
 func (r *mutationResolver) Signup(ctx context.Context, signupInput model.SignupInput) (model.AuthResult, error) {
-
-	if signupInput.Password != signupInput.ConfirmPassword {
-		return nil, gqlerror.Errorf("Passwords don't match")
-	}
-
-	// check strength
-	if !utils.IsStrong(signupInput.Password) {
-		return nil, gqlerror.Errorf("Password needs at least 1 number and 8 - 16 characters")
-	}
-
-	if _, err := mail.ParseAddress(signupInput.Email); err != nil {
-		return nil, gqlerror.Errorf("Not a valid email")
+	if err := validator.SignupInputIsValid(&signupInput); err != nil {
+		return nil, err
 	}
 
 	// check if user was found from query
