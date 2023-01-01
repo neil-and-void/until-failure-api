@@ -22,7 +22,7 @@ func CreateWorkoutRoutine(db *gorm.DB, routine *WorkoutRoutine) *gorm.DB {
 
 func GetWorkoutRoutine(db *gorm.DB, workoutRoutineId string) (*WorkoutRoutine, error) {
 	var wr WorkoutRoutine
-	result := db.Preload("ExerciseRoutines").First(&wr, "id = ?", workoutRoutineId) // TODO: preload clause might be performance hit
+	result := db.First(&wr, "id = ?", workoutRoutineId)
 	return &wr, result.Error
 }
 
