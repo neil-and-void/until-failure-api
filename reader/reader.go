@@ -78,19 +78,20 @@ func (e *ExerciseRoutineSliceReader) GetExerciseRoutineSlices(ctx context.Contex
 	exerciseRoutines, _ := database.GetExerciseRoutinesByWorkoutRoutineId(e.DB, workoutRoutineIds)
 	exerciseRoutinesByWorkoutRoutineId := map[string][]*model.ExerciseRoutine{}
 	for _, exerciseRoutine := range *exerciseRoutines {
-		id := utils.UIntToString(exerciseRoutine.WorkoutRoutineID)
-		if _, ok := exerciseRoutinesByWorkoutRoutineId[id]; ok {
-			exerciseRoutinesByWorkoutRoutineId[id] = append(exerciseRoutinesByWorkoutRoutineId[id], &model.ExerciseRoutine{
-				ID: id,
+		workoutRoutineId := utils.UIntToString(exerciseRoutine.WorkoutRoutineID)
+		exerciseRoutineId := utils.UIntToString(exerciseRoutine.ID)
+		if _, ok := exerciseRoutinesByWorkoutRoutineId[workoutRoutineId]; ok {
+			exerciseRoutinesByWorkoutRoutineId[workoutRoutineId] = append(exerciseRoutinesByWorkoutRoutineId[workoutRoutineId], &model.ExerciseRoutine{
+				ID: exerciseRoutineId,
 				Active: exerciseRoutine.Active,
 				Name: exerciseRoutine.Name,
 				Sets: int(exerciseRoutine.Sets),
 				Reps: int(exerciseRoutine.Reps),
 			})
 		} else {
-			exerciseRoutinesByWorkoutRoutineId[id] = []*model.ExerciseRoutine{
+			exerciseRoutinesByWorkoutRoutineId[workoutRoutineId] = []*model.ExerciseRoutine{
 				{
-					ID: id,
+					ID: exerciseRoutineId,
 					Active: exerciseRoutine.Active,
 					Name: exerciseRoutine.Name,
 					Sets: int(exerciseRoutine.Sets),
@@ -200,18 +201,18 @@ func (s *SetEntrySliceReader) GetSetEntrySlices(ctx context.Context, keys datalo
 	setEntries, _ := database.GetSetsByExerciseId(s.DB, exerciseIds)
 	setEntrySlicesByExerciseId := map[string][]*model.SetEntry{}
 	for _, setEntry := range *setEntries {
-		id := utils.UIntToString(setEntry.ExerciseID)
-
-		if _, ok := setEntrySlicesByExerciseId[id]; ok {
-			setEntrySlicesByExerciseId[id] = append(setEntrySlicesByExerciseId[id], &model.SetEntry{
-				ID: id,
+		exerciseId := utils.UIntToString(setEntry.ExerciseID)
+		setEntryId := utils.UIntToString(setEntry.ID)
+		if _, ok := setEntrySlicesByExerciseId[exerciseId]; ok {
+			setEntrySlicesByExerciseId[exerciseId] = append(setEntrySlicesByExerciseId[exerciseId], &model.SetEntry{
+				ID: setEntryId,
 				Weight: float64(setEntry.Weight),
 				Reps: int(setEntry.Reps),
 			})
 		} else {
-			setEntrySlicesByExerciseId[id] = []*model.SetEntry{
+			setEntrySlicesByExerciseId[exerciseId] = []*model.SetEntry{
 				{
-					ID: id,
+					ID: setEntryId,
 					Weight: float64(setEntry.Weight),
 					Reps: int(setEntry.Reps),
 				},
