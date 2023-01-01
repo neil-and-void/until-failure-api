@@ -16,17 +16,17 @@ import (
 )
 
 // Login is the resolver for the login field.
-func (r *mutationResolver) Login(ctx context.Context, loginInput model.LoginInput) (model.AuthResult, error) {
+func (r *mutationResolver) Login(ctx context.Context, loginInput model.LoginInput) (*model.AuthResult, error) {
 	dbUser, err := database.GetUserByEmail(r.DB, loginInput.Email)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, gqlerror.Errorf("Email does not exist")
+		return &model.AuthResult{}, gqlerror.Errorf("Email does not exist")
 	}
 	if err != nil {
-		return nil, gqlerror.Errorf("Error Logging In")
+		return &model.AuthResult{}, gqlerror.Errorf("Error Logging In")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(loginInput.Password)); err != nil {
-		return nil, gqlerror.Errorf("Incorrect Password")
+		return &model.AuthResult{}, gqlerror.Errorf("Incorrect Password")
 	}
 	c := &token.Credentials{
 		ID:    dbUser.ID,
@@ -37,22 +37,22 @@ func (r *mutationResolver) Login(ctx context.Context, loginInput model.LoginInpu
 	refreshToken := token.Sign(c, []byte(os.Getenv(config.REFRESH_SECRET)), config.REFRESH_TTL)
 	accessToken := token.Sign(c, []byte(os.Getenv(config.ACCESS_SECRET)), config.ACCESS_TTL)
 
-	return model.AuthSuccess{
+	return &model.AuthResult{
 		RefreshToken: refreshToken,
 		AccessToken:  accessToken,
 	}, nil
 }
 
 // Signup is the resolver for the signup field.
-func (r *mutationResolver) Signup(ctx context.Context, signupInput model.SignupInput) (model.AuthResult, error) {
+func (r *mutationResolver) Signup(ctx context.Context, signupInput model.SignupInput) (*model.AuthResult, error) {
 	if err := validator.SignupInputIsValid(&signupInput); err != nil {
-		return nil, err
+		return &model.AuthResult{}, err
 	}
 
 	// check if user was found from query
 	dbUser, err := database.GetUserByEmail(r.DB, signupInput.Email)
 	if dbUser.ID != 0 {
-		return nil, gqlerror.Errorf("Email already exists")
+		return &model.AuthResult{}, gqlerror.Errorf("Email already exists")
 	}
 
 	// Hashing the password with the default cost of 10
@@ -64,7 +64,7 @@ func (r *mutationResolver) Signup(ctx context.Context, signupInput model.SignupI
 	u := database.User{Name: signupInput.Name, Email: signupInput.Email, Password: string(hashedPassword)}
 	err = r.DB.Create(&u).Error
 	if err != nil {
-		return nil, gqlerror.Errorf(err.Error())
+		return &model.AuthResult{}, gqlerror.Errorf(err.Error())
 	}
 
 	c := &token.Credentials{
@@ -76,7 +76,7 @@ func (r *mutationResolver) Signup(ctx context.Context, signupInput model.SignupI
 	refreshToken := token.Sign(c, []byte(os.Getenv(config.REFRESH_SECRET)), config.REFRESH_TTL)
 	accessToken := token.Sign(c, []byte(os.Getenv(config.ACCESS_SECRET)), config.ACCESS_TTL)
 
-	return model.AuthSuccess{
+	return &model.AuthResult{
 		RefreshToken: refreshToken,
 		AccessToken:  accessToken,
 	}, nil

@@ -1,14 +1,18 @@
 package validator
 
-import "regexp"
+import (
+	"strconv"
+)
 
 // checks if password has at least 1 number
-func isComplex(p string) bool {
-	re, err := regexp.Compile("\\d")
-	if err != nil {
-		panic(err)
+func hasNumber(p string) bool {
+	for _, c := range p {
+		_, err := strconv.ParseInt(string(c), 10, strconv.IntSize)
+		if err == nil {
+			return true
+		}
 	}
-	return re.MatchString(p)
+	return false
 }
 
 func passwordLongEnough(p string) bool {

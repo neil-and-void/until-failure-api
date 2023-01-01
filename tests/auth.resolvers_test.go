@@ -26,6 +26,21 @@ import (
 
 var db *gorm.DB
 
+type LoginResp struct {
+	Login struct {
+		AccessToken  string
+		RefreshToken string
+	}
+}
+
+type SignupResp struct {
+	Signup struct {
+		AccessToken  string
+		RefreshToken string
+	}
+}
+
+
 func TestAuthResolvers(t *testing.T) {
 	t.Parallel()
 
@@ -63,22 +78,15 @@ func TestAuthResolvers(t *testing.T) {
 		const userQuery = `SELECT * FROM "users" WHERE email = $1 AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1`
 		mock.ExpectQuery(regexp.QuoteMeta(userQuery)).WithArgs(u.Email).WillReturnRows(userRow)
 
-		var resp struct {
-			Login struct {
-				AccessToken  string
-				RefreshToken string
-			}
-		}
+		var resp LoginResp
 		c.MustPost(`mutation Login {
-			login(
+			login(loginInput: {
 			  email: "test@test.com",
 			  password: "password123",
-			) {
-			  ... on AuthSuccess {
-				refreshToken,
+			}) {
+				refreshToken
 				accessToken
 			  }
-			}
 		  }`,
 			&resp)
 		assert.True(t, token.Validate(resp.Login.AccessToken, ACCESS_SECRET))
@@ -108,15 +116,13 @@ func TestAuthResolvers(t *testing.T) {
 			}
 		}
 		err = c.Post(`mutation Login {
-			login(
+			login(loginInput: {
 			  email: "test@test.com",
 			  password: "NOTCORRECTHEHEHE",
-			) {
-			  ... on AuthSuccess {
+			}) {
 				refreshToken,
 				accessToken
 			  }
-			}
 		  }`,
 			&resp)
 		require.EqualError(t, err, "[{\"message\":\"Incorrect Password\",\"path\":[\"login\"]}]")
@@ -138,15 +144,13 @@ func TestAuthResolvers(t *testing.T) {
 		// empty response struct since we know we are going to return an error
 		var resp struct{}
 		err = c.Post(`mutation Login {
-			login(
+			login(loginInput: {
 			  email: "notexistingemail@test.com",
 			  password: "password123",
-			) {
-			  ... on AuthSuccess {
+			}) {
 				refreshToken,
 				accessToken
 			  }
-			}
 		  }`,
 			&resp)
 		require.EqualError(t, err, "[{\"message\":\"Email does not exist\",\"path\":[\"login\"]}]")
@@ -165,18 +169,16 @@ func TestAuthResolvers(t *testing.T) {
 		// empty response struct since we know we are going to return an error
 		var resp struct{}
 		err = c.Post(`mutation Login {
-			login(
+			login(loginInput: {
 			  email: "this_is_def_not_an_email_WTFFFFF",
 			  password: "password123",
-			) {
-			  ... on AuthSuccess {
+			}) {
 				refreshToken,
 				accessToken
 			  }
-			}
 		  }`,
 			&resp)
-		require.EqualError(t, err, "[{\"message\":\"Not a valid email\",\"path\":[\"login\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Error Logging In\",\"path\":[\"login\"]}]")
 
 		err = mock.ExpectationsWereMet() // make sure all expectations were met
 		if err != nil {
@@ -208,16 +210,14 @@ func TestAuthResolvers(t *testing.T) {
 			}
 		}
 		c.MustPost(`mutation Signup{
-			signup(
+			signup(signupInput: {
 			  email: "test@test.com",
 			  name: "testname",
 			  password: "password123",
 			  confirmPassword: "password123"
-			) {
-			  ... on AuthSuccess {
+			}) {
 				refreshToken,
 				accessToken
-			  }
 			}
 		  }`,
 			&resp)
@@ -245,16 +245,14 @@ func TestAuthResolvers(t *testing.T) {
 		// empty struct since we not use it
 		var resp struct{}
 		err := c.Post(`mutation Signup{
-			signup(
+			signup(signupInput: {
 			  email: "test@test.com",
 			  name: "testname",
 			  password: "password123",
 			  confirmPassword: "password123"
-			) {
-			  ... on AuthSuccess {
+			}) {
 				refreshToken,
 				accessToken
-			  }
 			}
 		  }`,
 			&resp)
@@ -269,16 +267,14 @@ func TestAuthResolvers(t *testing.T) {
 		// empty response struct since we know we are going to return an error
 		var resp struct{}
 		err = c.Post(`mutation Signup{
-			signup(
+			signup(signupInput: {
 			  email: "@notanemail:)",
 			  name: "testname",
 			  password: "password123",
 			  confirmPassword: "password123"
-			) {
-			  ... on AuthSuccess {
+			}) {
 				refreshToken,
 				accessToken
-			  }
 			}
 		  }`,
 			&resp)
@@ -298,16 +294,14 @@ func TestAuthResolvers(t *testing.T) {
 		// empty response struct since we know we are going to return an error
 		var resp struct{}
 		err = c.Post(`mutation Signup{
-			signup(
+			signup(signupInput: {
 			  email: "test@test.com",
 			  name: "testname",
-			  password: "NOPE",
+			  password: "password312",
 			  confirmPassword: "password123"
-			) {
-			  ... on AuthSuccess {
+			}) {
 				refreshToken,
 				accessToken
-			  }
 			}
 		  }`,
 			&resp)
@@ -327,20 +321,18 @@ func TestAuthResolvers(t *testing.T) {
 		// empty response struct since we know we are going to return an error
 		var resp struct{}
 		err = c.Post(`mutation Signup{
-			signup(
+			signup(signupInput: {
 			  email: "test@test.com",
 			  name: "testname",
 			  password: "passwords",
 			  confirmPassword: "passwords"
-			) {
-			  ... on AuthSuccess {
+			}) {
 				refreshToken,
 				accessToken
-			  }
 			}
 		  }`,
 			&resp)
-		require.EqualError(t, err, "[{\"message\":\"Password needs at least 1 number and 8 - 16 characters\",\"path\":[\"signup\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Password needs at least 1 number and 8 - 32 characters\",\"path\":[\"signup\"]}]")
 
 		err = mock.ExpectationsWereMet() // make sure all expectations were met
 		if err != nil {
@@ -356,20 +348,18 @@ func TestAuthResolvers(t *testing.T) {
 		// empty response struct since we know we are going to return an error
 		var resp struct{}
 		err = c.Post(`mutation Signup{
-			signup(
+			signup(signupInput: {
 			  email: "test@test.com",
 			  name: "testname",
 			  password: "bowo",
 			  confirmPassword: "bowo"
-			) {
-			  ... on AuthSuccess {
+			}) {
 				refreshToken,
 				accessToken
-			  }
 			}
 		  }`,
 			&resp)
-		require.EqualError(t, err, "[{\"message\":\"Password needs at least 1 number and 8 - 16 characters\",\"path\":[\"signup\"]}]")
+		require.EqualError(t, err, "[{\"message\":\"Password needs at least 1 number and 8 - 32 characters\",\"path\":[\"signup\"]}]")
 
 		err = mock.ExpectationsWereMet() // make sure all expectations were met
 		if err != nil {

@@ -16,7 +16,8 @@ func SignupInputIsValid(s *model.SignupInput) error {
 		return errors.New("Name needs to be between 2 and 50 characters")
 	}
 
-	if !(passwordLongEnough(s.Password) || isComplex(s.Password)) {
+
+	if !passwordLongEnough(s.Password) || !hasNumber(s.Password) {
 		return errors.New("Password needs at least 1 number and 8 - 32 characters")
 	}
 
