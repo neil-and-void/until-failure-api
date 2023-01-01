@@ -9,6 +9,7 @@ import (
 	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/middleware"
+	"github.com/neilZon/workout-logger-api/validator"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"gorm.io/gorm"
 )
@@ -17,6 +18,10 @@ import (
 func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *model.SetEntryInput) (string, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
+		return "", err
+	}
+
+	if err := validator.SetEntryInputIsValid(set); err != nil {
 		return "", err
 	}
 
@@ -94,6 +99,10 @@ func (r *queryResolver) Sets(ctx context.Context, exerciseID string) ([]*model.S
 func (r *mutationResolver) UpdateSet(ctx context.Context, setID string, set model.UpdateSetEntryInput) (*model.SetEntry, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
+		return &model.SetEntry{}, err
+	}
+
+	if err := validator.UpdateSetEntryInputIsValid(&set); err != nil {
 		return &model.SetEntry{}, err
 	}
 

@@ -10,6 +10,7 @@ import (
 	"github.com/neilZon/workout-logger-api/accesscontroller/accesscontrol"
 	"github.com/neilZon/workout-logger-api/helpers"
 	"github.com/neilZon/workout-logger-api/tests/testdata"
+	"github.com/neilZon/workout-logger-api/utils"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
@@ -86,6 +87,8 @@ func TestSetEntryResolvers(t *testing.T) {
 			helpers.AddContext(u),
 		)
 
+		require.Equal(t, resp.AddSet, utils.UIntToString(s.ID), "Created Id's don't match")
+
 		err := mock.ExpectationsWereMet()
 		if err != nil {
 			panic(err)
@@ -136,6 +139,95 @@ func TestSetEntryResolvers(t *testing.T) {
 			helpers.AddContext(u),
 		)
 		require.EqualError(t, err, "[{\"message\":\"Error Adding Set\",\"path\":[\"addSet\"]}]")
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})
+
+
+	t.Run("Add Set Entry Too Much Reps", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		var resp AddSetEntryResp
+		err := c.Post(`
+			mutation AddSet {
+				addSet(exerciseId: "44", set: {weight: 100, reps: 293084 })
+			}
+			`,
+			&resp,
+			helpers.AddContext(u),
+		)
+		require.EqualError(t, err, "[{\"message\":\"Reps needs to be between 0 and 9999\",\"path\":[\"addSet\"]}]")
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Add Set Entry Too little Reps", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		var resp AddSetEntryResp
+		err := c.Post(`
+			mutation AddSet {
+				addSet(exerciseId: "44", set: {weight: 225.0, reps: -23 })
+			}
+			`,
+			&resp,
+			helpers.AddContext(u),
+		)
+		require.EqualError(t, err, "[{\"message\":\"Reps needs to be between 0 and 9999\",\"path\":[\"addSet\"]}]")
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Add Set Entry Too Much Weight", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		var resp AddSetEntryResp
+		err := c.Post(`
+			mutation AddSet {
+				addSet(exerciseId: "44", set: {weight: 423987, reps: 8 })
+			}
+			`,
+			&resp,
+			helpers.AddContext(u),
+		)
+		require.EqualError(t, err, "[{\"message\":\"Weight needs to be between 0 and 9999\",\"path\":[\"addSet\"]}]")
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Add Set Entry Too little Weight", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		var resp AddSetEntryResp
+		err := c.Post(`
+			mutation AddSet {
+				addSet(exerciseId: "44", set: {weight: -423987, reps: 8 })
+			}
+			`,
+			&resp,
+			helpers.AddContext(u),
+		)
+		require.EqualError(t, err, "[{\"message\":\"Weight needs to be between 0 and 9999\",\"path\":[\"addSet\"]}]")
 
 		err = mock.ExpectationsWereMet()
 		if err != nil {
@@ -443,6 +535,115 @@ func TestSetEntryResolvers(t *testing.T) {
 			panic(err)
 		}
 	})
+
+	t.Run("Update Set Entry Too Much Reps", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		var resp UpdateSetResp
+		err := c.Post(`
+			mutation UpdateSet {
+				updateSet(setId: "30", set: { reps: 213908 }) {
+					id
+					weight
+					reps
+				}
+			}
+			`,
+			&resp,
+			helpers.AddContext(u),
+		)
+
+		require.EqualError(t, err, "[{\"message\":\"Reps needs to be between 0 and 9999\",\"path\":[\"updateSet\"]}]")
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Update Set Entry Too little Reps", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		var resp UpdateSetResp
+		err := c.Post(`
+			mutation UpdateSet {
+				updateSet(setId: "30", set: { reps: -1 }) {
+					id
+					weight
+					reps
+				}
+			}
+			`,
+			&resp,
+			helpers.AddContext(u),
+		)
+
+		require.EqualError(t, err, "[{\"message\":\"Reps needs to be between 0 and 9999\",\"path\":[\"updateSet\"]}]")
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Update Set Entry Too Much Weight", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		var resp UpdateSetResp
+		err := c.Post(`
+			mutation UpdateSet {
+				updateSet(setId: "30", set: { weight: 213908 }) {
+					id
+					weight
+					reps
+				}
+			}
+			`,
+			&resp,
+			helpers.AddContext(u),
+		)
+
+		require.EqualError(t, err, "[{\"message\":\"Weight needs to be between 0 and 9999\",\"path\":[\"updateSet\"]}]")
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Update Set Entry Too little Weight", func(t *testing.T) {
+		mock, gormDB := helpers.SetupMockDB()
+		acs := accesscontrol.NewAccessControllerService(gormDB)
+		c := helpers.NewGqlClient(gormDB, acs)
+
+		var resp UpdateSetResp
+		err := c.Post(`
+			mutation UpdateSet {
+				updateSet(setId: "30", set: { weight: -0.1 }) {
+					id
+					weight
+					reps
+				}
+			}
+			`,
+			&resp,
+			helpers.AddContext(u),
+		)
+
+		require.EqualError(t, err, "[{\"message\":\"Weight needs to be between 0 and 9999\",\"path\":[\"updateSet\"]}]")
+
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			panic(err)
+		}
+	})
+
 
 	t.Run("Update Set Error Updating Set", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
