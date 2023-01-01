@@ -105,8 +105,7 @@ func (e *ExerciseRoutineSliceReader) GetExerciseRoutineSlices(ctx context.Contex
 		if exerciseRoutineSlice, ok := exerciseRoutinesByWorkoutRoutineId[workoutRoutineKey.String()]; ok {
 			output = append(output, &dataloader.Result{Data: exerciseRoutineSlice, Error: nil})
 		} else {
-			err := fmt.Errorf("exercise routine slice not found %s", workoutRoutineKey.String())
-			output = append(output, &dataloader.Result{Data: nil, Error: err})	
+			output = append(output, &dataloader.Result{Data: []*model.ExerciseRoutine{}, Error: nil})	
 		}
 	}
 
@@ -114,18 +113,21 @@ func (e *ExerciseRoutineSliceReader) GetExerciseRoutineSlices(ctx context.Contex
 }
 
 func (e *ExerciseRoutineReader) GetExerciseRoutines(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	exerciseRoutineIds := []string{}
+	exerciseIds := []string{}
 	for _, key := range keys {
-		exerciseRoutineIds = append(exerciseRoutineIds, key.String())
+		exerciseIds = append(exerciseIds, key.String())
 	}
-	exercises, _ := database.GetExercisesById(e.DB, exerciseRoutineIds)
+	fmt.Println(exerciseIds)
+	exercises, _ := database.GetExercisesById(e.DB, exerciseIds)
 
 	// convert to graphql models and store in a dict with workout routine id as key
-	exerciseRoutineById := map[string]*model.ExerciseRoutine{}
+	exerciseRoutineByExerciseId := map[string]*model.ExerciseRoutine{}
 	for _, exercise := range *exercises {
-		id := strconv.Itoa(int(exercise.ID))
-		exerciseRoutineById[id] = &model.ExerciseRoutine{
-			ID:     id,
+		exerciseId := strconv.Itoa(int(exercise.ID))
+		exerciseRoutineId := strconv.Itoa(int(exercise.ExerciseRoutineID))
+		
+		exerciseRoutineByExerciseId[exerciseId] = &model.ExerciseRoutine{
+			ID:     exerciseRoutineId,
 			Name:   exercise.ExerciseRoutine.Name,
 			Active: exercise.ExerciseRoutine.Active,
 			Sets:   int(exercise.ExerciseRoutine.Sets),
@@ -135,7 +137,7 @@ func (e *ExerciseRoutineReader) GetExerciseRoutines(ctx context.Context, keys da
 
 	var output []*dataloader.Result
 	for _, exerciseRoutineKey := range keys {
-		exerciseRoutine, ok := exerciseRoutineById[exerciseRoutineKey.String()]
+		exerciseRoutine, ok := exerciseRoutineByExerciseId[exerciseRoutineKey.String()]
 		if ok {
 			output = append(output, &dataloader.Result{Data: exerciseRoutine, Error: nil})
 		} else {
@@ -152,17 +154,24 @@ func (e *ExerciseSliceReader) GetExerciseSlices(ctx context.Context, keys datalo
 	for _, key := range keys {
 		workoutSessionIds = append(workoutSessionIds, key.String())
 	}
-
+	
 	exercises, _ := database.GetExercisesByWorkoutSessionId(e.DB, workoutSessionIds)
 	exerciseSlicesByWorkoutSession := map[string][]*model.Exercise{}
 	for _, exercise := range *exercises {
-		id := fmt.Sprintf("%d", exercise.WorkoutSessionID)
-
-		if _, ok := exerciseSlicesByWorkoutSession[id]; ok {
-			exerciseSlicesByWorkoutSession[id] = append(exerciseSlicesByWorkoutSession[id], &model.Exercise{
-				ID: id,
+		workoutSessionId := utils.UIntToString(exercise.WorkoutSessionID)
+		exerciseId := utils.UIntToString(exercise.ID)
+		if _, ok := exerciseSlicesByWorkoutSession[workoutSessionId]; ok {
+			exerciseSlicesByWorkoutSession[workoutSessionId] = append(exerciseSlicesByWorkoutSession[workoutSessionId], &model.Exercise{
+				ID: exerciseId,
 				Notes: exercise.Notes,
 			})
+		} else {
+			exerciseSlicesByWorkoutSession[workoutSessionId] = []*model.Exercise{
+				{
+					ID: exerciseId,
+					Notes: exercise.Notes,
+				},
+			}
 		}
 	}
 
@@ -171,8 +180,7 @@ func (e *ExerciseSliceReader) GetExerciseSlices(ctx context.Context, keys datalo
 		if exerciseRoutineSlice, ok := exerciseSlicesByWorkoutSession[workoutSessionKey.String()]; ok {
 			output = append(output, &dataloader.Result{Data: exerciseRoutineSlice, Error: nil})
 		} else {
-			err := fmt.Errorf("exercise slice not found %s", workoutSessionKey.String())
-			output = append(output, &dataloader.Result{Data: nil, Error: err})	
+			output = append(output, &dataloader.Result{Data: []*model.Exercise{}, Error: nil})	
 		}	
 	}
 
@@ -188,20 +196,20 @@ func (s *SetEntrySliceReader) GetSetEntrySlices(ctx context.Context, keys datalo
 	for _, key := range keys {
 		exerciseIds = append(exerciseIds, key.String())
 	}
-	fmt.Println(exerciseIds)
+	fmt.Println(exerciseIds)	
 	setEntries, _ := database.GetSetsByExerciseId(s.DB, exerciseIds)
-	exerciseSlicesByWorkoutSession := map[string][]*model.SetEntry{}
+	setEntrySlicesByExerciseId := map[string][]*model.SetEntry{}
 	for _, setEntry := range *setEntries {
 		id := utils.UIntToString(setEntry.ExerciseID)
 
-		if _, ok := exerciseSlicesByWorkoutSession[id]; ok {
-			exerciseSlicesByWorkoutSession[id] = append(exerciseSlicesByWorkoutSession[id], &model.SetEntry{
+		if _, ok := setEntrySlicesByExerciseId[id]; ok {
+			setEntrySlicesByExerciseId[id] = append(setEntrySlicesByExerciseId[id], &model.SetEntry{
 				ID: id,
 				Weight: float64(setEntry.Weight),
 				Reps: int(setEntry.Reps),
 			})
 		} else {
-			exerciseSlicesByWorkoutSession[id] = []*model.SetEntry{
+			setEntrySlicesByExerciseId[id] = []*model.SetEntry{
 				{
 					ID: id,
 					Weight: float64(setEntry.Weight),
@@ -210,14 +218,13 @@ func (s *SetEntrySliceReader) GetSetEntrySlices(ctx context.Context, keys datalo
 			}
 		}
 	}
-
+	fmt.Println("wtf;sjof as98dfuy as", setEntrySlicesByExerciseId)
 	var output []*dataloader.Result
 	for _, exerciseKey := range keys {
-		if setEntrySlice, ok := exerciseSlicesByWorkoutSession[exerciseKey.String()]; ok {
+		if setEntrySlice, ok := setEntrySlicesByExerciseId[exerciseKey.String()]; ok {
 			output = append(output, &dataloader.Result{Data: setEntrySlice, Error: nil})
 		} else {
-			err := fmt.Errorf("exercise slice not found %s", exerciseKey.String())
-			output = append(output, &dataloader.Result{Data: nil, Error: err})	
+			output = append(output, &dataloader.Result{Data: []*model.SetEntry{}, Error: nil})	
 		}		
 	}
 

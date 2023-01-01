@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/graph-gophers/dataloader"
 	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/middleware"
@@ -163,31 +164,13 @@ func (r *mutationResolver) DeleteExercise(ctx context.Context, exerciseID string
 
 // Exercises is the resolver for the exercises field.
 func (r *workoutSessionResolver) Exercises(ctx context.Context, obj *model.WorkoutSession) ([]*model.Exercise, error) {
-	u, err := middleware.GetUser(ctx)
+	loaders := middleware.GetLoaders(ctx)
+	thunk := loaders.ExerciseSliceLoader.Load(ctx, dataloader.StringKey(obj.ID))
+	result, err := thunk()
 	if err != nil {
-		return []*model.Exercise{}, err
+		return nil, err
 	}
-
-	err = r.ACS.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), obj.ID)
-	if err != nil {
-		return []*model.Exercise{}, gqlerror.Errorf("Error Getting Exercises: Access Denied")
-	}
-
-	var dbExercises []database.Exercise
-	err = database.GetExercises(r.DB, &dbExercises, obj.ID)
-	if err != nil {
-		return []*model.Exercise{}, gqlerror.Errorf("Error Getting Exercises")
-	}
-
-	var exercises []*model.Exercise
-	for _, e := range dbExercises {
-		exercises = append(exercises, &model.Exercise{
-			ID:    fmt.Sprintf("%d", e.ID),
-			Notes: e.Notes,
-		})
-	}
-
-	return exercises, nil
+	return result.([]*model.Exercise), nil
 }
 
 // PrevExercises is the resolver for the prevExercises field.
