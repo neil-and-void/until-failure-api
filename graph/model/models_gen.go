@@ -6,22 +6,10 @@ import (
 	"time"
 )
 
-type AuthResult interface {
-	IsAuthResult()
-}
-
-type AuthError struct {
-	Message string `json:"message"`
-}
-
-func (AuthError) IsAuthResult() {}
-
-type AuthSuccess struct {
+type AuthResult struct {
 	RefreshToken string `json:"refreshToken"`
 	AccessToken  string `json:"accessToken"`
 }
-
-func (AuthSuccess) IsAuthResult() {}
 
 type ExerciseInput struct {
 	ExerciseRoutineID string           `json:"exerciseRoutineId"`

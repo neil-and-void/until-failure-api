@@ -48,11 +48,7 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	AuthError struct {
-		Message func(childComplexity int) int
-	}
-
-	AuthSuccess struct {
+	AuthResult struct {
 		AccessToken  func(childComplexity int) int
 		RefreshToken func(childComplexity int) int
 	}
@@ -175,8 +171,8 @@ type ExerciseResolver interface {
 	Sets(ctx context.Context, obj *model.Exercise) ([]*model.SetEntry, error)
 }
 type MutationResolver interface {
-	Login(ctx context.Context, loginInput model.LoginInput) (model.AuthResult, error)
-	Signup(ctx context.Context, signupInput model.SignupInput) (model.AuthResult, error)
+	Login(ctx context.Context, loginInput model.LoginInput) (*model.AuthResult, error)
+	Signup(ctx context.Context, signupInput model.SignupInput) (*model.AuthResult, error)
 	RefreshAccessToken(ctx context.Context, refreshToken string) (*model.RefreshSuccess, error)
 	CreateWorkoutRoutine(ctx context.Context, routine model.WorkoutRoutineInput) (*model.WorkoutRoutine, error)
 	UpdateWorkoutRoutine(ctx context.Context, workoutRoutine model.UpdateWorkoutRoutineInput) (*model.WorkoutRoutine, error)
@@ -226,26 +222,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "AuthError.message":
-		if e.complexity.AuthError.Message == nil {
+	case "AuthResult.accessToken":
+		if e.complexity.AuthResult.AccessToken == nil {
 			break
 		}
 
-		return e.complexity.AuthError.Message(childComplexity), true
+		return e.complexity.AuthResult.AccessToken(childComplexity), true
 
-	case "AuthSuccess.accessToken":
-		if e.complexity.AuthSuccess.AccessToken == nil {
+	case "AuthResult.refreshToken":
+		if e.complexity.AuthResult.RefreshToken == nil {
 			break
 		}
 
-		return e.complexity.AuthSuccess.AccessToken(childComplexity), true
-
-	case "AuthSuccess.refreshToken":
-		if e.complexity.AuthSuccess.RefreshToken == nil {
-			break
-		}
-
-		return e.complexity.AuthSuccess.RefreshToken(childComplexity), true
+		return e.complexity.AuthResult.RefreshToken(childComplexity), true
 
 	case "Exercise.exerciseRoutine":
 		if e.complexity.Exercise.ExerciseRoutine == nil {
@@ -976,16 +965,10 @@ type SetEntry {
   reps: Int!
 }
 
-type AuthError {
-  message: String!
-}
-
-type AuthSuccess {
+type AuthResult {
   refreshToken: String!
   accessToken: String!
 }
-
-union AuthResult = AuthError | AuthSuccess
 
 type RefreshSuccess {
   accessToken: String!
@@ -1604,52 +1587,8 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _AuthError_message(ctx context.Context, field graphql.CollectedField, obj *model.AuthError) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthError_message(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Message, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_AuthError_message(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AuthError",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _AuthSuccess_refreshToken(ctx context.Context, field graphql.CollectedField, obj *model.AuthSuccess) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthSuccess_refreshToken(ctx, field)
+func (ec *executionContext) _AuthResult_refreshToken(ctx context.Context, field graphql.CollectedField, obj *model.AuthResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AuthResult_refreshToken(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1679,9 +1618,9 @@ func (ec *executionContext) _AuthSuccess_refreshToken(ctx context.Context, field
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_AuthSuccess_refreshToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_AuthResult_refreshToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "AuthSuccess",
+		Object:     "AuthResult",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -1692,8 +1631,8 @@ func (ec *executionContext) fieldContext_AuthSuccess_refreshToken(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _AuthSuccess_accessToken(ctx context.Context, field graphql.CollectedField, obj *model.AuthSuccess) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthSuccess_accessToken(ctx, field)
+func (ec *executionContext) _AuthResult_accessToken(ctx context.Context, field graphql.CollectedField, obj *model.AuthResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AuthResult_accessToken(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1723,9 +1662,9 @@ func (ec *executionContext) _AuthSuccess_accessToken(ctx context.Context, field 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_AuthSuccess_accessToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_AuthResult_accessToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "AuthSuccess",
+		Object:     "AuthResult",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -2178,9 +2117,9 @@ func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.AuthResult)
+	res := resTmp.(*model.AuthResult)
 	fc.Result = res
-	return ec.marshalNAuthResult2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐAuthResult(ctx, field.Selections, res)
+	return ec.marshalNAuthResult2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐAuthResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2190,7 +2129,13 @@ func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, fie
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type AuthResult does not have child fields")
+			switch field.Name {
+			case "refreshToken":
+				return ec.fieldContext_AuthResult_refreshToken(ctx, field)
+			case "accessToken":
+				return ec.fieldContext_AuthResult_accessToken(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AuthResult", field.Name)
 		},
 	}
 	defer func() {
@@ -2233,9 +2178,9 @@ func (ec *executionContext) _Mutation_signup(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.AuthResult)
+	res := resTmp.(*model.AuthResult)
 	fc.Result = res
-	return ec.marshalNAuthResult2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐAuthResult(ctx, field.Selections, res)
+	return ec.marshalNAuthResult2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐAuthResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_signup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2245,7 +2190,13 @@ func (ec *executionContext) fieldContext_Mutation_signup(ctx context.Context, fi
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type AuthResult does not have child fields")
+			switch field.Name {
+			case "refreshToken":
+				return ec.fieldContext_AuthResult_refreshToken(ctx, field)
+			case "accessToken":
+				return ec.fieldContext_AuthResult_accessToken(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AuthResult", field.Name)
 		},
 	}
 	defer func() {
@@ -7430,81 +7381,30 @@ func (ec *executionContext) unmarshalInputWorkoutSessionInput(ctx context.Contex
 
 // region    ************************** interface.gotpl ***************************
 
-func (ec *executionContext) _AuthResult(ctx context.Context, sel ast.SelectionSet, obj model.AuthResult) graphql.Marshaler {
-	switch obj := (obj).(type) {
-	case nil:
-		return graphql.Null
-	case model.AuthError:
-		return ec._AuthError(ctx, sel, &obj)
-	case *model.AuthError:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._AuthError(ctx, sel, obj)
-	case model.AuthSuccess:
-		return ec._AuthSuccess(ctx, sel, &obj)
-	case *model.AuthSuccess:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._AuthSuccess(ctx, sel, obj)
-	default:
-		panic(fmt.Errorf("unexpected type %T", obj))
-	}
-}
-
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
 
-var authErrorImplementors = []string{"AuthError", "AuthResult"}
+var authResultImplementors = []string{"AuthResult"}
 
-func (ec *executionContext) _AuthError(ctx context.Context, sel ast.SelectionSet, obj *model.AuthError) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, authErrorImplementors)
+func (ec *executionContext) _AuthResult(ctx context.Context, sel ast.SelectionSet, obj *model.AuthResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, authResultImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("AuthError")
-		case "message":
-
-			out.Values[i] = ec._AuthError_message(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var authSuccessImplementors = []string{"AuthSuccess", "AuthResult"}
-
-func (ec *executionContext) _AuthSuccess(ctx context.Context, sel ast.SelectionSet, obj *model.AuthSuccess) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, authSuccessImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("AuthSuccess")
+			out.Values[i] = graphql.MarshalString("AuthResult")
 		case "refreshToken":
 
-			out.Values[i] = ec._AuthSuccess_refreshToken(ctx, field, obj)
+			out.Values[i] = ec._AuthResult_refreshToken(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "accessToken":
 
-			out.Values[i] = ec._AuthSuccess_accessToken(ctx, field, obj)
+			out.Values[i] = ec._AuthResult_accessToken(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -8871,6 +8771,10 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // region    ***************************** type.gotpl *****************************
 
 func (ec *executionContext) marshalNAuthResult2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐAuthResult(ctx context.Context, sel ast.SelectionSet, v model.AuthResult) graphql.Marshaler {
+	return ec._AuthResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAuthResult2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐAuthResult(ctx context.Context, sel ast.SelectionSet, v *model.AuthResult) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

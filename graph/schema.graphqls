@@ -79,16 +79,10 @@ type SetEntry {
   reps: Int!
 }
 
-type AuthError {
-  message: String!
-}
-
-type AuthSuccess {
+type AuthResult {
   refreshToken: String!
   accessToken: String!
 }
-
-union AuthResult = AuthError | AuthSuccess
 
 type RefreshSuccess {
   accessToken: String!
