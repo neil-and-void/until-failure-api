@@ -7,8 +7,10 @@ import (
 	"time"
 
 	"github.com/neilZon/workout-logger-api/database"
+	"github.com/neilZon/workout-logger-api/errors"
 	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/middleware"
+	"github.com/neilZon/workout-logger-api/utils"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
@@ -118,30 +120,44 @@ func (r *mutationResolver) DeleteWorkoutSession(ctx context.Context, workoutSess
 
 // WorkoutSessions is the resolver for the workoutSessions field.
 func (r *queryResolver) WorkoutSessions(ctx context.Context, limit int, after *string) (*model.WorkoutSessionConnection, error) {
-	panic("somthi")
-	// u, err := middleware.GetUser(ctx)
-	// if err != nil {
-	// 	return []*model.WorkoutSession{}, err
-	// }
 
-	// dbWorkoutSessions, err := database.GetWorkoutSessions(r.DB, fmt.Sprintf("%d", u.ID))
-	// if err != nil {
-	// 	return []*model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Sessions")
-	// }
+	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.WorkoutSessionConnection{}, err
+	}
 
-	// var workoutSessions []*model.WorkoutSession
-	// for _, ws := range dbWorkoutSessions {
+	if limit <= 0 || limit > 50 {
+		return &model.WorkoutSessionConnection{}, gqlerror.Errorf(errors.GetWorkoutRoutinesError, "limit needs to be between 1 to 50")
+	}
 
-	// 	workoutSession := &model.WorkoutSession{
-	// 		ID:    fmt.Sprintf("%d", ws.ID),
-	// 		Start: ws.Start,
-	// 		End:   ws.End,
-	// 	}
+	cursor := ""
+	if after != nil && *after != "" {
+		cursor = *after
+	}
 
-	// 	workoutSessions = append(workoutSessions, workoutSession)
-	// }
+	dbWorkoutSessions, err := database.GetWorkoutSessions(r.DB, utils.UIntToString(u.ID), cursor, limit)
+	if err != nil {
+		return &model.WorkoutSessionConnection{}, gqlerror.Errorf(errors.GetWorkoutSessionsError)
+	}
 
-	// return workoutSessions, nil
+	var edges []*model.WorkoutSessionEdge
+	for _, workoutSession := range dbWorkoutSessions {
+		edges = append(edges, &model.WorkoutSessionEdge{
+			Cursor: utils.UIntToString(workoutSession.ID),
+			Node: &model.WorkoutSession{
+				ID: utils.UIntToString(workoutSession.ID),
+				Start: workoutSession.Start,
+				End: workoutSession.End,
+			},
+		})
+	}
+
+	return &model.WorkoutSessionConnection{
+		Edges: edges,
+		PageInfo: &model.PageInfo{
+			HasNextPage: true,
+		},
+	}, nil
 }
 
 // WorkoutSession is the resolver for the workoutSession field.

@@ -200,14 +200,15 @@ func GetWorkoutSession(db *gorm.DB, workoutSessionId string) (*WorkoutSession, e
 	return &workoutSession, err
 }
 
-func GetWorkoutSessionOfExercise() error {
-	return nil
-}
-
-func GetWorkoutSessions(db *gorm.DB, userId string) ([]*WorkoutSession, error) {
-	var workoutSessions []*WorkoutSession
-	db.Where("user_id = ?", userId).Find(&workoutSessions)
-	return workoutSessions, nil
+func GetWorkoutSessions(db *gorm.DB, userId string, cursor string, limit int) ([]WorkoutSession, error) {
+	var workoutSessions []WorkoutSession
+	if len(cursor) == 0 {
+		db = db.Where("user_id = ?", userId)
+	} else {
+		db = db.Where("user_id = ? AND id > ?", userId, cursor)
+	}
+	result := db.Order("id").Limit(limit).Find(&workoutSessions)
+	return workoutSessions, result.Error
 }
 
 func GetWorkoutSessionsById(db *gorm.DB, ids []string) (*[]WorkoutSession, error) {
