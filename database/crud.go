@@ -217,6 +217,15 @@ func GetWorkoutSessionsById(db *gorm.DB, ids []string) (*[]WorkoutSession, error
 	return &workoutSessions, err
 }
 
+func GetPreviousWorkoutSessionsByWorkoutRoutineId(db *gorm.DB, workoutRoutineIds string, before time.Time) ([]WorkoutSession, error) {
+	workoutSessions := []WorkoutSession{}
+	err := db.
+		Preload("Exercises").
+		Where("workout_routine_id IN ? AND end < ?", workoutRoutineIds, before).
+		Find(&workoutSessions).Error
+	return workoutSessions, err
+}
+
 func UpdateWorkoutSession(db *gorm.DB, workoutSessionId string, updatedWorkoutSession *WorkoutSession) error {
 	result := db.Model(updatedWorkoutSession).Clauses(clause.Returning{}).Where("id = ?", workoutSessionId).Updates(updatedWorkoutSession)
 	return result.Error
@@ -272,18 +281,6 @@ func GetExercisesByWorkoutSessionId(db *gorm.DB, workoutSessionIds []string) (*[
 	err := db.
 		Where("workout_session_id IN ?", workoutSessionIds).
 		Find(&exercises).Error
-	return &exercises, err
-}
-
-func GetExercisesBeforeDate(db *gorm.DB, workoutSessionId string, date time.Time) (*[]Exercise, error) {
-	exercises := []Exercise{}
-	
-	err := db.
-		Model(&Exercise{}).
-		Joins("LEFT JOIN workout_sessions AS ws ON ws.id = exercises.workout_session_id").
-		Where("ws.end IS NOT NULL AND ws.end < ? AND exercises.workout_session_id = ?", date, workoutSessionId).
-		Find(&exercises).Error
-
 	return &exercises, err
 }
 
