@@ -174,6 +174,10 @@ func (r *queryResolver) WorkoutSession(ctx context.Context, workoutSessionID str
 
 	return &model.WorkoutSession{
 		ID:        fmt.Sprintf("%d", workoutSession.ID),
+		// return workout routine to access in exercise resolver
+		WorkoutRoutine: model.WorkoutRoutine{ 
+			ID: fmt.Sprintf("%d", workoutSession.WorkoutRoutineID),
+		},
 		Start:     workoutSession.Start,
 		End:       workoutSession.End,
 	}, nil

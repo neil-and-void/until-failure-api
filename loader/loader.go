@@ -10,6 +10,5 @@ type Loaders struct {
 	ExerciseRoutineLoader *dataloader.Loader
 	ExerciseRoutineSliceLoader *dataloader.Loader
 	ExerciseSliceLoader *dataloader.Loader
-	PrevExerciseSliceLoader *dataloader.Loader
 	SetEntrySliceLoader        *dataloader.Loader
 }

@@ -276,6 +276,22 @@ func GetExercises(db *gorm.DB, exercises *[]Exercise, workoutSessionId string) e
 	return result.Error
 }
 
+func GetPrevExercisesByWorkoutRoutineId(db *gorm.DB, workoutRoutineId string, before time.Time) ([]Exercise, error) {
+	exercises := []Exercise{}
+	err := db.Raw(`
+		SELECT * from (
+			SELECT exercises.*,
+				ROW_NUMBER() OVER (PARTITION BY exercises.exercise_routine_id ORDER BY workout_sessions.end DESC) AS rows
+			FROM workout_sessions JOIN exercises ON exercises.workout_session_id = workout_sessions.id
+			WHERE workout_sessions.end < ? and workout_sessions."end" IS NOT NULL AND workout_sessions.workout_routine_id = ?
+		) TBLE where TBLE.rows = 1`,
+		before, workoutRoutineId,
+	).Scan(&exercises).Error
+	fmt.Println("err: ", err)
+	fmt.Printf("%+v", exercises)
+	return exercises, err
+}
+
 func GetExercisesByWorkoutSessionId(db *gorm.DB, workoutSessionIds []string) (*[]Exercise, error) {
 	exercises := []Exercise{}
 	err := db.

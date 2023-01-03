@@ -72,20 +72,20 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		const addWorkoutSessionStmnt = `INSERT INTO "workout_sessions" ("created_at","updated_at","deleted_at","start","end","workout_routine_id","user_id") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`
 		mock.ExpectQuery(regexp.QuoteMeta(addWorkoutSessionStmnt)).WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), ws.Start, nil, ws.WorkoutRoutineID, ws.UserID).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(ws.ID))
 
-		const addExerciseStmt = `INSERT INTO "exercises" ("created_at","updated_at","deleted_at","workout_session_id","exercise_routine_id","notes") VALUES ($1,$2,$3,$4,$5,$6),($7,$8,$9,$10,$11,$12) ON CONFLICT ("id") DO UPDATE SET "workout_session_id"="excluded"."workout_session_id" RETURNING "id"`
+		const addExerciseStmt = `INSERT INTO "exercises" ("created_at","updated_at","deleted_at","notes","exercise_routine_id","workout_session_id") VALUES ($1,$2,$3,$4,$5,$6),($7,$8,$9,$10,$11,$12) ON CONFLICT ("id") DO UPDATE SET "workout_session_id"="excluded"."workout_session_id" RETURNING "id"`
 		mock.ExpectQuery(regexp.QuoteMeta(addExerciseStmt)).WithArgs(
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
-			ws.Exercises[0].WorkoutSessionID,
-			ws.Exercises[0].ExerciseRoutineID,
 			ws.Exercises[0].Notes,
+			ws.Exercises[0].ExerciseRoutineID,
+			ws.Exercises[0].WorkoutSessionID,
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
-			ws.Exercises[1].WorkoutSessionID,
-			ws.Exercises[1].ExerciseRoutineID,
 			ws.Exercises[1].Notes,
+			ws.Exercises[1].ExerciseRoutineID,
+			ws.Exercises[1].WorkoutSessionID,
 		).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(ws.Exercises[0].ID).AddRow(ws.Exercises[1].ID))
 
 		const addSetEntries = `INSERT INTO "set_entries" ("created_at","updated_at","deleted_at","weight","reps","exercise_id") VALUES ($1,$2,$3,$4,$5,$6),($7,$8,$9,$10,$11,$12),($13,$14,$15,$16,$17,$18),($19,$20,$21,$22,$23,$24) ON CONFLICT ("id") DO UPDATE SET "exercise_id"="excluded"."exercise_id" RETURNING "id"`
@@ -253,20 +253,20 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), ws.Start, nil, ws.WorkoutRoutineID, ws.UserID).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(ws.ID))
 
-		const addExerciseStmt = `INSERT INTO "exercises" ("created_at","updated_at","deleted_at","workout_session_id","exercise_routine_id","notes") VALUES ($1,$2,$3,$4,$5,$6),($7,$8,$9,$10,$11,$12) ON CONFLICT ("id") DO UPDATE SET "workout_session_id"="excluded"."workout_session_id" RETURNING "id"`
+		const addExerciseStmt = `INSERT INTO "exercises" ("created_at","updated_at","deleted_at","notes","exercise_routine_id","workout_session_id") VALUES ($1,$2,$3,$4,$5,$6),($7,$8,$9,$10,$11,$12) ON CONFLICT ("id") DO UPDATE SET "workout_session_id"="excluded"."workout_session_id" RETURNING "id"`
 		mock.ExpectQuery(regexp.QuoteMeta(addExerciseStmt)).WithArgs(
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
-			ws.Exercises[0].WorkoutSessionID,
-			ws.Exercises[0].ExerciseRoutineID,
 			ws.Exercises[0].Notes,
+			ws.Exercises[0].ExerciseRoutineID,
+			ws.Exercises[0].WorkoutSessionID,
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
 			sqlmock.AnyArg(),
-			ws.Exercises[1].WorkoutSessionID,
-			9879,
 			ws.Exercises[1].Notes,
+			ws.Exercises[1].ExerciseRoutineID,
+			ws.Exercises[1].WorkoutSessionID,
 		).WillReturnError(gorm.ErrInvalidValue)
 
 		mock.ExpectRollback()
@@ -287,7 +287,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 							notes: "This is a note"
 						},
 						{
-							exerciseRoutineId: "9879", 
+							exerciseRoutineId: "4", 
 							setEntries: [
 								{ weight: 225, reps: 8},
 								{ weight: 225, reps: 7},
@@ -327,17 +327,21 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 			}
 		}
 
-		const getWorkoutSessions = `SELECT * FROM "workout_sessions" WHERE user_id = $1 AND "workout_sessions"."deleted_at" IS NULL`
+		const getWorkoutSessions = `SELECT * FROM "workout_sessions" WHERE (user_id = $1 AND id > $2) AND "workout_sessions"."deleted_at" IS NULL ORDER BY id LIMIT 2`
 		mock.ExpectQuery(regexp.QuoteMeta(getWorkoutSessions)).
-			WithArgs(fmt.Sprintf("%d", u.ID)).
+			WithArgs(utils.UIntToString(u.ID), utils.UIntToString(ws.ID)).
 			WillReturnRows(workoutSessionRow)
 
-		const getExercises = `SELECT * FROM "exercises" WHERE "exercises"."workout_session_id" = $1 AND "exercises"."deleted_at" IS NULL`
+		// todo: workout routine
+
+		const getExercises = `SELECT * FROM "exercises" WHERE id IN ($1,$2) AND "exercises"."deleted_at" IS NULL`
 		mock.ExpectQuery(regexp.QuoteMeta(getExercises)).
-			WithArgs(ws.ID).
+			WithArgs(utils.UIntToString(ws.ID)).
 			WillReturnRows(exerciseRows)
 
-		const getSetEntries = `SELECT * FROM "set_entries" WHERE "set_entries"."exercise_id" IN ($1,$2) AND "set_entries"."deleted_at" IS NULL`
+		// todo: exercise routines
+
+		const getSetEntries = `SELECT * FROM "set_entries" WHERE exercise_id IN ($1,$2) AND "set_entries"."deleted_at" IS NULL`
 		mock.ExpectQuery(regexp.QuoteMeta(getSetEntries)).
 			WithArgs(ws.Exercises[0].ID, ws.Exercises[1].ID).
 			WillReturnRows(setEntryRows)
@@ -345,16 +349,35 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		var resp GetWorkoutSession
 		c.MustPost(`
 			query WorkoutSessions {
-				workoutSessions {
-					id
-					workoutRoutineId
-					start
-					exercises {
-						exerciseRoutineId
-						sets {
-							weight
-							reps
+				workoutSessions(limit: 2, after: "3") {
+					edges {
+						node {
+							id
+							start
+							end
+							workoutRoutine {
+								id
+								name
+							}
+							exercises {
+								id
+								exerciseRoutine {
+									id
+									name
+									sets
+									reps
+								}
+								sets {
+									id
+									weight
+									reps
+								}
+								notes
+							}
 						}
+					}
+					pageInfo {
+						hasNextPage
 					}
 				}
 			}`,

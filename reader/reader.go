@@ -188,10 +188,6 @@ func (e *ExerciseSliceReader) GetExerciseSlices(ctx context.Context, keys datalo
 	return output
 }
 
-func (p *PrevExerciseSliceReader) GetPrevExerciseSlices(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	panic("unimplemented")
-}
-
 func (s *SetEntrySliceReader) GetSetEntrySlices(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {	
 	exerciseIds := []string{}
 	for _, key := range keys {

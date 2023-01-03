@@ -70,7 +70,6 @@ func NewLoaders(gormDB *gorm.DB) *loader.Loaders {
 	workoutRoutineReader := &reader.WorkoutRoutineReader{DB: gormDB}
 	exerciseRoutineSliceLoader := &reader.ExerciseRoutineSliceReader{DB: gormDB}
 	exerciseSliceLoader := &reader.ExerciseSliceReader{DB: gormDB}
-	prevExerciseSliceLoader := &reader.PrevExerciseSliceReader{DB: gormDB}
 
 	loaders := &loader.Loaders{
 		ExerciseRoutineLoader: dataloader.NewBatchedLoader(exerciseRoutineReader.GetExerciseRoutines),
@@ -78,7 +77,6 @@ func NewLoaders(gormDB *gorm.DB) *loader.Loaders {
 		WorkoutRoutineLoader:  dataloader.NewBatchedLoader(workoutRoutineReader.GetWorkoutRoutines),
 		ExerciseRoutineSliceLoader: dataloader.NewBatchedLoader(exerciseRoutineSliceLoader.GetExerciseRoutineSlices),
 		ExerciseSliceLoader: dataloader.NewBatchedLoader(exerciseSliceLoader.GetExerciseSlices),
-		PrevExerciseSliceLoader: dataloader.NewBatchedLoader(prevExerciseSliceLoader.GetPrevExerciseSlices),
 	}
 	return loaders
 }

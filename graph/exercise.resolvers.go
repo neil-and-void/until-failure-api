@@ -189,18 +189,19 @@ func (r *workoutSessionResolver) PrevExercises(ctx context.Context, obj *model.W
 		return []*model.Exercise{}, nil
 	}
 
-	dbExercises, err := database.GetExercisesBeforeDate(r.DB, obj.ID, *obj.End)
+	// TODO: 1 + (n+m) issue if we query for all workoutSessions, might need to fix
+	dbExercises, err := database.GetPrevExercisesByWorkoutRoutineId(r.DB, obj.WorkoutRoutine.ID, obj.Start)
 	if err != nil {
 		return []*model.Exercise{}, gqlerror.Errorf("Error Getting Exercises")
 	}
 	
 	var exercises []*model.Exercise
-	for _, e := range *dbExercises {
+	for _, e := range dbExercises {
 		exercises = append(exercises, &model.Exercise{
 			ID:    fmt.Sprintf("%d", e.ID),
 			Notes: e.Notes,
 		})
 	}
-
+	
 	return exercises, nil
 }
