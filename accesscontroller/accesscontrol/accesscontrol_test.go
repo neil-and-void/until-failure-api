@@ -87,7 +87,7 @@ func TestAccessControl(t *testing.T) {
 		userId := fmt.Sprintf("%d", ws.UserID)
 		badUserId := 299
 		workoutSessionId := fmt.Sprintf("%d", ws.ID)
-	
+
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, badUserId, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)

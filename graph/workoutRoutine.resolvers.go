@@ -77,7 +77,7 @@ func (r *queryResolver) WorkoutRoutines(ctx context.Context, limit int, after *s
 	if after != nil && *after != "" {
 		cursor = *after
 	}
-	
+
 	dbWorkoutRoutines, err = database.GetWorkoutRoutines(r.DB, utils.UIntToString(u.ID), cursor, limit)
 
 	if err != nil {

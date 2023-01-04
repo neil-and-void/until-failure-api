@@ -146,7 +146,6 @@ func TestSetEntryResolvers(t *testing.T) {
 		}
 	})
 
-
 	t.Run("Add Set Entry Too Much Reps", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
 		acs := accesscontrol.NewAccessControllerService(gormDB)
@@ -643,7 +642,6 @@ func TestSetEntryResolvers(t *testing.T) {
 			panic(err)
 		}
 	})
-
 
 	t.Run("Update Set Error Updating Set", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()

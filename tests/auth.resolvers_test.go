@@ -40,7 +40,6 @@ type SignupResp struct {
 	}
 }
 
-
 func TestAuthResolvers(t *testing.T) {
 	t.Parallel()
 

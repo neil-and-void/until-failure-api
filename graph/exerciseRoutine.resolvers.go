@@ -113,7 +113,7 @@ func (r *exerciseResolver) ExerciseRoutine(ctx context.Context, obj *model.Exerc
 }
 
 // ExerciseRoutines is the resolver for the exerciseRoutines field.
-func (r *workoutRoutineResolver) ExerciseRoutines(ctx context.Context, obj *model.WorkoutRoutine) ([]*model.ExerciseRoutine, error) {	
+func (r *workoutRoutineResolver) ExerciseRoutines(ctx context.Context, obj *model.WorkoutRoutine) ([]*model.ExerciseRoutine, error) {
 	loaders := middleware.GetLoaders(ctx)
 	thunk := loaders.ExerciseRoutineSliceLoader.Load(ctx, dataloader.StringKey(obj.ID))
 	result, err := thunk()

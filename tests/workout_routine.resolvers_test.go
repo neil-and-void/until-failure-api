@@ -39,13 +39,13 @@ type GetWorkoutRoutineResp struct {
 	WorkoutRoutine struct {
 		ID               string
 		Name             string
-		Active bool
+		Active           bool
 		ExerciseRoutines []struct {
-			ID   string
-			Name string
+			ID     string
+			Name   string
 			Active bool
-			Sets int
-			Reps int
+			Sets   int
+			Reps   int
 		}
 	}
 }
@@ -285,7 +285,6 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt, wr.UserID, wr.Active)
 		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(utils.UIntToString(wr.ID)).WillReturnRows(workoutRoutineRow)
 
-
 		workoutRoutineRow = sqlmock.
 			NewRows([]string{"id", "name", "created_at", "deleted_at", "updated_at", "user_id", "active"}).
 			AddRow(wr.ID, wr.Name, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt, wr.UserID, wr.Active)
@@ -327,7 +326,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 		}
 	})
 
-	t.Run("Get Workout Routine No Token", func(t *testing.T) {	
+	t.Run("Get Workout Routine No Token", func(t *testing.T) {
 	})
 
 	t.Run("Update Workout Routine", func(t *testing.T) {
@@ -453,7 +452,7 @@ func TestWorkoutRoutineResolvers(t *testing.T) {
 			wr.Name,
 			wr.ExerciseRoutines[0].ID,
 			wr.ExerciseRoutines[0].Name,
-			wr.ExerciseRoutines[0].Sets, 
+			wr.ExerciseRoutines[0].Sets,
 			wr.ExerciseRoutines[0].Reps,
 		)
 		err := c.Post(mutation, &resp)
