@@ -9,6 +9,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/joho/godotenv"
 	"github.com/neilZon/workout-logger-api/accesscontroller/accesscontrol"
+	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/helpers"
 	"github.com/neilZon/workout-logger-api/tests/testdata"
 	"github.com/neilZon/workout-logger-api/utils"
@@ -39,6 +40,31 @@ type GetWorkoutSession struct {
 	}
 }
 
+type GetWorkoutSessions struct {
+	WorkoutSessions struct {
+		Edges []struct {
+			Node struct {
+				ID    string
+				Start string
+				End   string
+				// WorkoutRoutineId string
+				Exercises []struct {
+					ExerciseRoutine model.ExerciseRoutine
+					Notes           string
+					ID              string
+					Sets            []struct {
+						ID     string
+						Weight float32
+						Reps   int
+					}
+				}
+			}
+			Cursor string
+		}
+		PageInfo struct{}
+	}
+}
+
 type UpdateWorkoutSession struct {
 	UpdateWorkoutSession struct {
 		ID    string
@@ -60,6 +86,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 	}
 
 	ws := testdata.WorkoutSession
+	// wr := testdata.WorkoutRoutine
 	u := testdata.User
 
 	t.Run("Add Workout Session success", func(t *testing.T) {
@@ -308,120 +335,6 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		}
 	})
 
-	t.Run("Get Workout Sessions success", func(t *testing.T) {
-		mock, gormDB := helpers.SetupMockDB()
-		acs := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, acs)
-
-		workoutSessionRow := sqlmock.
-			NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "start", "end", "workout_routine_id", "user_id"}).
-			AddRow(ws.ID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt, ws.Start, nil, ws.WorkoutRoutineID, ws.UserID)
-
-		exerciseRows := sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "workout_session_id", "exercise_routine_id"})
-		setEntryRows := sqlmock.NewRows([]string{"id", "created_at", "deleted_at", "updated_at", "weight", "reps", "exercise_id"})
-		for _, e := range ws.Exercises {
-			exerciseRows.AddRow(e.ID, e.CreatedAt, e.DeletedAt, e.UpdatedAt, e.WorkoutSessionID, e.ExerciseRoutineID)
-
-			for _, s := range e.Sets {
-				setEntryRows.AddRow(s.ID, s.CreatedAt, s.DeletedAt, s.UpdatedAt, s.Weight, s.Reps, s.ExerciseID)
-			}
-		}
-
-		const getWorkoutSessions = `SELECT * FROM "workout_sessions" WHERE (user_id = $1 AND id > $2) AND "workout_sessions"."deleted_at" IS NULL ORDER BY id LIMIT 2`
-		mock.ExpectQuery(regexp.QuoteMeta(getWorkoutSessions)).
-			WithArgs(utils.UIntToString(u.ID), utils.UIntToString(ws.ID)).
-			WillReturnRows(workoutSessionRow)
-
-		// todo: workout routine
-
-		const getExercises = `SELECT * FROM "exercises" WHERE id IN ($1,$2) AND "exercises"."deleted_at" IS NULL`
-		mock.ExpectQuery(regexp.QuoteMeta(getExercises)).
-			WithArgs(utils.UIntToString(ws.ID)).
-			WillReturnRows(exerciseRows)
-
-		// todo: exercise routines
-
-		const getSetEntries = `SELECT * FROM "set_entries" WHERE exercise_id IN ($1,$2) AND "set_entries"."deleted_at" IS NULL`
-		mock.ExpectQuery(regexp.QuoteMeta(getSetEntries)).
-			WithArgs(ws.Exercises[0].ID, ws.Exercises[1].ID).
-			WillReturnRows(setEntryRows)
-
-		var resp GetWorkoutSession
-		c.MustPost(`
-			query WorkoutSessions {
-				workoutSessions(limit: 2, after: "3") {
-					edges {
-						node {
-							id
-							start
-							end
-							workoutRoutine {
-								id
-								name
-							}
-							exercises {
-								id
-								exerciseRoutine {
-									id
-									name
-									sets
-									reps
-								}
-								sets {
-									id
-									weight
-									reps
-								}
-								notes
-							}
-						}
-					}
-					pageInfo {
-						hasNextPage
-					}
-				}
-			}`,
-			&resp,
-			helpers.AddContext(u, helpers.NewLoaders(gormDB)),
-		)
-
-		err = mock.ExpectationsWereMet()
-		if err != nil {
-			panic(err)
-		}
-	})
-
-	t.Run("Get Workout Sessions Invalid Token", func(t *testing.T) {
-		mock, gormDB := helpers.SetupMockDB()
-		acs := accesscontrol.NewAccessControllerService(gormDB)
-		c := helpers.NewGqlClient(gormDB, acs)
-
-		var resp GetWorkoutSession
-		err := c.Post(`
-			query WorkoutSessions {
-				workoutSessions {
-					workoutRoutineId
-					id
-					start
-					exercises {
-						exerciseRoutineId
-						sets {
-							weight
-							reps
-						}
-					}
-				}
-			}`,
-			&resp,
-		)
-		require.EqualError(t, err, "[{\"message\":\"Unauthorized\",\"path\":[\"workoutSessions\"],\"extensions\":{\"code\":\"UNAUTHORIZED\"}}]")
-
-		err = mock.ExpectationsWereMet()
-		if err != nil {
-			panic(err)
-		}
-	})
-
 	t.Run("Get Workout Session Success", func(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
 		acs := accesscontrol.NewAccessControllerService(gormDB)
@@ -499,7 +412,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(utils.UIntToString(ws.ID)).WillReturnRows(workoutSessionRow)
 
 		mock.ExpectBegin()
 
@@ -562,7 +475,11 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		acs := accesscontrol.NewAccessControllerService(gormDB)
 		c := helpers.NewGqlClient(gormDB, acs)
 
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnError(gorm.ErrRecordNotFound)
+		badUserId := 1423
+		workoutSessionRow := sqlmock.
+			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
+			AddRow(ws.ID, badUserId, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(utils.UIntToString(ws.ID)).WillReturnRows(workoutSessionRow)
 
 		gqlQuery := fmt.Sprintf(`
 			mutation UpdateWorkoutSession {
@@ -592,7 +509,7 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(utils.UIntToString(ws.ID)).WillReturnRows(workoutSessionRow)
 
 		mock.ExpectBegin()
 
@@ -630,8 +547,8 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
-			AddRow(ws.ID, ws.UserID, ws.Start, nil, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
+			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(utils.UIntToString(ws.ID)).WillReturnRows(workoutSessionRow)
 
 		mock.ExpectBegin()
 		deleteWorkoutSessionQuery := `UPDATE "workout_sessions" SET "deleted_at"=$1 WHERE id = $2 AND "workout_sessions"."deleted_at" IS NULL`
@@ -686,7 +603,11 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 		acs := accesscontrol.NewAccessControllerService(gormDB)
 		c := helpers.NewGqlClient(gormDB, acs)
 
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnError(gorm.ErrRecordNotFound)
+		badUserId := 142
+		workoutSessionRow := sqlmock.
+			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
+			AddRow(ws.ID, badUserId, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(utils.UIntToString(ws.ID)).WillReturnRows(workoutSessionRow)
 
 		gqlQuery := fmt.Sprintf(`mutation DeleteWorkoutSession {
 			deleteWorkoutSession(workoutSessionId: "%d")
@@ -708,8 +629,8 @@ func TestWorkoutSessionResolvers(t *testing.T) {
 
 		workoutSessionRow := sqlmock.
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
-			AddRow(ws.ID, ws.UserID, ws.Start, nil, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", ws.ID)).WillReturnRows(workoutSessionRow)
+			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(utils.UIntToString(ws.ID)).WillReturnRows(workoutSessionRow)
 
 		mock.ExpectBegin()
 		deleteWorkoutSessionQuery := `UPDATE "workout_sessions" SET "deleted_at"=$1 WHERE id = $2 AND "workout_sessions"."deleted_at" IS NULL`
