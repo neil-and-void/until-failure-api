@@ -2,7 +2,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -61,7 +60,7 @@ func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.
 		return "", gqlerror.Errorf("Error Adding Workout Session")
 	}
 
-	return fmt.Sprintf("%d", ws.ID), nil
+	return utils.UIntToString(ws.ID), nil
 }
 
 // UpdateWorkoutSession is the resolver for the updateWorkoutSession field.
@@ -71,7 +70,7 @@ func (r *mutationResolver) UpdateWorkoutSession(ctx context.Context, workoutSess
 		return &model.UpdatedWorkoutSession{}, err
 	}
 
-	userId := fmt.Sprintf("%d", u.ID)
+	userId := utils.UIntToString(u.ID)
 	err = r.ACS.CanAccessWorkoutSession(userId, workoutSessionID)
 	if err != nil {
 		return &model.UpdatedWorkoutSession{}, gqlerror.Errorf("Error Updating Workout Session: Access Denied")
@@ -91,7 +90,7 @@ func (r *mutationResolver) UpdateWorkoutSession(ctx context.Context, workoutSess
 	}
 
 	return &model.UpdatedWorkoutSession{
-		ID:    fmt.Sprintf("%d", updatedWorkoutSession.ID),
+		ID:    utils.UIntToString(updatedWorkoutSession.ID),
 		Start: updatedWorkoutSession.Start,
 		End:   updatedWorkoutSession.End,
 	}, nil
@@ -104,7 +103,7 @@ func (r *mutationResolver) DeleteWorkoutSession(ctx context.Context, workoutSess
 		return 0, err
 	}
 
-	userId := fmt.Sprintf("%d", u.ID)
+	userId := utils.UIntToString(u.ID)
 	err = r.ACS.CanAccessWorkoutSession(userId, workoutSessionID)
 	if err != nil {
 		return 0, gqlerror.Errorf("Error Deleting Workout Session: Access Denied")
@@ -120,7 +119,6 @@ func (r *mutationResolver) DeleteWorkoutSession(ctx context.Context, workoutSess
 
 // WorkoutSessions is the resolver for the workoutSessions field.
 func (r *queryResolver) WorkoutSessions(ctx context.Context, limit int, after *string) (*model.WorkoutSessionConnection, error) {
-
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
 		return &model.WorkoutSessionConnection{}, err
@@ -146,8 +144,12 @@ func (r *queryResolver) WorkoutSessions(ctx context.Context, limit int, after *s
 			Cursor: utils.UIntToString(workoutSession.ID),
 			Node: &model.WorkoutSession{
 				ID: utils.UIntToString(workoutSession.ID),
+				// return workout routine to access in exercise resolver
+				WorkoutRoutine: model.WorkoutRoutine{
+					ID: utils.UIntToString(workoutSession.WorkoutRoutineID),
+				},
 				Start: workoutSession.Start,
-				End: workoutSession.End,
+				End:   workoutSession.End,
 			},
 		})
 	}
@@ -162,23 +164,23 @@ func (r *queryResolver) WorkoutSessions(ctx context.Context, limit int, after *s
 
 // WorkoutSession is the resolver for the workoutSession field.
 func (r *queryResolver) WorkoutSession(ctx context.Context, workoutSessionID string) (*model.WorkoutSession, error) {
-	_, err := middleware.GetUser(ctx)
+	u, err := middleware.GetUser(ctx)
 	if err != nil {
 		return &model.WorkoutSession{}, err
 	}
 
-	workoutSession, err := database.GetWorkoutSession(r.DB, workoutSessionID)
+	workoutSession, err := database.GetUsersWorkoutSession(r.DB, workoutSessionID, utils.UIntToString(u.ID))
 	if err != nil {
 		return &model.WorkoutSession{}, gqlerror.Errorf("Error Getting Workout Session: Access Denied")
 	}
 
 	return &model.WorkoutSession{
-		ID:        fmt.Sprintf("%d", workoutSession.ID),
+		ID: utils.UIntToString(workoutSession.ID),
 		// return workout routine to access in exercise resolver
-		WorkoutRoutine: model.WorkoutRoutine{ 
-			ID: fmt.Sprintf("%d", workoutSession.WorkoutRoutineID),
+		WorkoutRoutine: model.WorkoutRoutine{
+			ID: utils.UIntToString(workoutSession.WorkoutRoutineID),
 		},
-		Start:     workoutSession.Start,
-		End:       workoutSession.End,
+		Start: workoutSession.Start,
+		End:   workoutSession.End,
 	}, nil
 }
