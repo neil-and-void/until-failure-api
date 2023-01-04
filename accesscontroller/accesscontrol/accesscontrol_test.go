@@ -9,7 +9,6 @@ import (
 	"github.com/neilZon/workout-logger-api/helpers"
 	"github.com/neilZon/workout-logger-api/tests/testdata"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 func TestAccessControl(t *testing.T) {
@@ -26,8 +25,7 @@ func TestAccessControl(t *testing.T) {
 			NewRows([]string{"id", "name", "user_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(wr.ID, wr.Name, wr.UserID, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt)
 
-		const userQuery = `SELECT * FROM "workout_routines" WHERE (user_id = $1 AND id = $2) AND "workout_routines"."deleted_at" IS NULL`
-		mock.ExpectQuery(regexp.QuoteMeta(userQuery)).WithArgs(userId, workoutRoutineId).WillReturnRows(workoutRoutineRow)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(workoutRoutineId).WillReturnRows(workoutRoutineRow)
 
 		ac := &AccessController{DB: gormDB}
 		err := ac.CanAccessWorkoutRoutine(userId, workoutRoutineId)
@@ -43,9 +41,13 @@ func TestAccessControl(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
 
 		userId := fmt.Sprintf("%d", wr.UserID)
+		badUserId := 43
 		workoutRoutineId := fmt.Sprintf("%d", wr.ID)
+		workoutRoutineRow := sqlmock.
+			NewRows([]string{"id", "name", "user_id", "created_at", "deleted_at", "updated_at"}).
+			AddRow(wr.ID, wr.Name, badUserId, wr.CreatedAt, wr.DeletedAt, wr.UpdatedAt)
 
-		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(userId, workoutRoutineId).WillReturnError(gorm.ErrRecordNotFound)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutRoutineAccessQuery)).WithArgs(workoutRoutineId).WillReturnRows(workoutRoutineRow)
 
 		ac := &AccessController{DB: gormDB}
 		err := ac.CanAccessWorkoutRoutine(userId, workoutRoutineId)
@@ -67,8 +69,7 @@ func TestAccessControl(t *testing.T) {
 			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
 			AddRow(ws.ID, ws.UserID, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
 
-		const workoutSessionQuery = `SELECT * FROM "workout_sessions" WHERE (user_id = $1 AND id = $2) AND "workout_sessions"."deleted_at" IS NULL ORDER BY "workout_sessions"."id" LIMIT 1`
-		mock.ExpectQuery(regexp.QuoteMeta(workoutSessionQuery)).WithArgs(userId, workoutSessionId).WillReturnRows(workoutSessionRow)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(workoutSessionId).WillReturnRows(workoutSessionRow)
 
 		ac := &AccessController{DB: gormDB}
 		err := ac.CanAccessWorkoutSession(userId, workoutSessionId)
@@ -84,10 +85,14 @@ func TestAccessControl(t *testing.T) {
 		mock, gormDB := helpers.SetupMockDB()
 
 		userId := fmt.Sprintf("%d", ws.UserID)
+		badUserId := 299
 		workoutSessionId := fmt.Sprintf("%d", ws.ID)
+	
+		workoutSessionRow := sqlmock.
+			NewRows([]string{"id", "user_id", "start", "end", "workout_routine_id", "created_at", "deleted_at", "updated_at"}).
+			AddRow(ws.ID, badUserId, ws.Start, ws.End, ws.WorkoutRoutineID, ws.CreatedAt, ws.DeletedAt, ws.UpdatedAt)
 
-		const workoutSessionQuery = `SELECT * FROM "workout_sessions" WHERE (user_id = $1 AND id = $2) AND "workout_sessions"."deleted_at" IS NULL ORDER BY "workout_sessions"."id" LIMIT 1`
-		mock.ExpectQuery(regexp.QuoteMeta(workoutSessionQuery)).WithArgs(userId, workoutSessionId).WillReturnError(gorm.ErrRecordNotFound)
+		mock.ExpectQuery(regexp.QuoteMeta(helpers.WorkoutSessionAccessQuery)).WithArgs(workoutSessionId).WillReturnRows(workoutSessionRow)
 
 		ac := &AccessController{DB: gormDB}
 		err := ac.CanAccessWorkoutSession(userId, workoutSessionId)
