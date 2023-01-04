@@ -175,16 +175,6 @@ func (r *workoutSessionResolver) Exercises(ctx context.Context, obj *model.Worko
 
 // PrevExercises is the resolver for the prevExercises field.
 func (r *workoutSessionResolver) PrevExercises(ctx context.Context, obj *model.WorkoutSession) ([]*model.Exercise, error) {
-	u, err := middleware.GetUser(ctx)
-	if err != nil {
-		return []*model.Exercise{}, err
-	}
-
-	err = r.ACS.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), obj.ID)
-	if err != nil {
-		return []*model.Exercise{}, gqlerror.Errorf("Error Getting Exercises: Access Denied")
-	}
-
 	if obj.End == nil {
 		return []*model.Exercise{}, nil
 	}
@@ -194,7 +184,7 @@ func (r *workoutSessionResolver) PrevExercises(ctx context.Context, obj *model.W
 	if err != nil {
 		return []*model.Exercise{}, gqlerror.Errorf("Error Getting Exercises")
 	}
-	
+
 	var exercises []*model.Exercise
 	for _, e := range dbExercises {
 		exercises = append(exercises, &model.Exercise{
@@ -202,6 +192,6 @@ func (r *workoutSessionResolver) PrevExercises(ctx context.Context, obj *model.W
 			Notes: e.Notes,
 		})
 	}
-	
+
 	return exercises, nil
 }
