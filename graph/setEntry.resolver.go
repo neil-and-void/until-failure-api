@@ -9,25 +9,26 @@ import (
 	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/middleware"
+	"github.com/neilZon/workout-logger-api/utils"
 	"github.com/neilZon/workout-logger-api/validator"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"gorm.io/gorm"
 )
 
 // AddSet is the resolver for the addSet field.
-func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *model.SetEntryInput) (string, error) {
+func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set model.SetEntryInput) (*model.SetEntry, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return "", err
+		return &model.SetEntry{}, err
 	}
 
-	if err := validator.SetEntryInputIsValid(set); err != nil {
-		return "", err
+	if err := validator.SetEntryInputIsValid(&set); err != nil {
+		return &model.SetEntry{}, err
 	}
 
 	exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, 64)
 	if err != nil {
-		return "", gqlerror.Errorf("Error Adding Set: Invalid Exercise ID")
+		return &model.SetEntry{}, gqlerror.Errorf("Error Adding Set: Invalid Exercise ID")
 	}
 	exercise := database.Exercise{
 		Model: gorm.Model{
@@ -36,11 +37,11 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *m
 	}
 	err = database.GetExercise(r.DB, &exercise, false)
 	if err != nil {
-		return "", gqlerror.Errorf("Error Adding Set: %s", err)
+		return &model.SetEntry{}, gqlerror.Errorf("Error Adding Set: %s", err)
 	}
 	err = r.ACS.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", exercise.WorkoutSessionID))
 	if err != nil {
-		return "", gqlerror.Errorf("Error Adding Set: Access Denied")
+		return &model.SetEntry{}, gqlerror.Errorf("Error Adding Set: Access Denied")
 	}
 
 	dbSet := database.SetEntry{
@@ -51,10 +52,14 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set *m
 	err = database.AddSet(r.DB, &dbSet)
 	if err != nil {
 		fmt.Println(err)
-		return "", gqlerror.Errorf("Error Adding Set")
+		return &model.SetEntry{}, gqlerror.Errorf("Error Adding Set")
 	}
 
-	return fmt.Sprintf("%d", dbSet.ID), nil
+	return &model.SetEntry{
+		ID:     utils.UIntToString(dbSet.ID),
+		Weight: float64(dbSet.Weight),
+		Reps:   int(dbSet.Reps),
+	}, nil
 }
 
 // Sets is the resolver for the sets field.

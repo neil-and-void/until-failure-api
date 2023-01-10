@@ -71,7 +71,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		AddExercise           func(childComplexity int, workoutSessionID string, exercise model.ExerciseInput) int
 		AddExerciseRoutine    func(childComplexity int, workoutRoutineID string, exerciseRoutine model.ExerciseRoutineInput) int
-		AddSet                func(childComplexity int, exerciseID string, set *model.SetEntryInput) int
+		AddSet                func(childComplexity int, exerciseID string, set model.SetEntryInput) int
 		AddWorkoutSession     func(childComplexity int, workout model.WorkoutSessionInput) int
 		CreateWorkoutRoutine  func(childComplexity int, routine model.WorkoutRoutineInput) int
 		DeleteExercise        func(childComplexity int, exerciseID string) int
@@ -177,15 +177,15 @@ type MutationResolver interface {
 	CreateWorkoutRoutine(ctx context.Context, routine model.WorkoutRoutineInput) (*model.WorkoutRoutine, error)
 	UpdateWorkoutRoutine(ctx context.Context, workoutRoutine model.UpdateWorkoutRoutineInput) (*model.WorkoutRoutine, error)
 	DeleteWorkoutRoutine(ctx context.Context, workoutRoutineID string) (int, error)
-	AddExerciseRoutine(ctx context.Context, workoutRoutineID string, exerciseRoutine model.ExerciseRoutineInput) (string, error)
+	AddExerciseRoutine(ctx context.Context, workoutRoutineID string, exerciseRoutine model.ExerciseRoutineInput) (*model.ExerciseRoutine, error)
 	DeleteExerciseRoutine(ctx context.Context, exerciseRoutineID string) (int, error)
-	AddWorkoutSession(ctx context.Context, workout model.WorkoutSessionInput) (string, error)
+	AddWorkoutSession(ctx context.Context, workout model.WorkoutSessionInput) (*model.WorkoutSession, error)
 	UpdateWorkoutSession(ctx context.Context, workoutSessionID string, updateWorkoutSessionInput model.UpdateWorkoutSessionInput) (*model.UpdatedWorkoutSession, error)
 	DeleteWorkoutSession(ctx context.Context, workoutSessionID string) (int, error)
-	AddExercise(ctx context.Context, workoutSessionID string, exercise model.ExerciseInput) (string, error)
+	AddExercise(ctx context.Context, workoutSessionID string, exercise model.ExerciseInput) (*model.Exercise, error)
 	UpdateExercise(ctx context.Context, exerciseID string, exercise model.UpdateExerciseInput) (*model.UpdatedExercise, error)
 	DeleteExercise(ctx context.Context, exerciseID string) (int, error)
-	AddSet(ctx context.Context, exerciseID string, set *model.SetEntryInput) (string, error)
+	AddSet(ctx context.Context, exerciseID string, set model.SetEntryInput) (*model.SetEntry, error)
 	UpdateSet(ctx context.Context, setID string, set model.UpdateSetEntryInput) (*model.SetEntry, error)
 	DeleteSet(ctx context.Context, setID string) (int, error)
 }
@@ -333,7 +333,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddSet(childComplexity, args["exerciseId"].(string), args["set"].(*model.SetEntryInput)), true
+		return e.complexity.Mutation.AddSet(childComplexity, args["exerciseId"].(string), args["set"].(model.SetEntryInput)), true
 
 	case "Mutation.addWorkoutSession":
 		if e.complexity.Mutation.AddWorkoutSession == nil {
@@ -1072,10 +1072,10 @@ type Mutation {
   addExerciseRoutine(
     workoutRoutineId: ID!
     exerciseRoutine: ExerciseRoutineInput!
-  ): ID!
+  ): ExerciseRoutine!
   deleteExerciseRoutine(exerciseRoutineId: ID!): Int!
 
-  addWorkoutSession(workout: WorkoutSessionInput!): ID!
+  addWorkoutSession(workout: WorkoutSessionInput!): WorkoutSession!
   updateWorkoutSession(
     workoutSessionId: ID!
     updateWorkoutSessionInput: UpdateWorkoutSessionInput!
@@ -1083,14 +1083,14 @@ type Mutation {
   deleteWorkoutSession(workoutSessionId: ID!): Int!
 
   # addImpromptuExercise(workoutSession, exerciseRoutine:{sets, reps, name, workoutRoutineId}) for later
-  addExercise(workoutSessionId: ID!, exercise: ExerciseInput!): ID!
+  addExercise(workoutSessionId: ID!, exercise: ExerciseInput!): Exercise!
   updateExercise(
     exerciseId: ID!
     exercise: UpdateExerciseInput!
   ): UpdatedExercise!
   deleteExercise(exerciseId: ID!): Int!
 
-  addSet(exerciseId: ID!, set: SetEntryInput): ID!
+  addSet(exerciseId: ID!, set: SetEntryInput!): SetEntry!
   updateSet(setId: ID!, set: UpdateSetEntryInput!): SetEntry!
   deleteSet(setId: ID!): Int!
 }
@@ -1162,10 +1162,10 @@ func (ec *executionContext) field_Mutation_addSet_args(ctx context.Context, rawA
 		}
 	}
 	args["exerciseId"] = arg0
-	var arg1 *model.SetEntryInput
+	var arg1 model.SetEntryInput
 	if tmp, ok := rawArgs["set"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("set"))
-		arg1, err = ec.unmarshalOSetEntryInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntryInput(ctx, tmp)
+		arg1, err = ec.unmarshalNSetEntryInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntryInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2483,9 +2483,9 @@ func (ec *executionContext) _Mutation_addExerciseRoutine(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.ExerciseRoutine)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNExerciseRoutine2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutine(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_addExerciseRoutine(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2495,7 +2495,19 @@ func (ec *executionContext) fieldContext_Mutation_addExerciseRoutine(ctx context
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ExerciseRoutine_id(ctx, field)
+			case "active":
+				return ec.fieldContext_ExerciseRoutine_active(ctx, field)
+			case "name":
+				return ec.fieldContext_ExerciseRoutine_name(ctx, field)
+			case "sets":
+				return ec.fieldContext_ExerciseRoutine_sets(ctx, field)
+			case "reps":
+				return ec.fieldContext_ExerciseRoutine_reps(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ExerciseRoutine", field.Name)
 		},
 	}
 	defer func() {
@@ -2593,9 +2605,9 @@ func (ec *executionContext) _Mutation_addWorkoutSession(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.WorkoutSession)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNWorkoutSession2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutSession(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_addWorkoutSession(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2605,7 +2617,21 @@ func (ec *executionContext) fieldContext_Mutation_addWorkoutSession(ctx context.
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_WorkoutSession_id(ctx, field)
+			case "start":
+				return ec.fieldContext_WorkoutSession_start(ctx, field)
+			case "end":
+				return ec.fieldContext_WorkoutSession_end(ctx, field)
+			case "workoutRoutine":
+				return ec.fieldContext_WorkoutSession_workoutRoutine(ctx, field)
+			case "exercises":
+				return ec.fieldContext_WorkoutSession_exercises(ctx, field)
+			case "prevExercises":
+				return ec.fieldContext_WorkoutSession_prevExercises(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type WorkoutSession", field.Name)
 		},
 	}
 	defer func() {
@@ -2766,9 +2792,9 @@ func (ec *executionContext) _Mutation_addExercise(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.Exercise)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNExercise2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExercise(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_addExercise(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2778,7 +2804,17 @@ func (ec *executionContext) fieldContext_Mutation_addExercise(ctx context.Contex
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Exercise_id(ctx, field)
+			case "exerciseRoutine":
+				return ec.fieldContext_Exercise_exerciseRoutine(ctx, field)
+			case "sets":
+				return ec.fieldContext_Exercise_sets(ctx, field)
+			case "notes":
+				return ec.fieldContext_Exercise_notes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Exercise", field.Name)
 		},
 	}
 	defer func() {
@@ -2925,7 +2961,7 @@ func (ec *executionContext) _Mutation_addSet(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddSet(rctx, fc.Args["exerciseId"].(string), fc.Args["set"].(*model.SetEntryInput))
+		return ec.resolvers.Mutation().AddSet(rctx, fc.Args["exerciseId"].(string), fc.Args["set"].(model.SetEntryInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2937,9 +2973,9 @@ func (ec *executionContext) _Mutation_addSet(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.SetEntry)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNSetEntry2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntry(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_addSet(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2949,7 +2985,15 @@ func (ec *executionContext) fieldContext_Mutation_addSet(ctx context.Context, fi
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SetEntry_id(ctx, field)
+			case "weight":
+				return ec.fieldContext_SetEntry_weight(ctx, field)
+			case "reps":
+				return ec.fieldContext_SetEntry_reps(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SetEntry", field.Name)
 		},
 	}
 	defer func() {
@@ -9101,6 +9145,11 @@ func (ec *executionContext) marshalNSetEntry2ᚖgithubᚗcomᚋneilZonᚋworkout
 	return ec._SetEntry(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNSetEntryInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntryInput(ctx context.Context, v interface{}) (model.SetEntryInput, error) {
+	res, err := ec.unmarshalInputSetEntryInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNSetEntryInput2ᚕᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntryInputᚄ(ctx context.Context, v interface{}) ([]*model.SetEntryInput, error) {
 	var vSlice []interface{}
 	if v != nil {
@@ -9727,14 +9776,6 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
-}
-
-func (ec *executionContext) unmarshalOSetEntryInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐSetEntryInput(ctx context.Context, v interface{}) (*model.SetEntryInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputSetEntryInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

@@ -9,25 +9,26 @@ import (
 	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/middleware"
+	"github.com/neilZon/workout-logger-api/utils"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 // AddExerciseRoutine is the resolver for the addExerciseRoutine field.
-func (r *mutationResolver) AddExerciseRoutine(ctx context.Context, workoutRoutineID string, exerciseRoutine model.ExerciseRoutineInput) (string, error) {
+func (r *mutationResolver) AddExerciseRoutine(ctx context.Context, workoutRoutineID string, exerciseRoutine model.ExerciseRoutineInput) (*model.ExerciseRoutine, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return "", err
+		return &model.ExerciseRoutine{}, err
 	}
 
 	userId := fmt.Sprintf("%d", u.ID)
 	err = r.ACS.CanAccessWorkoutRoutine(userId, workoutRoutineID)
 	if err != nil {
-		return "", gqlerror.Errorf("Error Adding Exercise Routine: Access Denied")
+		return &model.ExerciseRoutine{}, gqlerror.Errorf("Error Adding Exercise Routine: Access Denied")
 	}
 
 	workoutRoutineIDUint, err := strconv.ParseUint(workoutRoutineID, 10, strconv.IntSize)
 	if err != nil {
-		return "", gqlerror.Errorf("Error Adding Exercise Routine")
+		return &model.ExerciseRoutine{}, gqlerror.Errorf("Error Adding Exercise Routine")
 	}
 	dbExerciseRoutine := &database.ExerciseRoutine{
 		Name:             exerciseRoutine.Name,
@@ -37,10 +38,16 @@ func (r *mutationResolver) AddExerciseRoutine(ctx context.Context, workoutRoutin
 	}
 	err = database.AddExerciseRoutine(r.DB, dbExerciseRoutine)
 	if err != nil {
-		return "", gqlerror.Errorf("Error Adding Exercise Routine")
+		return &model.ExerciseRoutine{}, gqlerror.Errorf("Error Adding Exercise Routine")
 	}
 
-	return fmt.Sprintf("%d", dbExerciseRoutine.ID), nil
+	return &model.ExerciseRoutine{
+		ID:     utils.UIntToString(dbExerciseRoutine.ID),
+		Active: dbExerciseRoutine.Active,
+		Name:   dbExerciseRoutine.Name,
+		Reps:   int(dbExerciseRoutine.Reps),
+		Sets:   int(dbExerciseRoutine.Sets),
+	}, nil
 }
 
 // ExerciseRoutines is the resolver for the exerciseRoutines field.

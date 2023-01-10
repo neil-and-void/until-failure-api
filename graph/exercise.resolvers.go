@@ -9,21 +9,22 @@ import (
 	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/middleware"
+	"github.com/neilZon/workout-logger-api/utils"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"gorm.io/gorm"
 )
 
 // AddExercise is the resolver for the addExercise field.
-func (r *mutationResolver) AddExercise(ctx context.Context, workoutSessionID string, exercise model.ExerciseInput) (string, error) {
+func (r *mutationResolver) AddExercise(ctx context.Context, workoutSessionID string, exercise model.ExerciseInput) (*model.Exercise, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return "", err
+		return &model.Exercise{}, err
 	}
 
 	userId := fmt.Sprintf("%d", u.ID)
 	err = r.ACS.CanAccessWorkoutSession(userId, workoutSessionID)
 	if err != nil {
-		return "", gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
+		return &model.Exercise{}, gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
 	}
 
 	// todo: check can access exercise routines that are being added
@@ -38,12 +39,12 @@ func (r *mutationResolver) AddExercise(ctx context.Context, workoutSessionID str
 
 	workoutSessionIDUint, err := strconv.ParseUint(workoutSessionID, 10, 32)
 	if err != nil {
-		return "", gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
+		return &model.Exercise{}, gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
 	}
 
 	exerciseRoutineID, err := strconv.ParseUint(exercise.ExerciseRoutineID, 10, 32)
 	if err != nil {
-		return "", gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
+		return &model.Exercise{}, gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
 	}
 
 	dbExercise := &database.Exercise{
@@ -55,10 +56,13 @@ func (r *mutationResolver) AddExercise(ctx context.Context, workoutSessionID str
 
 	err = database.AddExercise(r.DB, dbExercise)
 	if err != nil {
-		return "", gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
+		return &model.Exercise{}, gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
 	}
 
-	return fmt.Sprintf("%d", dbExercise.ID), nil
+	return &model.Exercise{
+		ID:    utils.UIntToString(dbExercise.ID),
+		Notes: dbExercise.Notes,
+	}, nil
 }
 
 // Exercise is the resolver for the exercise field.

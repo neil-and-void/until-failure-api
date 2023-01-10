@@ -14,10 +14,10 @@ import (
 )
 
 // AddWorkoutSession is the resolver for the addWorkoutSession field.
-func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.WorkoutSessionInput) (string, error) {
+func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.WorkoutSessionInput) (*model.WorkoutSession, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return "", err
+		return &model.WorkoutSession{}, err
 	}
 
 	var dbExercises []database.Exercise
@@ -33,7 +33,7 @@ func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.
 
 		exerciseRoutineId, err := strconv.ParseUint(e.ExerciseRoutineID, 10, 32)
 		if err != nil {
-			return "", gqlerror.Errorf("Error Adding Workout Session")
+			return &model.WorkoutSession{}, gqlerror.Errorf("Error Adding Workout Session")
 		}
 
 		dbExercises = append(dbExercises, database.Exercise{
@@ -45,7 +45,7 @@ func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.
 
 	workotuRoutineID, err := strconv.ParseUint(workout.WorkoutRoutineID, 10, 64)
 	if err != nil {
-		return "", gqlerror.Errorf("Error Adding Workout Session: Invalid Workout Routine ID")
+		return &model.WorkoutSession{}, gqlerror.Errorf("Error Adding Workout Session: Invalid Workout Routine ID")
 	}
 
 	ws := &database.WorkoutSession{
@@ -57,10 +57,14 @@ func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.
 	}
 	err = database.AddWorkoutSession(r.DB, ws)
 	if err != nil {
-		return "", gqlerror.Errorf("Error Adding Workout Session")
+		return &model.WorkoutSession{}, gqlerror.Errorf("Error Adding Workout Session")
 	}
 
-	return utils.UIntToString(ws.ID), nil
+	return &model.WorkoutSession{
+		ID:    utils.UIntToString(ws.ID),
+		Start: ws.Start,
+		End:   ws.End,
+	}, nil
 }
 
 // UpdateWorkoutSession is the resolver for the updateWorkoutSession field.
