@@ -119,7 +119,6 @@ func (r *queryResolver) WorkoutRoutine(ctx context.Context, workoutRoutineID str
 
 	workoutRoutine, err := database.GetWorkoutRoutine(r.DB, workoutRoutineID)
 	if err != nil {
-		fmt.Println("wygsdflkjoij", err)
 		return &model.WorkoutRoutine{}, gqlerror.Errorf("Error Getting Workout Routine")
 	}
 
@@ -176,20 +175,13 @@ func (r *mutationResolver) UpdateWorkoutRoutine(ctx context.Context, workoutRout
 		return &model.WorkoutRoutine{}, gqlerror.Errorf("Error Updating Workout Routine")
 	}
 
-	var updatedExerciseRoutines []*model.ExerciseRoutine
-	for _, er := range exerciseRoutines {
-		updatedExerciseRoutines = append(updatedExerciseRoutines, &model.ExerciseRoutine{
-			ID:   fmt.Sprintf("%d", er.ID),
-			Name: er.Name,
-			Reps: int(er.Reps),
-			Sets: int(er.Sets),
-		})
-	}
+	// invalidate cache to return freshly updated exercise routines
+	loaders := middleware.GetLoaders(ctx)
+	loaders.ExerciseRoutineSliceLoader.Clear(ctx, dataloader.StringKey(workoutRoutine.ID))
 
 	return &model.WorkoutRoutine{
-		ID:               workoutRoutine.ID,
-		Name:             workoutRoutine.Name,
-		ExerciseRoutines: updatedExerciseRoutines,
+		ID:   workoutRoutine.ID,
+		Name: workoutRoutine.Name,
 	}, nil
 }
 
