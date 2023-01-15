@@ -292,8 +292,6 @@ func GetPrevExercisesByWorkoutRoutineId(db *gorm.DB, workoutRoutineId string, be
 		) TBLE where TBLE.rows = 1`,
 		before, workoutRoutineId,
 	).Scan(&exercises).Error
-	fmt.Println("err: ", err)
-	fmt.Printf("%+v", exercises)
 	return exercises, err
 }
 
