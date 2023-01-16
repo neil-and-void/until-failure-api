@@ -180,7 +180,7 @@ func (r *queryResolver) WorkoutSession(ctx context.Context, workoutSessionID str
 
 	return &model.WorkoutSession{
 		ID: utils.UIntToString(workoutSession.ID),
-		// return workout routine to access in exercise resolver
+		// return workout routine ID to access in workout routine resolver
 		WorkoutRoutine: model.WorkoutRoutine{
 			ID: utils.UIntToString(workoutSession.WorkoutRoutineID),
 		},
