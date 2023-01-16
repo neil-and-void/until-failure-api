@@ -183,7 +183,6 @@ func (r *workoutSessionResolver) PrevExercises(ctx context.Context, obj *model.W
 		return []*model.Exercise{}, nil
 	}
 
-	// TODO: 1 + (n+m) issue if we query for all workoutSessions, might need to fix
 	dbExercises, err := database.GetPrevExercisesByWorkoutRoutineId(r.DB, obj.WorkoutRoutine.ID, obj.Start)
 	if err != nil {
 		return []*model.Exercise{}, gqlerror.Errorf("Error Getting Exercises")
