@@ -59,6 +59,10 @@ func (r *mutationResolver) AddExercise(ctx context.Context, workoutSessionID str
 		return &model.Exercise{}, gqlerror.Errorf("Error Adding Exercise: %s", err.Error())
 	}
 
+	// invalidate exercise resolver dataloader cache
+	loaders := middleware.GetLoaders(ctx)
+	loaders.ExerciseSliceLoader.Clear(ctx, dataloader.StringKey(workoutSessionID))
+
 	return &model.Exercise{
 		ID:    utils.UIntToString(dbExercise.ID),
 		Notes: dbExercise.Notes,
@@ -99,10 +103,10 @@ func (r *queryResolver) Exercise(ctx context.Context, exerciseID string) (*model
 }
 
 // UpdateExercise is the resolver for the updateExercise field.
-func (r *mutationResolver) UpdateExercise(ctx context.Context, exerciseID string, exercise model.UpdateExerciseInput) (*model.UpdatedExercise, error) {
+func (r *mutationResolver) UpdateExercise(ctx context.Context, exerciseID string, exercise model.UpdateExerciseInput) (*model.Exercise, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return &model.UpdatedExercise{}, err
+		return &model.Exercise{}, err
 	}
 
 	exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, strconv.IntSize)
@@ -113,12 +117,12 @@ func (r *mutationResolver) UpdateExercise(ctx context.Context, exerciseID string
 	}
 	err = database.GetExercise(r.DB, &dbExercise, false)
 	if err != nil {
-		return &model.UpdatedExercise{}, gqlerror.Errorf("Error Updating Exercise")
+		return &model.Exercise{}, gqlerror.Errorf("Error Updating Exercise")
 	}
 
 	err = r.ACS.CanAccessWorkoutSession(fmt.Sprintf("%d", u.ID), fmt.Sprintf("%d", dbExercise.WorkoutSessionID))
 	if err != nil {
-		return &model.UpdatedExercise{}, gqlerror.Errorf("Error Updating Exercise: Access Denied")
+		return &model.Exercise{}, gqlerror.Errorf("Error Updating Exercise: Access Denied")
 	}
 
 	updatedExercise := database.Exercise{
@@ -126,10 +130,14 @@ func (r *mutationResolver) UpdateExercise(ctx context.Context, exerciseID string
 	}
 	err = database.UpdateExercise(r.DB, exerciseID, &updatedExercise)
 	if err != nil {
-		return &model.UpdatedExercise{}, gqlerror.Errorf("Error Updating Exercise")
+		return &model.Exercise{}, gqlerror.Errorf("Error Updating Exercise")
 	}
 
-	return &model.UpdatedExercise{
+	// invalidate exercise resolver dataloader cache
+	loaders := middleware.GetLoaders(ctx)
+	loaders.ExerciseSliceLoader.Clear(ctx, dataloader.StringKey(fmt.Sprintf("%d", dbExercise.WorkoutSessionID)))
+
+	return &model.Exercise{
 		ID:    exerciseID,
 		Notes: updatedExercise.Notes,
 	}, nil
@@ -163,6 +171,10 @@ func (r *mutationResolver) DeleteExercise(ctx context.Context, exerciseID string
 		return 0, gqlerror.Errorf("Error Deleting Exercise")
 	}
 
+	// invalidate exercise resolver dataloader cache
+	loaders := middleware.GetLoaders(ctx)
+	loaders.ExerciseSliceLoader.Clear(ctx, dataloader.StringKey(fmt.Sprintf("%d", dbExercise.WorkoutSessionID)))
+
 	return 1, nil
 }
 
@@ -174,6 +186,7 @@ func (r *workoutSessionResolver) Exercises(ctx context.Context, obj *model.Worko
 	if err != nil {
 		return nil, err
 	}
+
 	return result.([]*model.Exercise), nil
 }
 

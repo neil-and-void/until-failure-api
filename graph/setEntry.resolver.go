@@ -51,7 +51,6 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set mo
 	}
 	err = database.AddSet(r.DB, &dbSet)
 	if err != nil {
-		fmt.Println(err)
 		return &model.SetEntry{}, gqlerror.Errorf("Error Adding Set")
 	}
 

@@ -68,16 +68,16 @@ func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.
 }
 
 // UpdateWorkoutSession is the resolver for the updateWorkoutSession field.
-func (r *mutationResolver) UpdateWorkoutSession(ctx context.Context, workoutSessionID string, updateWorkoutSessionInput model.UpdateWorkoutSessionInput) (*model.UpdatedWorkoutSession, error) {
+func (r *mutationResolver) UpdateWorkoutSession(ctx context.Context, workoutSessionID string, updateWorkoutSessionInput model.UpdateWorkoutSessionInput) (*model.WorkoutSession, error) {
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
-		return &model.UpdatedWorkoutSession{}, err
+		return &model.WorkoutSession{}, err
 	}
 
 	userId := utils.UIntToString(u.ID)
 	err = r.ACS.CanAccessWorkoutSession(userId, workoutSessionID)
 	if err != nil {
-		return &model.UpdatedWorkoutSession{}, gqlerror.Errorf("Error Updating Workout Session: Access Denied")
+		return &model.WorkoutSession{}, gqlerror.Errorf("Error Updating Workout Session: Access Denied")
 	}
 
 	var start time.Time
@@ -90,10 +90,10 @@ func (r *mutationResolver) UpdateWorkoutSession(ctx context.Context, workoutSess
 	}
 	err = database.UpdateWorkoutSession(r.DB, workoutSessionID, &updatedWorkoutSession)
 	if err != nil {
-		return &model.UpdatedWorkoutSession{}, gqlerror.Errorf("Error Updating Workout Session")
+		return &model.WorkoutSession{}, gqlerror.Errorf("Error Updating Workout Session")
 	}
 
-	return &model.UpdatedWorkoutSession{
+	return &model.WorkoutSession{
 		ID:    utils.UIntToString(updatedWorkoutSession.ID),
 		Start: updatedWorkoutSession.Start,
 		End:   updatedWorkoutSession.End,
