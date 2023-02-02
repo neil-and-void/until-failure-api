@@ -96,6 +96,10 @@ func (r *queryResolver) Exercise(ctx context.Context, exerciseID string) (*model
 		return &model.Exercise{}, gqlerror.Errorf("Error Getting Exercise: %s", err.Error())
 	}
 
+	// invalidate exercise resolver dataloader cache
+	loaders := middleware.GetLoaders(ctx)
+	loaders.SetEntrySliceLoader.Clear(ctx, dataloader.StringKey(fmt.Sprintf("%d", exercise.ID)))
+
 	return &model.Exercise{
 		ID:    exerciseID,
 		Notes: exercise.Notes,

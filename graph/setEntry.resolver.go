@@ -54,6 +54,10 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set mo
 		return &model.SetEntry{}, gqlerror.Errorf("Error Adding Set")
 	}
 
+	// invalidate set entry resolver dataloader cache
+	loaders := middleware.GetLoaders(ctx)
+	loaders.SetEntrySliceLoader.Clear(ctx, dataloader.StringKey(exerciseID))
+
 	return &model.SetEntry{
 		ID:     utils.UIntToString(dbSet.ID),
 		Weight: float64(dbSet.Weight),
@@ -150,6 +154,10 @@ func (r *mutationResolver) UpdateSet(ctx context.Context, setID string, set mode
 		return &model.SetEntry{}, gqlerror.Errorf("Error Updating Set")
 	}
 
+	// invalidate set entry resolver dataloader cache
+	loaders := middleware.GetLoaders(ctx)
+	loaders.SetEntrySliceLoader.Clear(ctx, dataloader.StringKey(fmt.Sprintf("%d", exercise.ID)))
+
 	return &model.SetEntry{
 		ID:     fmt.Sprintf("%d", updatedSet.ID),
 		Weight: float64(updatedSet.Weight),
@@ -189,6 +197,10 @@ func (r *mutationResolver) DeleteSet(ctx context.Context, setID string) (int, er
 	if err != nil {
 		return 0, gqlerror.Errorf("Error Deleting Set")
 	}
+
+	// invalidate set entry resolver dataloader cache
+	loaders := middleware.GetLoaders(ctx)
+	loaders.SetEntrySliceLoader.Clear(ctx, dataloader.StringKey(fmt.Sprintf("%d", exercise.ID)))
 
 	return 1, nil
 }
