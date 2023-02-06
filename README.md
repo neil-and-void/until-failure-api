@@ -10,12 +10,10 @@ The GraphQL api for a very simple workout logger app I built for myself to track
 2. Do a login mutation to get the access token by pasting and running
 
 ```
-mutation Login {
-  login(email: "test@test.com", password:"password123") {
-    ... on AuthSuccess {
-      accessToken
-      refreshToken
-    }
+mutation Login{
+  login(loginInput: {email:"test@test.com", password:"password123"}) {
+    accessToken
+    refreshToken
   }
 }
 ```
