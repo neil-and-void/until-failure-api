@@ -212,7 +212,7 @@ func GetWorkoutSessions(db *gorm.DB, userId string, cursor string, limit int) ([
 	} else {
 		db = db.Where("user_id = ? AND id > ?", userId, cursor)
 	}
-	result := db.Order("id").Limit(limit).Find(&workoutSessions)
+	result := db.Order("id desc").Limit(limit).Find(&workoutSessions)
 	return workoutSessions, result.Error
 }
 
