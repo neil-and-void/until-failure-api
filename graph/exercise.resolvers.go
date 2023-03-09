@@ -196,10 +196,6 @@ func (r *workoutSessionResolver) Exercises(ctx context.Context, obj *model.Worko
 
 // PrevExercises is the resolver for the prevExercises field.
 func (r *workoutSessionResolver) PrevExercises(ctx context.Context, obj *model.WorkoutSession) ([]*model.Exercise, error) {
-	if obj.End == nil {
-		return []*model.Exercise{}, nil
-	}
-
 	dbExercises, err := database.GetPrevExercisesByWorkoutRoutineId(r.DB, obj.WorkoutRoutine.ID, obj.Start)
 	if err != nil {
 		return []*model.Exercise{}, gqlerror.Errorf("Error Getting Exercises")
