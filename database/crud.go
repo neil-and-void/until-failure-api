@@ -288,7 +288,7 @@ func GetPrevExercisesByWorkoutRoutineId(db *gorm.DB, workoutRoutineId string, be
 			SELECT exercises.*,
 				ROW_NUMBER() OVER (PARTITION BY exercises.exercise_routine_id ORDER BY workout_sessions.end DESC) AS rows
 			FROM workout_sessions JOIN exercises ON exercises.workout_session_id = workout_sessions.id
-			WHERE workout_sessions.end < ? and workout_sessions."end" IS NOT NULL AND workout_sessions.workout_routine_id = ? AND workout_sessions.deleted_at IS NULL AND exercises.deleted_at IS NULL
+			WHERE workout_sessions.start < ? and workout_sessions."end" IS NOT NULL AND workout_sessions.workout_routine_id = ? AND workout_sessions.deleted_at IS NULL AND exercises.deleted_at IS NULL
 		) TBLE where TBLE.rows = 1`,
 		before, workoutRoutineId,
 	).Scan(&exercises).Error
