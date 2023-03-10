@@ -121,7 +121,7 @@ func (e *ExerciseRoutineReader) GetExerciseRoutines(ctx context.Context, keys da
 
 	exercises, _ := database.GetExercisesById(e.DB, exerciseIds)
 
-	// convert to graphql models and store in a dict with workout routine id as key
+	// convert to graphql models and store in a dict with exercise id as key
 	exerciseRoutineByExerciseId := map[string]*model.ExerciseRoutine{}
 	for _, exercise := range *exercises {
 		exerciseId := strconv.Itoa(int(exercise.ID))
