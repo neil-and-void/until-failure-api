@@ -152,6 +152,7 @@ input UpdateSetEntryInput {
 ### END INPUTS ###
 
 type Query {
+  user: User!
   workoutRoutines(limit: Int!, after: String): WorkoutRoutineConnection!
   workoutRoutine(workoutRoutineId: ID!): WorkoutRoutine!
   exerciseRoutines(workoutRoutineId: ID!): [ExerciseRoutine!]!
@@ -162,6 +163,8 @@ type Query {
 }
 
 type Mutation {
+  deleteUser: Int!
+
   login(loginInput: LoginInput!): AuthResult!
   signup(signupInput: SignupInput!): AuthResult!
   refreshAccessToken(refreshToken: String!): RefreshSuccess!

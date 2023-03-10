@@ -77,6 +77,7 @@ type ComplexityRoot struct {
 		DeleteExercise        func(childComplexity int, exerciseID string) int
 		DeleteExerciseRoutine func(childComplexity int, exerciseRoutineID string) int
 		DeleteSet             func(childComplexity int, setID string) int
+		DeleteUser            func(childComplexity int) int
 		DeleteWorkoutRoutine  func(childComplexity int, workoutRoutineID string) int
 		DeleteWorkoutSession  func(childComplexity int, workoutSessionID string) int
 		Login                 func(childComplexity int, loginInput model.LoginInput) int
@@ -96,6 +97,7 @@ type ComplexityRoot struct {
 		Exercise         func(childComplexity int, exerciseID string) int
 		ExerciseRoutines func(childComplexity int, workoutRoutineID string) int
 		Sets             func(childComplexity int, exerciseID string) int
+		User             func(childComplexity int) int
 		WorkoutRoutine   func(childComplexity int, workoutRoutineID string) int
 		WorkoutRoutines  func(childComplexity int, limit int, after *string) int
 		WorkoutSession   func(childComplexity int, workoutSessionID string) int
@@ -160,6 +162,7 @@ type ExerciseResolver interface {
 	Sets(ctx context.Context, obj *model.Exercise) ([]*model.SetEntry, error)
 }
 type MutationResolver interface {
+	DeleteUser(ctx context.Context) (int, error)
 	Login(ctx context.Context, loginInput model.LoginInput) (*model.AuthResult, error)
 	Signup(ctx context.Context, signupInput model.SignupInput) (*model.AuthResult, error)
 	RefreshAccessToken(ctx context.Context, refreshToken string) (*model.RefreshSuccess, error)
@@ -179,6 +182,7 @@ type MutationResolver interface {
 	DeleteSet(ctx context.Context, setID string) (int, error)
 }
 type QueryResolver interface {
+	User(ctx context.Context) (*model.User, error)
 	WorkoutRoutines(ctx context.Context, limit int, after *string) (*model.WorkoutRoutineConnection, error)
 	WorkoutRoutine(ctx context.Context, workoutRoutineID string) (*model.WorkoutRoutine, error)
 	ExerciseRoutines(ctx context.Context, workoutRoutineID string) ([]*model.ExerciseRoutine, error)
@@ -384,6 +388,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteSet(childComplexity, args["setId"].(string)), true
 
+	case "Mutation.deleteUser":
+		if e.complexity.Mutation.DeleteUser == nil {
+			break
+		}
+
+		return e.complexity.Mutation.DeleteUser(childComplexity), true
+
 	case "Mutation.deleteWorkoutRoutine":
 		if e.complexity.Mutation.DeleteWorkoutRoutine == nil {
 			break
@@ -534,6 +545,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Sets(childComplexity, args["exerciseId"].(string)), true
+
+	case "Query.user":
+		if e.complexity.Query.User == nil {
+			break
+		}
+
+		return e.complexity.Query.User(childComplexity), true
 
 	case "Query.workoutRoutine":
 		if e.complexity.Query.WorkoutRoutine == nil {
@@ -992,6 +1010,7 @@ input UpdateSetEntryInput {
 ### END INPUTS ###
 
 type Query {
+  user: User!
   workoutRoutines(limit: Int!, after: String): WorkoutRoutineConnection!
   workoutRoutine(workoutRoutineId: ID!): WorkoutRoutine!
   exerciseRoutines(workoutRoutineId: ID!): [ExerciseRoutine!]!
@@ -1002,6 +1021,8 @@ type Query {
 }
 
 type Mutation {
+  deleteUser: Int!
+
   login(loginInput: LoginInput!): AuthResult!
   signup(signupInput: SignupInput!): AuthResult!
   refreshAccessToken(refreshToken: String!): RefreshSuccess!
@@ -2024,6 +2045,50 @@ func (ec *executionContext) fieldContext_ExerciseRoutine_reps(ctx context.Contex
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteUser(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -3117,6 +3182,58 @@ func (ec *executionContext) fieldContext_PageInfo_hasNextPage(ctx context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_user(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().User(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
 	}
 	return fc, nil
@@ -7347,6 +7464,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "deleteUser":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteUser(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "login":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -7558,6 +7684,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "user":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_user(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "workoutRoutines":
 			field := field
 
@@ -8906,6 +9055,20 @@ func (ec *executionContext) unmarshalNUpdateWorkoutRoutineInput2githubᚗcomᚋn
 func (ec *executionContext) unmarshalNUpdateWorkoutSessionInput2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUpdateWorkoutSessionInput(ctx context.Context, v interface{}) (model.UpdateWorkoutSessionInput, error) {
 	res, err := ec.unmarshalInputUpdateWorkoutSessionInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUser2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {
+	return ec._User(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._User(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNWorkoutRoutine2githubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐWorkoutRoutine(ctx context.Context, sel ast.SelectionSet, v model.WorkoutRoutine) graphql.Marshaler {
