@@ -198,7 +198,7 @@ func (r *workoutSessionResolver) Exercises(ctx context.Context, obj *model.Worko
 func (r *workoutSessionResolver) PrevExercises(ctx context.Context, obj *model.WorkoutSession) ([]*model.Exercise, error) {
 	dbExercises, err := database.GetPrevExercisesByWorkoutRoutineId(r.DB, obj.WorkoutRoutine.ID, obj.Start)
 	if err != nil {
-		return []*model.Exercise{}, gqlerror.Errorf("Error Getting Exercises")
+		return []*model.Exercise{}, gqlerror.Errorf("Error getting previous exercises")
 	}
 
 	var exercises []*model.Exercise

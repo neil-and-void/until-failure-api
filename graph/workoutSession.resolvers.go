@@ -61,7 +61,11 @@ func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.
 	}
 
 	return &model.WorkoutSession{
-		ID:    utils.UIntToString(ws.ID),
+		ID: utils.UIntToString(ws.ID),
+		// return so previous exercise routine resolver can use
+		WorkoutRoutine: model.WorkoutRoutine{
+			ID: workout.WorkoutRoutineID,
+		},
 		Start: ws.Start,
 		End:   ws.End,
 	}, nil
