@@ -132,8 +132,8 @@ func (r *queryResolver) WorkoutSessions(ctx context.Context, limit int, after *s
 		return &model.WorkoutSessionConnection{}, err
 	}
 
-	if limit <= 0 || limit > 20 {
-		return &model.WorkoutSessionConnection{}, gqlerror.Errorf(errors.GetWorkoutRoutinesError, "limit needs to be between 1 to 20")
+	if limit <= 0 || limit > 30 {
+		return &model.WorkoutSessionConnection{}, gqlerror.Errorf(errors.GetWorkoutRoutinesError, "limit needs to be between 1 to 30")
 	}
 
 	cursor := ""
