@@ -31,8 +31,8 @@ func VerifyUser(db *gorm.DB, id string, code string) error {
 	return db.Model(&User{}).Where("verification_code = ? AND id = ?", code, id).Update("verified", "true").Error
 }
 
-func UpdateUser(db *gorm.DB, user *User) error {
-	return nil
+func UpdateUser(db *gorm.DB, email string, user *User) error {
+	return db.Model(&User{}).Where("email = ?", email).Updates(*user).Error
 }
 
 func DeleteUser(db *gorm.DB, id string) error {
