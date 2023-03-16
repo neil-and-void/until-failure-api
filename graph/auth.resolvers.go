@@ -86,7 +86,7 @@ func (r *mutationResolver) Signup(ctx context.Context, signupInput model.SignupI
 	}
 
 	// should this be moved to inside the user create tx?
-	// err = mail.SendVerificationCode(verificationCode, u.Email)
+	err = mail.SendVerificationCode(verificationCode, u.Email)
 	if err != nil {
 		return &model.AuthResult{}, gqlerror.Errorf("Issue sending verification email")
 	}
