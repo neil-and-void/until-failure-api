@@ -55,11 +55,11 @@ func (r *mutationResolver) Signup(ctx context.Context, signupInput model.SignupI
 
 	// check if user was found from query
 	dbUser, err := database.GetUserByEmail(r.DB, signupInput.Email)
-	if err != nil {
-		return &model.AuthResult{}, gqlerror.Errorf(err.Error())
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return &model.AuthResult{}, gqlerror.Errorf("error signing up")
 	}
-	if dbUser.ID != 0 {
-		return &model.AuthResult{}, gqlerror.Errorf("Email already exists")
+	if dbUser.Email == signupInput.Email {
+		return &model.AuthResult{}, gqlerror.Errorf("email already exists")
 	}
 
 	// Hashing the password with the default cost of 10
@@ -122,13 +122,13 @@ func (r *mutationResolver) ResendVerificationCode(ctx context.Context, email str
 		VerificationCode:   verificationCode,
 		VerificationSentAt: time.Now(),
 	}
-	err = database.UpdateUser(r.DB, &u)
+	err = database.UpdateUser(r.DB, email, &u)
 	if err != nil {
 		return false, gqlerror.Errorf(err.Error())
 	}
 
 	// should this be moved to inside the user create tx?
-	err = mail.SendVerificationCode(verificationCode, u.Email)
+	err = mail.SendVerificationCode(verificationCode, email)
 	if err != nil {
 		return false, gqlerror.Errorf("Issue sending verification email")
 	}
