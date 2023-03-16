@@ -3,12 +3,16 @@ package graph
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
+	"time"
 
 	"github.com/neilZon/workout-logger-api/config"
 	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph/model"
+	"github.com/neilZon/workout-logger-api/mail"
 	"github.com/neilZon/workout-logger-api/token"
+	"github.com/neilZon/workout-logger-api/utils"
 	"github.com/neilZon/workout-logger-api/validator"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"golang.org/x/crypto/bcrypt"
@@ -51,6 +55,9 @@ func (r *mutationResolver) Signup(ctx context.Context, signupInput model.SignupI
 
 	// check if user was found from query
 	dbUser, err := database.GetUserByEmail(r.DB, signupInput.Email)
+	if err != nil {
+		return &model.AuthResult{}, gqlerror.Errorf(err.Error())
+	}
 	if dbUser.ID != 0 {
 		return &model.AuthResult{}, gqlerror.Errorf("Email already exists")
 	}
@@ -61,10 +68,27 @@ func (r *mutationResolver) Signup(ctx context.Context, signupInput model.SignupI
 		panic(err)
 	}
 
-	u := database.User{Name: signupInput.Name, Email: signupInput.Email, Password: string(hashedPassword)}
+	verificationCode, err := utils.GenerateVerificationCode(64)
+	if err != nil {
+		return &model.AuthResult{}, gqlerror.Errorf(err.Error())
+	}
+	u := database.User{
+		Name:               signupInput.Name,
+		Email:              signupInput.Email,
+		Password:           string(hashedPassword),
+		VerificationCode:   verificationCode,
+		Verified:           false,
+		VerificationSentAt: time.Now(),
+	}
 	err = r.DB.Create(&u).Error
 	if err != nil {
 		return &model.AuthResult{}, gqlerror.Errorf(err.Error())
+	}
+
+	// should this be moved to inside the user create tx?
+	err = mail.SendVerificationCode(verificationCode, u.Email)
+	if err != nil {
+		return &model.AuthResult{}, gqlerror.Errorf("Issue sending verification email")
 	}
 
 	c := &token.Credentials{
@@ -80,6 +104,36 @@ func (r *mutationResolver) Signup(ctx context.Context, signupInput model.SignupI
 		RefreshToken: refreshToken,
 		AccessToken:  accessToken,
 	}, nil
+}
+
+// ForgotPassword is the resolver for the forgotPassword field.
+func (r *mutationResolver) ForgotPassword(ctx context.Context, email string) (bool, error) {
+	panic(fmt.Errorf("not implemented: ForgotPassword - forgotPassword"))
+}
+
+// ResendVerificationCode is the resolver for the resendVerificationCode field.
+func (r *mutationResolver) ResendVerificationCode(ctx context.Context, email string) (bool, error) {
+	verificationCode, err := utils.GenerateVerificationCode(64)
+	if err != nil {
+		return false, gqlerror.Errorf(err.Error())
+	}
+
+	u := database.User{
+		VerificationCode:   verificationCode,
+		VerificationSentAt: time.Now(),
+	}
+	err = database.UpdateUser(r.DB, &u)
+	if err != nil {
+		return false, gqlerror.Errorf(err.Error())
+	}
+
+	// should this be moved to inside the user create tx?
+	err = mail.SendVerificationCode(verificationCode, u.Email)
+	if err != nil {
+		return false, gqlerror.Errorf("Issue sending verification email")
+	}
+
+	return true, nil
 }
 
 // RefreshAccessToken is the resolver for the refreshAccessToken field.
