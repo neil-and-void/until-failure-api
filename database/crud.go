@@ -21,6 +21,20 @@ func GetUserById(db *gorm.DB, id string) (*User, error) {
 	return &u, result.Error
 }
 
+func GetUserByCode(db *gorm.DB, code string) (*User, error) {
+	var u User
+	result := db.First(&u, "verification_code = ?", code)
+	return &u, result.Error
+}
+
+func VerifyUser(db *gorm.DB, id string, code string) error {
+	return db.Model(&User{}).Where("verification_code = ? AND id = ?", code, id).Update("verified", "true").Error
+}
+
+func UpdateUser(db *gorm.DB, user *User) error {
+	return nil
+}
+
 func DeleteUser(db *gorm.DB, id string) error {
 	return db.Unscoped().Where("id = ?", id).Delete(&User{}).Error
 }

@@ -164,6 +164,8 @@ type Query {
 
 type Mutation {
   deleteUser: Int!
+  forgotPassword(email: String!): Boolean!
+  resendVerificationCode(email: String!): Boolean!
 
   login(loginInput: LoginInput!): AuthResult!
   signup(signupInput: SignupInput!): AuthResult!

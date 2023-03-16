@@ -69,24 +69,26 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddExercise           func(childComplexity int, workoutSessionID string, exercise model.ExerciseInput) int
-		AddExerciseRoutine    func(childComplexity int, workoutRoutineID string, exerciseRoutine model.ExerciseRoutineInput) int
-		AddSet                func(childComplexity int, exerciseID string, set model.SetEntryInput) int
-		AddWorkoutSession     func(childComplexity int, workout model.WorkoutSessionInput) int
-		CreateWorkoutRoutine  func(childComplexity int, routine model.WorkoutRoutineInput) int
-		DeleteExercise        func(childComplexity int, exerciseID string) int
-		DeleteExerciseRoutine func(childComplexity int, exerciseRoutineID string) int
-		DeleteSet             func(childComplexity int, setID string) int
-		DeleteUser            func(childComplexity int) int
-		DeleteWorkoutRoutine  func(childComplexity int, workoutRoutineID string) int
-		DeleteWorkoutSession  func(childComplexity int, workoutSessionID string) int
-		Login                 func(childComplexity int, loginInput model.LoginInput) int
-		RefreshAccessToken    func(childComplexity int, refreshToken string) int
-		Signup                func(childComplexity int, signupInput model.SignupInput) int
-		UpdateExercise        func(childComplexity int, exerciseID string, exercise model.UpdateExerciseInput) int
-		UpdateSet             func(childComplexity int, setID string, set model.UpdateSetEntryInput) int
-		UpdateWorkoutRoutine  func(childComplexity int, workoutRoutine model.UpdateWorkoutRoutineInput) int
-		UpdateWorkoutSession  func(childComplexity int, workoutSessionID string, updateWorkoutSessionInput model.UpdateWorkoutSessionInput) int
+		AddExercise            func(childComplexity int, workoutSessionID string, exercise model.ExerciseInput) int
+		AddExerciseRoutine     func(childComplexity int, workoutRoutineID string, exerciseRoutine model.ExerciseRoutineInput) int
+		AddSet                 func(childComplexity int, exerciseID string, set model.SetEntryInput) int
+		AddWorkoutSession      func(childComplexity int, workout model.WorkoutSessionInput) int
+		CreateWorkoutRoutine   func(childComplexity int, routine model.WorkoutRoutineInput) int
+		DeleteExercise         func(childComplexity int, exerciseID string) int
+		DeleteExerciseRoutine  func(childComplexity int, exerciseRoutineID string) int
+		DeleteSet              func(childComplexity int, setID string) int
+		DeleteUser             func(childComplexity int) int
+		DeleteWorkoutRoutine   func(childComplexity int, workoutRoutineID string) int
+		DeleteWorkoutSession   func(childComplexity int, workoutSessionID string) int
+		ForgotPassword         func(childComplexity int, email string) int
+		Login                  func(childComplexity int, loginInput model.LoginInput) int
+		RefreshAccessToken     func(childComplexity int, refreshToken string) int
+		ResendVerificationCode func(childComplexity int, email string) int
+		Signup                 func(childComplexity int, signupInput model.SignupInput) int
+		UpdateExercise         func(childComplexity int, exerciseID string, exercise model.UpdateExerciseInput) int
+		UpdateSet              func(childComplexity int, setID string, set model.UpdateSetEntryInput) int
+		UpdateWorkoutRoutine   func(childComplexity int, workoutRoutine model.UpdateWorkoutRoutineInput) int
+		UpdateWorkoutSession   func(childComplexity int, workoutSessionID string, updateWorkoutSessionInput model.UpdateWorkoutSessionInput) int
 	}
 
 	PageInfo struct {
@@ -163,6 +165,8 @@ type ExerciseResolver interface {
 }
 type MutationResolver interface {
 	DeleteUser(ctx context.Context) (int, error)
+	ForgotPassword(ctx context.Context, email string) (bool, error)
+	ResendVerificationCode(ctx context.Context, email string) (bool, error)
 	Login(ctx context.Context, loginInput model.LoginInput) (*model.AuthResult, error)
 	Signup(ctx context.Context, signupInput model.SignupInput) (*model.AuthResult, error)
 	RefreshAccessToken(ctx context.Context, refreshToken string) (*model.RefreshSuccess, error)
@@ -419,6 +423,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteWorkoutSession(childComplexity, args["workoutSessionId"].(string)), true
 
+	case "Mutation.forgotPassword":
+		if e.complexity.Mutation.ForgotPassword == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_forgotPassword_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ForgotPassword(childComplexity, args["email"].(string)), true
+
 	case "Mutation.login":
 		if e.complexity.Mutation.Login == nil {
 			break
@@ -442,6 +458,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.RefreshAccessToken(childComplexity, args["refreshToken"].(string)), true
+
+	case "Mutation.resendVerificationCode":
+		if e.complexity.Mutation.ResendVerificationCode == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_resendVerificationCode_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ResendVerificationCode(childComplexity, args["email"].(string)), true
 
 	case "Mutation.signup":
 		if e.complexity.Mutation.Signup == nil {
@@ -1022,6 +1050,8 @@ type Query {
 
 type Mutation {
   deleteUser: Int!
+  forgotPassword(email: String!): Boolean!
+  resendVerificationCode(email: String!): Boolean!
 
   login(loginInput: LoginInput!): AuthResult!
   signup(signupInput: SignupInput!): AuthResult!
@@ -1240,6 +1270,21 @@ func (ec *executionContext) field_Mutation_deleteWorkoutSession_args(ctx context
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_forgotPassword_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["email"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["email"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1267,6 +1312,21 @@ func (ec *executionContext) field_Mutation_refreshAccessToken_args(ctx context.C
 		}
 	}
 	args["refreshToken"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_resendVerificationCode_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["email"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["email"] = arg0
 	return args, nil
 }
 
@@ -2092,6 +2152,116 @@ func (ec *executionContext) fieldContext_Mutation_deleteUser(ctx context.Context
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_forgotPassword(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_forgotPassword(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ForgotPassword(rctx, fc.Args["email"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_forgotPassword(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_forgotPassword_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_resendVerificationCode(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_resendVerificationCode(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ResendVerificationCode(rctx, fc.Args["email"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_resendVerificationCode(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_resendVerificationCode_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -7468,6 +7638,24 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteUser(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "forgotPassword":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_forgotPassword(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "resendVerificationCode":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_resendVerificationCode(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html,
+      body {
+        font-family: 'Poppins', sans-serif;
+      }
+
+      .container {
+        display: flex;
+        justify-content: center;
+      }
+
+      .main {
+        border-radius: 0.5rem;
+        padding: 1rem;
+        box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+      }
+
+      .button-container {
+        display: flex;
+        justify-content: center;
+      }
+
+      button {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+        background-color: #f45b5a;
+        border: none;
+        color: white;
+        border-radius: 0.5rem;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="index.js"></script>
+    <div class="container">
+      <div class="main">
+        <p>Thanks for signing up with Til Failure! :)</p>
+        <p>Click the button below to verify your email</p>
+        <div class="button-container">
+          <a href="{{.Link}}"><button type="button">Verify Email</button></a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

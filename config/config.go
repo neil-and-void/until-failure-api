@@ -10,4 +10,6 @@ const (
 	// from the .env file
 	ACCESS_SECRET  = "ACCESS_SECRET"
 	REFRESH_SECRET = "REFRESH_SECRET"
+	EMAIL          = "EMAIL"
+	APP_PASSWORD   = "APP_PASSWORD"
 )
