@@ -108,11 +108,20 @@ func (r *mutationResolver) Signup(ctx context.Context, signupInput model.SignupI
 
 // ForgotPassword is the resolver for the forgotPassword field.
 func (r *mutationResolver) ForgotPassword(ctx context.Context, email string) (bool, error) {
+	err := validator.ValidateEmail(email)
+	if err != nil {
+		return false, gqlerror.Errorf(err.Error())
+	}
 	panic(fmt.Errorf("not implemented: ForgotPassword - forgotPassword"))
 }
 
 // ResendVerificationCode is the resolver for the resendVerificationCode field.
 func (r *mutationResolver) ResendVerificationCode(ctx context.Context, email string) (bool, error) {
+	err := validator.ValidateEmail(email)
+	if err != nil {
+		return false, gqlerror.Errorf(err.Error())
+	}
+
 	verificationCode, err := utils.GenerateVerificationCode(64)
 	if err != nil {
 		return false, gqlerror.Errorf(err.Error())

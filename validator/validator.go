@@ -50,3 +50,10 @@ func SetEntryInputIsValid(s *model.SetEntryInput) error {
 
 	return nil
 }
+
+func ValidateEmail(email string) error {
+	if _, err := mail.ParseAddress(email); err != nil {
+		return errors.New("not a valid email")
+	}
+	return nil
+}

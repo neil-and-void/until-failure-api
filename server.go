@@ -84,7 +84,6 @@ func (b *BaseHandler) verify(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		code := r.URL.Query().Get("code")
-		fmt.Println(code)
 		if code == "" {
 			http.Redirect(w, r, "http://localhost:8080/static/verification-failure.html", http.StatusSeeOther)
 		}
