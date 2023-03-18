@@ -89,7 +89,7 @@ func (b *BaseHandler) verify(w http.ResponseWriter, r *http.Request) {
 		}
 
 		expiryTime := time.Now().Add(24 * time.Hour)
-		user, err := database.GetUserByCode(b.DB, code)
+		user, err := database.GetUserByVerificationCode(b.DB, code)
 		if err != nil || user == nil || user.VerificationCode == nil || *user.VerificationCode != code || user.VerificationSentAt == nil || user.VerificationSentAt.After(expiryTime) {
 			http.Redirect(w, r, "http://localhost:8080/static/verification-failure.html", http.StatusSeeOther)
 			return

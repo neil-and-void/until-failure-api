@@ -21,19 +21,38 @@ func GetUserById(db *gorm.DB, id string) (*User, error) {
 	return &u, result.Error
 }
 
-func GetUserByCode(db *gorm.DB, code string) (*User, error) {
+func GetUserByVerificationCode(db *gorm.DB, code string) (*User, error) {
 	var u User
 	result := db.First(&u, "verification_code = ?", code)
 	return &u, result.Error
 }
 
+func GetUserByPasswordCode(db *gorm.DB, code string) (*User, error) {
+	var u User
+	result := db.First(&u, "password_reset_code = ?", code)
+	return &u, result.Error
+}
+
 func VerifyUser(db *gorm.DB, id string, code string) error {
-	var nilVerificationCode *string // used to reset verification code
-	return db.Model(&User{}).Where("verification_code = ? AND id = ?", code, id).Updates(User{Verified: true, VerificationCode: nilVerificationCode}).Error
+	return db.Model(&User{}).Where("verification_code = ? AND id = ?", code, id).Updates(
+		map[string]interface{}{"Verified": true, "VerificationCode": nil, "VerificationSentAt": nil}).Error
+}
+
+func ChangePassword(db *gorm.DB, code string, password string) error {
+	return db.Model(&User{}).Where("password_reset_code = ?", code).Updates(
+		map[string]interface{}{"PasswordResetCode": nil, "password": password, "PasswordResetSentAt": nil}).Error
 }
 
 func UpdateUser(db *gorm.DB, email string, user *User) error {
 	return db.Model(&User{}).Where("email = ?", email).Updates(*user).Error
+}
+
+func UpdateUserByPasswordCode(db *gorm.DB, code string, user *User) error {
+	return db.Model(&User{}).Where("password_reset_code = ?", code).Updates(*user).Error
+}
+
+func UpdateUserByVerificationCode(db *gorm.DB, code string, user *User) error {
+	return db.Model(&User{}).Where("verification_code = ?", code).Updates(*user).Error
 }
 
 func DeleteUser(db *gorm.DB, id string) error {

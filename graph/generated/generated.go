@@ -1051,10 +1051,9 @@ input UpdateSetEntryInput {
 }
 
 input PasswordResetCredentials {
-  email: String!
+  code: String!
   password: String!
   confirmPassword: String!
-  code: String!
 }
 
 ### END INPUTS ###
@@ -7169,18 +7168,18 @@ func (ec *executionContext) unmarshalInputPasswordResetCredentials(ctx context.C
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"email", "password", "confirmPassword", "code"}
+	fieldsInOrder := [...]string{"code", "password", "confirmPassword"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "email":
+		case "code":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-			it.Email, err = ec.unmarshalNString2string(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+			it.Code, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7197,14 +7196,6 @@ func (ec *executionContext) unmarshalInputPasswordResetCredentials(ctx context.C
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("confirmPassword"))
 			it.ConfirmPassword, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "code":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
-			it.Code, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}

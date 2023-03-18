@@ -13,9 +13,9 @@ type User struct {
 	Password            string           `gorm:"not null;size:type:varchar(32)"`
 	WorkoutRoutines     []WorkoutRoutine `gorm:"constraint:OnDelete:CASCADE"`
 	Verified            bool             `gorm:"default:false"`
-	VerificationCode    *string
+	VerificationCode    *string          `gorm:"unique"`
 	VerificationSentAt  *time.Time
-	PasswordResetCode   *string
+	PasswordResetCode   *string `gorm:"unique"`
 	PasswordResetSentAt *time.Time
 }
 

@@ -20,18 +20,14 @@ func UIntToString(num uint) string {
 }
 
 // generate URL safe code
-func GenerateVerificationCode(n int) (string, error) {
-	b, err := GenerateRandomBytes(n)
-	return base64.URLEncoding.EncodeToString(b), err
-}
-
-func GenerateRandomBytes(n int) ([]byte, error) {
-	b := make([]byte, n)
-	_, err := rand.Read(b)
-	// Note that err == nil only if we read len(b) bytes.
+func GenerateVerificationCode(length int) (string, error) {
+	// Generate a random byte slice of the specified length
+	randomBytes := make([]byte, length)
+	_, err := rand.Read(randomBytes)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return b, nil
+	// Encode the random byte slice using base64.URLEncoding, which produces a URL-safe string
+	return base64.URLEncoding.EncodeToString(randomBytes), nil
 }

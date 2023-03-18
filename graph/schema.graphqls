@@ -150,10 +150,9 @@ input UpdateSetEntryInput {
 }
 
 input PasswordResetCredentials {
-  email: String!
+  code: String!
   password: String!
   confirmPassword: String!
-  code: String!
 }
 
 ### END INPUTS ###
@@ -198,7 +197,6 @@ type Mutation {
   ): WorkoutSession!
   deleteWorkoutSession(workoutSessionId: ID!): Int!
 
-  # addImpromptuExercise(workoutSession, exerciseRoutine:{sets, reps, name, workoutRoutineId}) for later
   addExercise(workoutSessionId: ID!, exercise: ExerciseInput!): Exercise!
   updateExercise(exerciseId: ID!, exercise: UpdateExerciseInput!): Exercise!
   deleteExercise(exerciseId: ID!): Int!

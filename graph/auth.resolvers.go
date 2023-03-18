@@ -214,12 +214,11 @@ func (r *mutationResolver) SendForgotPasswordLink(ctx context.Context, email str
 
 // ResetPassword is the resolver for the resetPassword field.
 func (r *mutationResolver) ResetPassword(ctx context.Context, passwordResetCredentials model.PasswordResetCredentials) (bool, error) {
-	err := validator.ValidateEmail(passwordResetCredentials.Email)
-	if err != nil {
-		return false, gqlerror.Errorf(err.Error())
+	if passwordResetCredentials.Password != passwordResetCredentials.ConfirmPassword {
+		return false, gqlerror.Errorf("passwords don't match")
 	}
 
-	user, err := database.GetUserByEmail(r.DB, passwordResetCredentials.Email)
+	user, err := database.GetUserByPasswordCode(r.DB, passwordResetCredentials.Code)
 	if err != nil {
 		return false, gqlerror.Errorf(err.Error())
 	}
@@ -234,12 +233,7 @@ func (r *mutationResolver) ResetPassword(ctx context.Context, passwordResetCrede
 		return false, gqlerror.Errorf("could not reset password")
 	}
 
-	var nilPasswordResetCode *string
-	u := database.User{
-		Password:          string(newHashedPassword),
-		PasswordResetCode: nilPasswordResetCode,
-	}
-	err = database.UpdateUser(r.DB, passwordResetCredentials.Email, &u)
+	err = database.ChangePassword(r.DB, passwordResetCredentials.Code, string(newHashedPassword))
 	if err != nil {
 		return false, gqlerror.Errorf(err.Error())
 	}
