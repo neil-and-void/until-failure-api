@@ -3,7 +3,6 @@ package graph
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"time"
 
@@ -21,6 +20,11 @@ import (
 
 // Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, loginInput model.LoginInput) (*model.AuthResult, error) {
+	err := validator.ValidateEmail(loginInput.Email)
+	if err != nil {
+		return &model.AuthResult{}, gqlerror.Errorf("invalid email")
+	}
+
 	dbUser, err := database.GetUserByEmail(r.DB, loginInput.Email)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return &model.AuthResult{}, gqlerror.Errorf("Email does not exist")
@@ -72,13 +76,14 @@ func (r *mutationResolver) Signup(ctx context.Context, signupInput model.SignupI
 	if err != nil {
 		return &model.AuthResult{}, gqlerror.Errorf(err.Error())
 	}
+	now := time.Now()
 	u := database.User{
 		Name:               signupInput.Name,
 		Email:              signupInput.Email,
 		Password:           string(hashedPassword),
-		VerificationCode:   verificationCode,
+		VerificationCode:   &verificationCode,
 		Verified:           false,
-		VerificationSentAt: time.Now(),
+		VerificationSentAt: &now,
 	}
 	err = r.DB.Create(&u).Error
 	if err != nil {
@@ -106,45 +111,6 @@ func (r *mutationResolver) Signup(ctx context.Context, signupInput model.SignupI
 	}, nil
 }
 
-// ForgotPassword is the resolver for the forgotPassword field.
-func (r *mutationResolver) ForgotPassword(ctx context.Context, email string) (bool, error) {
-	err := validator.ValidateEmail(email)
-	if err != nil {
-		return false, gqlerror.Errorf(err.Error())
-	}
-	panic(fmt.Errorf("not implemented: ForgotPassword - forgotPassword"))
-}
-
-// ResendVerificationCode is the resolver for the resendVerificationCode field.
-func (r *mutationResolver) ResendVerificationCode(ctx context.Context, email string) (bool, error) {
-	err := validator.ValidateEmail(email)
-	if err != nil {
-		return false, gqlerror.Errorf(err.Error())
-	}
-
-	verificationCode, err := utils.GenerateVerificationCode(64)
-	if err != nil {
-		return false, gqlerror.Errorf(err.Error())
-	}
-
-	u := database.User{
-		VerificationCode:   verificationCode,
-		VerificationSentAt: time.Now(),
-	}
-	err = database.UpdateUser(r.DB, email, &u)
-	if err != nil {
-		return false, gqlerror.Errorf(err.Error())
-	}
-
-	// should this be moved to inside the user create tx?
-	err = mail.SendVerificationCode(verificationCode, email)
-	if err != nil {
-		return false, gqlerror.Errorf("Issue sending verification email")
-	}
-
-	return true, nil
-}
-
 // RefreshAccessToken is the resolver for the refreshAccessToken field.
 func (r *mutationResolver) RefreshAccessToken(ctx context.Context, refreshToken string) (*model.RefreshSuccess, error) {
 	// read token from context
@@ -165,4 +131,118 @@ func (r *mutationResolver) RefreshAccessToken(ctx context.Context, refreshToken 
 	return &model.RefreshSuccess{
 		AccessToken: accessToken,
 	}, nil
+}
+
+// ResendVerificationCode is the resolver for the resendVerificationCode field.
+func (r *mutationResolver) ResendVerificationCode(ctx context.Context, email string) (bool, error) {
+	err := validator.ValidateEmail(email)
+	if err != nil {
+		return false, gqlerror.Errorf(err.Error())
+	}
+
+	// check if user exists to send email to
+	_, err = database.GetUserByEmail(r.DB, email)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, gqlerror.Errorf("user does not exist")
+	}
+	if err != nil {
+		return false, gqlerror.Errorf(err.Error())
+	}
+
+	verificationCode, err := utils.GenerateVerificationCode(64)
+	if err != nil {
+		return false, gqlerror.Errorf("could not send verification email")
+	}
+
+	now := time.Now()
+	u := database.User{
+		VerificationCode:   &verificationCode,
+		VerificationSentAt: &now,
+	}
+	err = database.UpdateUser(r.DB, email, &u)
+	if err != nil {
+		return false, gqlerror.Errorf("could not send verification email")
+	}
+
+	// should this be moved to inside the user create tx?
+	err = mail.SendVerificationCode(verificationCode, email)
+	if err != nil {
+		return false, gqlerror.Errorf("could not send verification email")
+	}
+
+	return true, nil
+}
+
+// SendForgotPasswordLink is the resolver for the sendForgotPasswordLink field.
+func (r *mutationResolver) SendForgotPasswordLink(ctx context.Context, email string) (bool, error) {
+	err := validator.ValidateEmail(email)
+	if err != nil {
+		return false, gqlerror.Errorf(err.Error())
+	}
+
+	// check if user exists to send email to
+	_, err = database.GetUserByEmail(r.DB, email)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, gqlerror.Errorf("user does not exist")
+	}
+	if err != nil {
+		return false, gqlerror.Errorf(err.Error())
+	}
+
+	passwordResetCode, err := utils.GenerateVerificationCode(64)
+	if err != nil {
+		return false, gqlerror.Errorf(err.Error())
+	}
+
+	now := time.Now()
+	u := database.User{
+		PasswordResetCode:   &passwordResetCode,
+		PasswordResetSentAt: &now,
+	}
+	err = database.UpdateUser(r.DB, email, &u)
+	if err != nil {
+		return false, gqlerror.Errorf(err.Error())
+	}
+
+	err = mail.SendResetLink(passwordResetCode, email)
+	if err != nil {
+		return false, gqlerror.Errorf(err.Error())
+	}
+
+	return true, nil
+}
+
+// ResetPassword is the resolver for the resetPassword field.
+func (r *mutationResolver) ResetPassword(ctx context.Context, passwordResetCredentials model.PasswordResetCredentials) (bool, error) {
+	err := validator.ValidateEmail(passwordResetCredentials.Email)
+	if err != nil {
+		return false, gqlerror.Errorf(err.Error())
+	}
+
+	user, err := database.GetUserByEmail(r.DB, passwordResetCredentials.Email)
+	if err != nil {
+		return false, gqlerror.Errorf(err.Error())
+	}
+	expiryTime := time.Now().Add(24 * time.Hour)
+	if user.PasswordResetCode == nil || *user.PasswordResetCode != passwordResetCredentials.Code || user.PasswordResetSentAt == nil || user.PasswordResetSentAt.After(expiryTime) {
+		return false, gqlerror.Errorf("could not reset password")
+	}
+
+	// Hashing the password with the default cost of 10
+	newHashedPassword, err := bcrypt.GenerateFromPassword([]byte(passwordResetCredentials.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return false, gqlerror.Errorf("could not reset password")
+	}
+
+	var nilPasswordResetCode *string
+	u := database.User{
+		Password:          string(newHashedPassword),
+		PasswordResetCode: nilPasswordResetCode,
+	}
+	err = database.UpdateUser(r.DB, passwordResetCredentials.Email, &u)
+	if err != nil {
+		return false, gqlerror.Errorf(err.Error())
+	}
+
+	return true, nil
 }

@@ -149,6 +149,13 @@ input UpdateSetEntryInput {
   reps: Int
 }
 
+input PasswordResetCredentials {
+  email: String!
+  password: String!
+  confirmPassword: String!
+  code: String!
+}
+
 ### END INPUTS ###
 
 type Query {
@@ -164,7 +171,8 @@ type Query {
 
 type Mutation {
   deleteUser: Int!
-  forgotPassword(email: String!): Boolean!
+  resetPassword(passwordResetCredentials: PasswordResetCredentials!): Boolean!
+  sendForgotPasswordLink(email: String!): Boolean!
   resendVerificationCode(email: String!): Boolean!
 
   login(loginInput: LoginInput!): AuthResult!

@@ -8,13 +8,15 @@ import (
 
 type User struct {
 	gorm.Model
-	Name               string           `gorm:"not null;type:varchar(50)"`
-	Email              string           `gorm:"unique;not null;type:varchar(80)"`
-	Password           string           `gorm:"not null;size:type:varchar(32)"`
-	WorkoutRoutines    []WorkoutRoutine `gorm:"constraint:OnDelete:CASCADE"`
-	VerificationCode   string           `gorm:"unique"`
-	Verified           bool             `gorm:"default:false"`
-	VerificationSentAt time.Time
+	Name                string           `gorm:"not null;type:varchar(50)"`
+	Email               string           `gorm:"unique;not null;type:varchar(80)"`
+	Password            string           `gorm:"not null;size:type:varchar(32)"`
+	WorkoutRoutines     []WorkoutRoutine `gorm:"constraint:OnDelete:CASCADE"`
+	Verified            bool             `gorm:"default:false"`
+	VerificationCode    *string
+	VerificationSentAt  *time.Time
+	PasswordResetCode   *string
+	PasswordResetSentAt *time.Time
 }
 
 type WorkoutRoutine struct {

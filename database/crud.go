@@ -28,7 +28,8 @@ func GetUserByCode(db *gorm.DB, code string) (*User, error) {
 }
 
 func VerifyUser(db *gorm.DB, id string, code string) error {
-	return db.Model(&User{}).Where("verification_code = ? AND id = ?", code, id).Update("verified", "true").Error
+	var nilVerificationCode *string // used to reset verification code
+	return db.Model(&User{}).Where("verification_code = ? AND id = ?", code, id).Updates(User{Verified: true, VerificationCode: nilVerificationCode}).Error
 }
 
 func UpdateUser(db *gorm.DB, email string, user *User) error {

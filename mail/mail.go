@@ -92,5 +92,26 @@ func SendVerificationCode(code string, recipient string) error {
 }
 
 func SendResetLink(code string, recipient string) error {
+	templateData := struct {
+		Link string
+	}{
+		Link: fmt.Sprintf("tilfailureapp://s?forgotPasswordCode=%s", code),
+	}
+
+	abs, err := filepath.Abs("./mail/forgot-password-template.html")
+	if err != nil {
+		return err
+	}
+
+	body, err := parseTemplate(abs, templateData)
+	if err != nil {
+		return err
+	}
+
+	err = sendEmail([]string{recipient}, "Til Failure Password Reset", body)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

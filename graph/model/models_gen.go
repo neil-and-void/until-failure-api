@@ -40,6 +40,13 @@ type PageInfo struct {
 	HasNextPage bool `json:"hasNextPage"`
 }
 
+type PasswordResetCredentials struct {
+	Email           string `json:"email"`
+	Password        string `json:"password"`
+	ConfirmPassword string `json:"confirmPassword"`
+	Code            string `json:"code"`
+}
+
 type RefreshSuccess struct {
 	AccessToken string `json:"accessToken"`
 }
