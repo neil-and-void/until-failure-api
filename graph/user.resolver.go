@@ -16,6 +16,12 @@ func (r *mutationResolver) DeleteUser(ctx context.Context) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
+	if err != nil {
+		return 0, err
+	}
+
 	err = database.DeleteUser(r.DB, fmt.Sprintf("%d", u.ID))
 	if err != nil {
 		return 0, err
@@ -26,6 +32,11 @@ func (r *mutationResolver) DeleteUser(ctx context.Context) (int, error) {
 // User is the resolver for the user field.
 func (r *queryResolver) User(ctx context.Context) (*model.User, error) {
 	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.User{}, err
+	}
+
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
 	if err != nil {
 		return &model.User{}, err
 	}
