@@ -57,3 +57,8 @@ mutation Login{
 - `make regenerate`: regenerate graphql resolvers from `schema.graphqls`
 - `make schema_json`: generate new `schema.json` file for the iOS client
 - `make deploy`: deploy to GCP Run
+
+# Deployment
+
+1. Follow default prompts
+2. Deploy to region 32
