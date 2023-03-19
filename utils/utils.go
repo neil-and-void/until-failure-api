@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+	"time"
 )
 
 func StringToUInt(s string) uint {
@@ -21,6 +22,8 @@ func UIntToString(num uint) string {
 
 // generate URL safe code
 func GenerateVerificationCode(length int) (string, error) {
+	rand.Seed(time.Now().UnixNano())
+
 	// Generate a random byte slice of the specified length
 	randomBytes := make([]byte, length)
 	_, err := rand.Read(randomBytes)

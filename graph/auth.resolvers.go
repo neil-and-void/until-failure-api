@@ -177,7 +177,7 @@ func (r *mutationResolver) ResendVerificationCode(ctx context.Context, email str
 func (r *mutationResolver) SendForgotPasswordLink(ctx context.Context, email string) (bool, error) {
 	err := validator.ValidateEmail(email)
 	if err != nil {
-		return false, gqlerror.Errorf(err.Error())
+		return false, gqlerror.Errorf("not a valid email")
 	}
 
 	// check if user exists to send email to
@@ -186,12 +186,12 @@ func (r *mutationResolver) SendForgotPasswordLink(ctx context.Context, email str
 		return false, gqlerror.Errorf("user does not exist")
 	}
 	if err != nil {
-		return false, gqlerror.Errorf(err.Error())
+		return false, gqlerror.Errorf("error sending password reset code")
 	}
 
 	passwordResetCode, err := utils.GenerateVerificationCode(64)
 	if err != nil {
-		return false, gqlerror.Errorf(err.Error())
+		return false, gqlerror.Errorf("error sending password reset code")
 	}
 
 	now := time.Now()
@@ -201,12 +201,12 @@ func (r *mutationResolver) SendForgotPasswordLink(ctx context.Context, email str
 	}
 	err = database.UpdateUser(r.DB, email, &u)
 	if err != nil {
-		return false, gqlerror.Errorf(err.Error())
+		return false, gqlerror.Errorf("error sending password reset code")
 	}
 
 	err = mail.SendResetLink(passwordResetCode, email)
 	if err != nil {
-		return false, gqlerror.Errorf(err.Error())
+		return false, gqlerror.Errorf("error sending password reset code")
 	}
 
 	return true, nil

@@ -65,7 +65,28 @@ func main() {
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", c.Handler(authMiddleware))
 
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./public"))))
+	http.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
+		// Open the file specified by the request path
+		file, err := os.Open("." + r.URL.Path)
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		defer file.Close()
+
+		// Get the file information, including the modification time
+		info, err := file.Stat()
+		if err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		// Set the Content-Type header to "text/html"
+		w.Header().Set("Content-Type", "text/html")
+
+		// Serve the file content using http.ServeContent
+		http.ServeContent(w, r, "", info.ModTime(), file)
+	})
 
 	basehandler := &BaseHandler{
 		DB: db,

@@ -95,7 +95,7 @@ func SendResetLink(code string, recipient string) error {
 	templateData := struct {
 		Link string
 	}{
-		Link: fmt.Sprintf("tilfailureapp://s?forgotPasswordCode=%s", code),
+		Link: fmt.Sprintf("http://localhost:8080/static/password-redirect.html?code=%s", code),
 	}
 
 	abs, err := filepath.Abs("./mail/forgot-password-template.html")
