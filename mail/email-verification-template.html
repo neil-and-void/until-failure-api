@@ -17,14 +17,16 @@
       }
 
       .container {
+        width: 100%;
         display: flex;
         justify-content: center;
       }
 
-      .main {
+      .content {
         border-radius: 0.5rem;
         padding: 1rem;
         box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+        border: 1px solid gray;
       }
 
       .button-container {
@@ -32,13 +34,14 @@
         justify-content: center;
       }
 
-      button {
-        padding: 1rem 2rem;
+      button,
+      a {
+        padding: 0.5rem 1rem;
         font-size: 1rem;
         background-color: #f45b5a;
         border: none;
         color: white;
-        border-radius: 0.5rem;
+        border-radius: 999rem;
         cursor: pointer;
       }
     </style>
@@ -46,11 +49,15 @@
   <body>
     <script src="index.js"></script>
     <div class="container">
-      <div class="main">
-        <p>Thanks for signing up with Til Failure! :)</p>
+      <div class="content">
+        <h1>Email Verification</h1>
         <p>Click the button below to verify your email</p>
+        <p>
+          Click the button below to verify your email and start working out with
+          Until Failure :)
+        </p>
         <div class="button-container">
-          <a href="{{.Link}}"><button type="button">Verify Email</button></a>
+          <a href="{{.Link}}"><button type="button">Reset Password</button></a>
         </div>
       </div>
     </div>
