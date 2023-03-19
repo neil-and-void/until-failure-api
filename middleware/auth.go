@@ -2,12 +2,15 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 
 	"github.com/neilZon/workout-logger-api/common"
 	"github.com/neilZon/workout-logger-api/config"
+	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/token"
+	"gorm.io/gorm"
 )
 
 const UserCtxKey string = "USER"
@@ -34,4 +37,15 @@ func GetUser(ctx context.Context) (*token.Claims, error) {
 		return nil, &common.UnauthorizedError{}
 	}
 	return u, nil
+}
+
+func VerifyUser(db *gorm.DB, userId string) error {
+	user, err := database.GetUserById(db, userId)
+	if err != nil {
+		return errors.New("could not verify user")
+	}
+	if !user.Verified {
+		return errors.New("user not verified")
+	}
+	return nil
 }
