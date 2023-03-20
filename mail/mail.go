@@ -39,8 +39,8 @@ func (a *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 }
 
 func sendEmail(to []string, subject_line string, body string) error {
-	from := string(os.Getenv(config.EMAIL))
-	pass := string(os.Getenv(config.APP_PASSWORD))
+	from := os.Getenv(config.EMAIL)
+	pass := os.Getenv(config.APP_PASSWORD)
 	auth := LoginAuth(from, pass)
 
 	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
@@ -67,10 +67,12 @@ func parseTemplate(templateFileName string, data interface{}) (string, error) {
 }
 
 func SendVerificationCode(code string, recipient string) error {
+	host := os.Getenv(config.HOST)
+
 	templateData := struct {
 		Link string
 	}{
-		Link: fmt.Sprintf("http://localhost:8080/verify?code=%s", code),
+		Link: fmt.Sprintf("%s/verify?code=%s", host, code),
 	}
 
 	abs, err := filepath.Abs("./mail/email-verification-template.html")
@@ -92,10 +94,12 @@ func SendVerificationCode(code string, recipient string) error {
 }
 
 func SendResetLink(code string, recipient string) error {
+	host := os.Getenv(config.HOST)
+
 	templateData := struct {
 		Link string
 	}{
-		Link: fmt.Sprintf("http://localhost:8080/static/password-redirect.html?code=%s", code),
+		Link: fmt.Sprintf("%s/static/password-redirect.html?code=%s", host, code),
 	}
 
 	abs, err := filepath.Abs("./mail/forgot-password-template.html")

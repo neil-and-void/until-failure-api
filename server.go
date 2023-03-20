@@ -12,6 +12,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/joho/godotenv"
 	"github.com/neilZon/workout-logger-api/accesscontroller/accesscontrol"
+	"github.com/neilZon/workout-logger-api/config"
 	"github.com/neilZon/workout-logger-api/database"
 	db "github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/helpers"
@@ -104,30 +105,32 @@ type BaseHandler struct {
 func (b *BaseHandler) verify(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
+		host := os.Getenv(config.HOST)
+
 		code := r.URL.Query().Get("code")
 		if code == "" {
-			http.Redirect(w, r, "http://localhost:8080/static/verification-failure.html", http.StatusSeeOther)
+			http.Redirect(w, r, fmt.Sprintf("%s/static/verification-failure.html", host), http.StatusSeeOther)
 		}
 
 		expiryTime := time.Now().Add(24 * time.Hour)
 		user, err := database.GetUserByVerificationCode(b.DB, code)
 		if err != nil || user == nil || user.VerificationCode == nil || *user.VerificationCode != code || user.VerificationSentAt == nil || user.VerificationSentAt.After(expiryTime) {
-			http.Redirect(w, r, "http://localhost:8080/static/verification-failure.html", http.StatusSeeOther)
+			http.Redirect(w, r, fmt.Sprintf("%s/static/verification-failure.html", host), http.StatusSeeOther)
 			return
 		}
 
 		if user.Verified {
-			http.Redirect(w, r, "http://localhost:8080/static/verification-failure.html", http.StatusSeeOther)
+			http.Redirect(w, r, fmt.Sprintf("%s/static/verification-failure.html", host), http.StatusSeeOther)
 			return
 		}
 
 		err = database.VerifyUser(b.DB, fmt.Sprintf("%d", user.ID), code)
 		if err != nil {
-			http.Redirect(w, r, "http://localhost:8080/static/verification-failure.html", http.StatusSeeOther)
+			http.Redirect(w, r, fmt.Sprintf("%s/static/verification-failure.html", host), http.StatusSeeOther)
 			return
 		}
 
-		http.Redirect(w, r, "http://localhost:8080/static/verification-success.html", http.StatusSeeOther)
+		http.Redirect(w, r, fmt.Sprintf("%s/static/verification-success.html", host), http.StatusSeeOther)
 		return
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)

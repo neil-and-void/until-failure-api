@@ -12,4 +12,5 @@ const (
 	REFRESH_SECRET = "REFRESH_SECRET"
 	EMAIL          = "EMAIL"
 	APP_PASSWORD   = "APP_PASSWORD"
+	HOST           = "HOST"
 )
