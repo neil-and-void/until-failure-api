@@ -27,6 +27,10 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine mod
 		return &model.WorkoutRoutine{}, gqlerror.Errorf("Invalid Routine Name Length")
 	}
 
+	if len(routine.ExerciseRoutines) > 20 {
+		return &model.WorkoutRoutine{}, gqlerror.Errorf("workout routine can only have 20 exercise routines max")
+	}
+
 	exerciseRoutines := make([]database.ExerciseRoutine, 0)
 	for _, er := range routine.ExerciseRoutines {
 		exerciseRoutines = append(exerciseRoutines, database.ExerciseRoutine{Name: er.Name, Reps: uint(er.Reps), Sets: uint(er.Sets)})

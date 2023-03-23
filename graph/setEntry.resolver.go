@@ -22,8 +22,16 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set mo
 		return &model.SetEntry{}, err
 	}
 
+	if set.Reps < 0 || 999 < set.Reps {
+		return &model.SetEntry{}, gqlerror.Errorf("reps needs to be between 0 and 999")
+	}
+
+	if set.Weight < 0 || 9999 < set.Weight {
+
+	}
+
 	if err := validator.SetEntryInputIsValid(&set); err != nil {
-		return &model.SetEntry{}, err
+		return &model.SetEntry{}, gqlerror.Errorf("weight needs to be between 0 and 9999")
 	}
 
 	exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, 64)

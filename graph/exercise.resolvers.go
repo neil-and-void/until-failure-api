@@ -28,6 +28,9 @@ func (r *mutationResolver) AddExercise(ctx context.Context, workoutSessionID str
 	}
 
 	// todo: check can access exercise routines that are being added
+	if len(exercise.SetEntries) > 20 {
+		return &model.Exercise{}, gqlerror.Errorf("exercises can only have a maximum of 20 sets")
+	}
 
 	var setEntries []database.SetEntry
 	for _, s := range exercise.SetEntries {

@@ -24,6 +24,10 @@ func (r *mutationResolver) AddExerciseRoutine(ctx context.Context, workoutRoutin
 		return &model.ExerciseRoutine{}, gqlerror.Errorf("Exercise routine cannot have more than 20 sets")
 	}
 
+	if exerciseRoutine.Sets < 0 {
+		return &model.ExerciseRoutine{}, gqlerror.Errorf("sets cannot be a negative number")
+	}
+
 	userId := fmt.Sprintf("%d", u.ID)
 	err = r.ACS.CanAccessWorkoutRoutine(userId, workoutRoutineID)
 	if err != nil {
