@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/neilZon/workout-logger-api/database"
 	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/mail"
+	"github.com/neilZon/workout-logger-api/middleware"
 	"github.com/neilZon/workout-logger-api/token"
 	"github.com/neilZon/workout-logger-api/utils"
 	"github.com/neilZon/workout-logger-api/validator"
@@ -31,6 +33,11 @@ func (r *mutationResolver) Login(ctx context.Context, loginInput model.LoginInpu
 	}
 	if err != nil {
 		return &model.AuthResult{}, gqlerror.Errorf("Error Logging In")
+	}
+
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", dbUser.ID))
+	if err != nil {
+		return &model.AuthResult{}, err
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(loginInput.Password)); err != nil {
