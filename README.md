@@ -61,4 +61,4 @@ mutation Login{
 # Deployment
 
 1. Follow default prompts
-2. Deploy to region 32
+2. Deploy to us-west1
