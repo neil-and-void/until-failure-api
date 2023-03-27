@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -16,6 +17,11 @@ import (
 // AddWorkoutSession is the resolver for the addWorkoutSession field.
 func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.WorkoutSessionInput) (*model.WorkoutSession, error) {
 	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.WorkoutSession{}, err
+	}
+
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
 	if err != nil {
 		return &model.WorkoutSession{}, err
 	}
@@ -78,6 +84,11 @@ func (r *mutationResolver) UpdateWorkoutSession(ctx context.Context, workoutSess
 		return &model.WorkoutSession{}, err
 	}
 
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
+	if err != nil {
+		return &model.WorkoutSession{}, err
+	}
+
 	userId := utils.UIntToString(u.ID)
 	err = r.ACS.CanAccessWorkoutSession(userId, workoutSessionID)
 	if err != nil {
@@ -111,6 +122,11 @@ func (r *mutationResolver) DeleteWorkoutSession(ctx context.Context, workoutSess
 		return 0, err
 	}
 
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
+	if err != nil {
+		return 0, err
+	}
+
 	userId := utils.UIntToString(u.ID)
 	err = r.ACS.CanAccessWorkoutSession(userId, workoutSessionID)
 	if err != nil {
@@ -128,6 +144,11 @@ func (r *mutationResolver) DeleteWorkoutSession(ctx context.Context, workoutSess
 // WorkoutSessions is the resolver for the workoutSessions field.
 func (r *queryResolver) WorkoutSessions(ctx context.Context, limit int, after *string) (*model.WorkoutSessionConnection, error) {
 	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.WorkoutSessionConnection{}, err
+	}
+
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
 	if err != nil {
 		return &model.WorkoutSessionConnection{}, err
 	}
@@ -173,6 +194,11 @@ func (r *queryResolver) WorkoutSessions(ctx context.Context, limit int, after *s
 // WorkoutSession is the resolver for the workoutSession field.
 func (r *queryResolver) WorkoutSession(ctx context.Context, workoutSessionID string) (*model.WorkoutSession, error) {
 	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.WorkoutSession{}, err
+	}
+
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
 	if err != nil {
 		return &model.WorkoutSession{}, err
 	}

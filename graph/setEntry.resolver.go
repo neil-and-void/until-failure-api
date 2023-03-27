@@ -22,16 +22,13 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set mo
 		return &model.SetEntry{}, err
 	}
 
-	if set.Reps < 0 || 999 < set.Reps {
-		return &model.SetEntry{}, gqlerror.Errorf("reps needs to be between 0 and 999")
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
+	if err != nil {
+		return &model.SetEntry{}, err
 	}
 
-	if set.Weight < 0 || 9999 < set.Weight {
-
-	}
-
-	if err := validator.SetEntryInputIsValid(&set); err != nil {
-		return &model.SetEntry{}, gqlerror.Errorf("weight needs to be between 0 and 9999")
+	if err := validator.SetEntryInputIsValid(&model.SetEntry{Weight: set.Weight, Reps: set.Reps}); err != nil {
+		return &model.SetEntry{}, err
 	}
 
 	exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, 64)
@@ -116,6 +113,14 @@ func (r *mutationResolver) UpdateSet(ctx context.Context, setID string, set mode
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
 		return &model.SetEntry{}, err
+	}
+
+	if set.Reps != nil && (*set.Reps < 0 || *set.Reps > 9999) {
+		return &model.SetEntry{}, gqlerror.Errorf("Reps needs to be between 0 and 9999")
+	}
+
+	if set.Weight != nil && (*set.Weight < 0 || *set.Weight > 9999) {
+		return &model.SetEntry{}, gqlerror.Errorf("Weight needs to be between 0 and 9999")
 	}
 
 	if err := validator.UpdateSetEntryInputIsValid(&set); err != nil {

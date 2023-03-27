@@ -20,6 +20,11 @@ func (r *mutationResolver) AddExerciseRoutine(ctx context.Context, workoutRoutin
 		return &model.ExerciseRoutine{}, err
 	}
 
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
+	if err != nil {
+		return &model.ExerciseRoutine{}, err
+	}
+
 	if exerciseRoutine.Sets > 20 {
 		return &model.ExerciseRoutine{}, gqlerror.Errorf("Exercise routine cannot have more than 20 sets")
 	}
@@ -65,6 +70,11 @@ func (r *queryResolver) ExerciseRoutines(ctx context.Context, workoutRoutineID s
 		return []*model.ExerciseRoutine{}, err
 	}
 
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
+	if err != nil {
+		return []*model.ExerciseRoutine{}, err
+	}
+
 	userId := fmt.Sprintf("%d", u.ID)
 	err = r.ACS.CanAccessWorkoutRoutine(userId, workoutRoutineID)
 	if err != nil {
@@ -92,6 +102,11 @@ func (r *queryResolver) ExerciseRoutines(ctx context.Context, workoutRoutineID s
 // DeleteExerciseRoutine is the resolver for the deleteExerciseRoutine field.
 func (r *mutationResolver) DeleteExerciseRoutine(ctx context.Context, exerciseRoutineID string) (int, error) {
 	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
 	if err != nil {
 		return 0, err
 	}

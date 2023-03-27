@@ -126,6 +126,11 @@ func (r *mutationResolver) RefreshAccessToken(ctx context.Context, refreshToken 
 		return nil, gqlerror.Errorf("Refresh token invalid")
 	}
 
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", claims.ID))
+	if err != nil {
+		return &model.RefreshSuccess{}, err
+	}
+
 	accessToken := token.Sign(&token.Credentials{
 		ID:    claims.ID,
 		Email: claims.Subject,

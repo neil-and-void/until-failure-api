@@ -21,6 +21,11 @@ func (r *mutationResolver) AddExercise(ctx context.Context, workoutSessionID str
 		return &model.Exercise{}, err
 	}
 
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
+	if err != nil {
+		return &model.Exercise{}, err
+	}
+
 	userId := fmt.Sprintf("%d", u.ID)
 	err = r.ACS.CanAccessWorkoutSession(userId, workoutSessionID)
 	if err != nil {
@@ -79,6 +84,11 @@ func (r *queryResolver) Exercise(ctx context.Context, exerciseID string) (*model
 		return &model.Exercise{}, err
 	}
 
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
+	if err != nil {
+		return &model.Exercise{}, err
+	}
+
 	exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, 64)
 	if err != nil {
 		return &model.Exercise{}, gqlerror.Errorf("Error Getting Exercise: Invalid Exercise ID")
@@ -112,6 +122,11 @@ func (r *queryResolver) Exercise(ctx context.Context, exerciseID string) (*model
 // UpdateExercise is the resolver for the updateExercise field.
 func (r *mutationResolver) UpdateExercise(ctx context.Context, exerciseID string, exercise model.UpdateExerciseInput) (*model.Exercise, error) {
 	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.Exercise{}, err
+	}
+
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
 	if err != nil {
 		return &model.Exercise{}, err
 	}
@@ -153,6 +168,11 @@ func (r *mutationResolver) UpdateExercise(ctx context.Context, exerciseID string
 // DeleteExercise is the resolver for the deleteExercise field.
 func (r *mutationResolver) DeleteExercise(ctx context.Context, exerciseID string) (int, error) {
 	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
 	if err != nil {
 		return 0, err
 	}
