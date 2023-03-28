@@ -102,7 +102,7 @@ func SendResetLink(code string, recipient string) error {
 		Link: fmt.Sprintf("%s/static/password-redirect.html?code=%s", host, code),
 	}
 
-	abs, err := filepath.Abs("./mail/forgot-password-template.html")
+	abs, err := filepath.Abs("./mail/reset-password-template.html")
 	if err != nil {
 		return err
 	}
