@@ -54,6 +54,9 @@ func (r *mutationResolver) AddExerciseRoutine(ctx context.Context, workoutRoutin
 		return &model.ExerciseRoutine{}, gqlerror.Errorf("Error Adding Exercise Routine")
 	}
 
+	loaders := middleware.GetLoaders(ctx)
+	loaders.ExerciseRoutineSliceLoader.Clear(ctx, dataloader.StringKey(workoutRoutineID))
+
 	return &model.ExerciseRoutine{
 		ID:     utils.UIntToString(dbExerciseRoutine.ID),
 		Active: dbExerciseRoutine.Active,

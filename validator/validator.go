@@ -2,6 +2,7 @@ package validator
 
 import (
 	"errors"
+	"fmt"
 	"net/mail"
 
 	"github.com/neilZon/workout-logger-api/graph/model"
@@ -76,7 +77,21 @@ func ExerciseIsVaid(exercise *model.Exercise) error {
 	return nil
 }
 
-func ExerciseRoutineIsValid(exerciseRoutine *model.ExerciseRoutine) error { return nil }
+func ExerciseRoutineIsValid(exerciseRoutine *model.ExerciseRoutine) error {
+	if exerciseRoutine.Sets > 20 {
+		return errors.New("you cannot have more than 20 sets")
+	}
+
+	if len(exerciseRoutine.Name) > 32 {
+		return errors.New("exercise routine names must have less than 32 characters")
+	}
+
+	if exerciseRoutine.Reps > 99 {
+		return fmt.Errorf("wtf you doing with %d reps??", exerciseRoutine.Reps)
+	}
+
+	return nil
+}
 
 func WorkoutSessionIsValid(workoutSession *model.WorkoutSession) error { return nil }
 

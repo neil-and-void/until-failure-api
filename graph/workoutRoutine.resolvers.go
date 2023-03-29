@@ -11,6 +11,7 @@ import (
 	"github.com/neilZon/workout-logger-api/graph/model"
 	"github.com/neilZon/workout-logger-api/middleware"
 	"github.com/neilZon/workout-logger-api/utils"
+	"github.com/neilZon/workout-logger-api/validator"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"gorm.io/gorm"
 )
@@ -22,6 +23,11 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine mod
 		return &model.WorkoutRoutine{}, err
 	}
 
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
+	if err != nil {
+		return &model.WorkoutRoutine{}, err
+	}
+
 	// validate input
 	if len([]rune(routine.Name)) <= 2 {
 		return &model.WorkoutRoutine{}, gqlerror.Errorf("Invalid Routine Name Length")
@@ -29,6 +35,15 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine mod
 
 	if len(routine.ExerciseRoutines) > 20 {
 		return &model.WorkoutRoutine{}, gqlerror.Errorf("workout routine can only have 20 exercise routines max")
+	}
+
+	for _, exerciseRoutine := range routine.ExerciseRoutines {
+		validator.ExerciseRoutineIsValid(&model.ExerciseRoutine{
+			ID:   "", // blank string to pass to validator
+			Name: exerciseRoutine.Name,
+			Reps: exerciseRoutine.Reps,
+			Sets: exerciseRoutine.Sets,
+		})
 	}
 
 	exerciseRoutines := make([]database.ExerciseRoutine, 0)
@@ -68,6 +83,11 @@ func (r *mutationResolver) CreateWorkoutRoutine(ctx context.Context, routine mod
 // WorkoutRoutines is the resolver for the workoutRoutines field.
 func (r *queryResolver) WorkoutRoutines(ctx context.Context, limit int, after *string) (*model.WorkoutRoutineConnection, error) {
 	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.WorkoutRoutineConnection{}, err
+	}
+
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
 	if err != nil {
 		return &model.WorkoutRoutineConnection{}, err
 	}
@@ -115,6 +135,11 @@ func (r *queryResolver) WorkoutRoutine(ctx context.Context, workoutRoutineID str
 		return &model.WorkoutRoutine{}, err
 	}
 
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
+	if err != nil {
+		return &model.WorkoutRoutine{}, err
+	}
+
 	userId := fmt.Sprintf("%d", u.ID)
 	err = r.ACS.CanAccessWorkoutRoutine(userId, workoutRoutineID)
 	if err != nil {
@@ -138,6 +163,24 @@ func (r *mutationResolver) UpdateWorkoutRoutine(ctx context.Context, workoutRout
 	u, err := middleware.GetUser(ctx)
 	if err != nil {
 		return &model.WorkoutRoutine{}, err
+	}
+
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
+	if err != nil {
+		return &model.WorkoutRoutine{}, err
+	}
+
+	for _, exerciseRoutine := range workoutRoutine.ExerciseRoutines {
+		err = validator.ExerciseRoutineIsValid(&model.ExerciseRoutine{
+			ID:   "", // blank string to pass to validator
+			Name: exerciseRoutine.Name,
+			Reps: exerciseRoutine.Reps,
+			Sets: exerciseRoutine.Sets,
+		})
+
+		if err != nil {
+			return &model.WorkoutRoutine{}, err
+		}
 	}
 
 	userId := fmt.Sprintf("%d", u.ID)
@@ -192,6 +235,11 @@ func (r *mutationResolver) UpdateWorkoutRoutine(ctx context.Context, workoutRout
 // DeleteWorkoutRoutine is the resolver for the deleteWorkoutRoutine field.
 func (r *mutationResolver) DeleteWorkoutRoutine(ctx context.Context, workoutRoutineID string) (int, error) {
 	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
 	if err != nil {
 		return 0, err
 	}

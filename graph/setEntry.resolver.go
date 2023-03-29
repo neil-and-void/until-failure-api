@@ -77,6 +77,11 @@ func (r *queryResolver) Sets(ctx context.Context, exerciseID string) ([]*model.S
 		return []*model.SetEntry{}, err
 	}
 
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
+	if err != nil {
+		return []*model.SetEntry{}, err
+	}
+
 	exerciseIDUint, err := strconv.ParseUint(exerciseID, 10, 64)
 	if err != nil {
 		return []*model.SetEntry{}, gqlerror.Errorf("Error Getting Sets: Invalid Exercise ID")
@@ -111,6 +116,11 @@ func (r *queryResolver) Sets(ctx context.Context, exerciseID string) ([]*model.S
 // UpdateSet is the resolver for the updateSet field.
 func (r *mutationResolver) UpdateSet(ctx context.Context, setID string, set model.UpdateSetEntryInput) (*model.SetEntry, error) {
 	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return &model.SetEntry{}, err
+	}
+
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
 	if err != nil {
 		return &model.SetEntry{}, err
 	}
@@ -181,6 +191,11 @@ func (r *mutationResolver) UpdateSet(ctx context.Context, setID string, set mode
 // DeleteSet is the resolver for the deleteSet field.
 func (r *mutationResolver) DeleteSet(ctx context.Context, setID string) (int, error) {
 	u, err := middleware.GetUser(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	err = middleware.VerifyUser(r.DB, fmt.Sprintf("%d", u.ID))
 	if err != nil {
 		return 0, err
 	}
