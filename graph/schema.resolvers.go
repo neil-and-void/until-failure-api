@@ -7,6 +7,8 @@ import (
 	"github.com/neilZon/workout-logger-api/graph/generated"
 )
 
+// ExerciseRoutine is the resolver for the exerciseRoutine field.
+
 // Exercise returns generated.ExerciseResolver implementation.
 func (r *Resolver) Exercise() generated.ExerciseResolver { return &exerciseResolver{r} }
 

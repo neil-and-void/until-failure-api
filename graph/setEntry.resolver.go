@@ -49,10 +49,21 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set mo
 		return &model.SetEntry{}, gqlerror.Errorf("Error Adding Set: Access Denied")
 	}
 
+	var weight *float32
+	if set.Weight != nil {
+		w := float32(*set.Weight)
+		weight = &w
+	}
+	var reps *uint
+	if set.Weight != nil {
+		r := uint(*set.Reps)
+		reps = &r
+	}
+
 	dbSet := database.SetEntry{
 		ExerciseID: uint(exerciseIDUint),
-		Weight:     float32(set.Weight),
-		Reps:       uint(set.Reps),
+		Weight:     weight,
+		Reps:       reps,
 	}
 	err = database.AddSet(r.DB, &dbSet)
 	if err != nil {
@@ -65,8 +76,8 @@ func (r *mutationResolver) AddSet(ctx context.Context, exerciseID string, set mo
 
 	return &model.SetEntry{
 		ID:     utils.UIntToString(dbSet.ID),
-		Weight: float64(dbSet.Weight),
-		Reps:   int(dbSet.Reps),
+		Weight: set.Weight,
+		Reps:   set.Reps,
 	}, nil
 }
 
@@ -103,10 +114,22 @@ func (r *queryResolver) Sets(ctx context.Context, exerciseID string) ([]*model.S
 
 	var sets []*model.SetEntry
 	for _, s := range exercise.Sets {
+
+		var weight *float64
+		if s.Weight != nil {
+			w := float64(*s.Weight)
+			weight = &w
+		}
+		var reps *int
+		if s.Weight != nil {
+			r := int(*s.Reps)
+			reps = &r
+		}
+
 		sets = append(sets, &model.SetEntry{
 			ID:     fmt.Sprintf("%d", s.ID),
-			Reps:   int(s.Reps),
-			Weight: float64(s.Weight),
+			Reps:   reps,
+			Weight: weight,
 		})
 	}
 
@@ -159,18 +182,18 @@ func (r *mutationResolver) UpdateSet(ctx context.Context, setID string, set mode
 	}
 
 	// check optional inputs
-	var reps uint
+	var dbReps uint
 	if set.Reps != nil {
-		reps = uint(*set.Reps)
+		dbReps = uint(*set.Reps)
 	}
-	var weight float32
+	var dbWeight float32
 	if set.Weight != nil {
-		weight = float32(*set.Weight)
+		dbWeight = float32(*set.Weight)
 	}
 
 	updatedSet := database.SetEntry{
-		Reps:   reps,
-		Weight: weight,
+		Reps:   &dbReps,
+		Weight: &dbWeight,
 	}
 	err = database.UpdateSet(r.DB, setID, &updatedSet)
 	if err != nil {
@@ -183,8 +206,8 @@ func (r *mutationResolver) UpdateSet(ctx context.Context, setID string, set mode
 
 	return &model.SetEntry{
 		ID:     fmt.Sprintf("%d", updatedSet.ID),
-		Weight: float64(updatedSet.Weight),
-		Reps:   int(updatedSet.Reps),
+		Weight: set.Weight,
+		Reps:   set.Reps,
 	}, nil
 }
 

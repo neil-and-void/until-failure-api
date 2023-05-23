@@ -64,8 +64,8 @@ type Exercise {
 
 type SetEntry {
   id: ID!
-  weight: Float!
-  reps: Int!
+  weight: Float
+  reps: Int
 }
 
 type AuthResult {
@@ -140,8 +140,8 @@ input UpdateExerciseInput {
 }
 
 input SetEntryInput {
-  weight: Float!
-  reps: Int!
+  weight: Float
+  reps: Int
 }
 
 input UpdateSetEntryInput {
