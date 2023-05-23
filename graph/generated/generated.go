@@ -965,8 +965,8 @@ type Exercise {
 
 type SetEntry {
   id: ID!
-  weight: Float
-  reps: Int
+  weight: Float!
+  reps: Int!
 }
 
 type AuthResult {
@@ -1041,8 +1041,8 @@ input UpdateExerciseInput {
 }
 
 input SetEntryInput {
-  weight: Float
-  reps: Int
+  weight: Float!
+  reps: Int!
 }
 
 input UpdateSetEntryInput {
@@ -1098,6 +1098,7 @@ type Mutation {
   ): WorkoutSession!
   deleteWorkoutSession(workoutSessionId: ID!): Int!
 
+  # addImpromptuExercise(workoutSession, exerciseRoutine:{sets, reps, name, workoutRoutineId}) for later
   addExercise(workoutSessionId: ID!, exercise: ExerciseInput!): Exercise!
   updateExercise(exerciseId: ID!, exercise: UpdateExerciseInput!): Exercise!
   deleteExercise(exerciseId: ID!): Int!
@@ -4189,11 +4190,14 @@ func (ec *executionContext) _SetEntry_weight(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*float64)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SetEntry_weight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4230,11 +4234,14 @@ func (ec *executionContext) _SetEntry_reps(ctx context.Context, field graphql.Co
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SetEntry_reps(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7216,7 +7223,7 @@ func (ec *executionContext) unmarshalInputSetEntryInput(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("weight"))
-			it.Weight, err = ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			it.Weight, err = ec.unmarshalNFloat2float64(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7224,7 +7231,7 @@ func (ec *executionContext) unmarshalInputSetEntryInput(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reps"))
-			it.Reps, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			it.Reps, err = ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8266,10 +8273,16 @@ func (ec *executionContext) _SetEntry(ctx context.Context, sel ast.SelectionSet,
 
 			out.Values[i] = ec._SetEntry_weight(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "reps":
 
 			out.Values[i] = ec._SetEntry_reps(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -9139,6 +9152,21 @@ func (ec *executionContext) unmarshalNExerciseRoutineInput2ᚕᚖgithubᚗcomᚋ
 func (ec *executionContext) unmarshalNExerciseRoutineInput2ᚖgithubᚗcomᚋneilZonᚋworkoutᚑloggerᚑapiᚋgraphᚋmodelᚐExerciseRoutineInput(ctx context.Context, v interface{}) (*model.ExerciseRoutineInput, error) {
 	res, err := ec.unmarshalInputExerciseRoutineInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
+	res, err := graphql.UnmarshalFloatContext(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
+	res := graphql.MarshalFloatContext(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return graphql.WrapContextMarshaler(ctx, res)
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {

@@ -51,14 +51,14 @@ type RefreshSuccess struct {
 }
 
 type SetEntry struct {
-	ID     string   `json:"id"`
-	Weight *float64 `json:"weight"`
-	Reps   *int     `json:"reps"`
+	ID     string  `json:"id"`
+	Weight float64 `json:"weight"`
+	Reps   int     `json:"reps"`
 }
 
 type SetEntryInput struct {
-	Weight *float64 `json:"weight"`
-	Reps   *int     `json:"reps"`
+	Weight float64 `json:"weight"`
+	Reps   int     `json:"reps"`
 }
 
 type SignupInput struct {

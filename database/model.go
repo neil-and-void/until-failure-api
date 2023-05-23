@@ -60,7 +60,7 @@ type Exercise struct {
 
 type SetEntry struct {
 	gorm.Model
-	Weight     *float32 `sql:"type:decimal(10,2);"`
-	Reps       *uint
+	Weight     float32 `gorm:"not null" sql:"type:decimal(10,2);"`
+	Reps       uint    `gorm:"not null"`
 	ExerciseID uint
 }

@@ -199,30 +199,18 @@ func (s *SetEntrySliceReader) GetSetEntrySlices(ctx context.Context, keys datalo
 	for _, setEntry := range *setEntries {
 		exerciseId := utils.UIntToString(setEntry.ExerciseID)
 		setEntryId := utils.UIntToString(setEntry.ID)
-
-		var weight *float64
-		if setEntry.Weight != nil {
-			w := float64(*setEntry.Weight)
-			weight = &w
-		}
-		var reps *int
-		if setEntry.Weight != nil {
-			r := int(*setEntry.Reps)
-			reps = &r
-		}
-
 		if _, ok := setEntrySlicesByExerciseId[exerciseId]; ok {
 			setEntrySlicesByExerciseId[exerciseId] = append(setEntrySlicesByExerciseId[exerciseId], &model.SetEntry{
 				ID:     setEntryId,
-				Weight: weight,
-				Reps:   reps,
+				Weight: float64(setEntry.Weight),
+				Reps:   int(setEntry.Reps),
 			})
 		} else {
 			setEntrySlicesByExerciseId[exerciseId] = []*model.SetEntry{
 				{
 					ID:     setEntryId,
-					Weight: weight,
-					Reps:   reps,
+					Weight: float64(setEntry.Weight),
+					Reps:   int(setEntry.Reps),
 				},
 			}
 		}

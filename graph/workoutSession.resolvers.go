@@ -31,20 +31,9 @@ func (r *mutationResolver) AddWorkoutSession(ctx context.Context, workout model.
 		var set []database.SetEntry
 
 		for _, s := range e.SetEntries {
-			var weight *float32
-			if s.Weight != nil {
-				temp := float32(*s.Weight)
-				weight = &temp
-			}
-			var reps *uint
-			if s.Reps != nil {
-				temp := uint(*s.Reps)
-				reps = &temp
-			}
-
 			set = append(set, database.SetEntry{
-				Weight: weight,
-				Reps:   reps,
+				Weight: float32(s.Weight),
+				Reps:   uint(s.Reps),
 			})
 		}
 

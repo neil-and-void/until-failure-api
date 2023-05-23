@@ -48,11 +48,11 @@ func UpdateSetEntryInputIsValid(u *model.UpdateSetEntryInput) error {
 }
 
 func SetEntryInputIsValid(s *model.SetEntry) error {
-	if s.Reps != nil && (*s.Reps < 0 || *s.Reps > 9999) {
+	if s.Reps < 0 || s.Reps > 9999 {
 		return errors.New("reps needs to be between 0 and 9999")
 	}
 
-	if s.Weight != nil && (*s.Weight < 0 || *s.Weight > 9999) {
+	if s.Weight < 0 || s.Weight > 9999 {
 		return errors.New("weight needs to be between 0 and 9999")
 	}
 
