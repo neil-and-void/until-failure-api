@@ -21,9 +21,13 @@ const (
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
+	environment := os.Getenv("ENVIRONMENT")
+
+	if environment != "PROD" {
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatalf("Error loading .env file")
+		}
 	}
 
 	port := os.Getenv("PORT")
