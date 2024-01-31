@@ -3,3 +3,4 @@
 tmp
 workout-logger-graphql-api
 schema.json
+*.pem

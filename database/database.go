@@ -8,7 +8,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitDb() (*gorm.DB, error) {
+type UntilFailureDB struct {
+	DB *gorm.DB
+}
+
+func InitDb() (UntilFailureDB, error) {
 	DB_HOST := os.Getenv("DB_HOST")
 	DB_DBNAME := os.Getenv("DB_DBNAME")
 	DB_USERNAME := os.Getenv("DB_USERNAME")
@@ -22,8 +26,12 @@ func InitDb() (*gorm.DB, error) {
 		PreferSimpleProtocol: true, // disables implicit prepared statement usage
 	}), &gorm.Config{})
 	if err != nil {
-		return nil, err
+		return UntilFailureDB{}, err
 	}
+
 	db.AutoMigrate(User{}, WorkoutRoutine{}, ExerciseRoutine{}, WorkoutSession{}, Exercise{}, SetEntry{})
-	return db, nil
+
+	untilFailureDB := UntilFailureDB{DB: db}
+
+	return untilFailureDB, nil
 }

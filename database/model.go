@@ -8,34 +8,25 @@ import (
 
 type User struct {
 	gorm.Model
-	Name                string           `gorm:"not null;type:varchar(50)"`
-	Email               string           `gorm:"unique;not null;type:varchar(80)"`
-	Password            string           `gorm:"not null;size:type:varchar(32)"`
-	WorkoutRoutines     []WorkoutRoutine `gorm:"constraint:OnDelete:CASCADE"`
-	Verified            bool             `gorm:"default:false"`
-	VerificationCode    *string          `gorm:"unique"`
-	VerificationSentAt  *time.Time
-	PasswordResetCode   *string `gorm:"unique"`
-	PasswordResetSentAt *time.Time
 }
 
 type WorkoutRoutine struct {
 	gorm.Model
-	Name             string            `gorm:"not null;size:32"`
-	ExerciseRoutines []ExerciseRoutine `gorm:"constraint:OnDelete:CASCADE"`
-	WorkoutSessions  []WorkoutSession  `gorm:"constraint:OnDelete:CASCADE"`
-	Active           bool              `gorm:"default:true"`
-	UserID           uint
+	Name             string            `gorm:"not null;size:32" json:"name"`
+	ExerciseRoutines []ExerciseRoutine `gorm:"constraint:OnDelete:CASCADE" json:"exerciseRoutines"`
+	WorkoutSessions  []WorkoutSession  `gorm:"constraint:OnDelete:CASCADE" json:"workoutSessions"`
+	Active           bool              `gorm:"default:true" json:"active"`
+	UserID           uint              `json:"userId"`
 }
 
 type ExerciseRoutine struct {
 	gorm.Model
-	Name             string     `gorm:"not null;size:32"`
-	Sets             uint       `gorm:"not null"`
-	Reps             uint       `gorm:"not null"`
-	Exercises        []Exercise `gorm:"constraint:OnDelete:CASCADE"`
-	Active           bool       `gorm:"default:true"`
-	WorkoutRoutineID uint
+	Name             string     `gorm:"not null;size:32" json:"name"`
+	Sets             uint       `gorm:"not null" json:"sets"`
+	Reps             uint       `gorm:"not null" reps:"reps"`
+	Exercises        []Exercise `gorm:"constraint:OnDelete:CASCADE" json:"exercises"`
+	Active           bool       `gorm:"default:true" json:"active"`
+	WorkoutRoutineID uint       `json:"workoutRoutineId"`
 }
 
 type WorkoutSession struct {
@@ -60,7 +51,7 @@ type Exercise struct {
 
 type SetEntry struct {
 	gorm.Model
-	Weight     float32 `gorm:"not null" sql:"type:decimal(10,2);"`
-	Reps       uint    `gorm:"not null"`
+	Weight     float32 `sql:"type:decimal(10,2);"`
+	Reps       uint
 	ExerciseID uint
 }
