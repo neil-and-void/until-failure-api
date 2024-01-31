@@ -6,52 +6,60 @@ import (
 	"gorm.io/gorm"
 )
 
-type User struct {
-	gorm.Model
+type BaseModel struct {
+	CreatedAt time.Time      `json:"CreatedAt"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deletedAt"`
 }
 
-type WorkoutRoutine struct {
-	gorm.Model
-	Name             string            `gorm:"not null;size:32" json:"name"`
-	ExerciseRoutines []ExerciseRoutine `gorm:"constraint:OnDelete:CASCADE" json:"exerciseRoutines"`
-	WorkoutSessions  []WorkoutSession  `gorm:"constraint:OnDelete:CASCADE" json:"workoutSessions"`
-	Active           bool              `gorm:"default:true" json:"active"`
+type User struct {
+	BaseModel
+	ID    string `gorm:"primarykey"`
+	Email string `gorm:"unique"`
+}
+
+type Routine struct {
+	BaseModel
+	Name             string            `gorm:"not null;size:32"`
+	ExerciseRoutines []ExerciseRoutine `gorm:"constraint:OnDelete:CASCADE"`
+	Workouts         []Workout         `gorm:"constraint:OnDelete:CASCADE"`
+	Active           bool              `gorm:"default:true"`
 	UserID           uint              `json:"userId"`
 }
 
 type ExerciseRoutine struct {
-	gorm.Model
-	Name             string     `gorm:"not null;size:32" json:"name"`
-	Sets             uint       `gorm:"not null" json:"sets"`
-	Reps             uint       `gorm:"not null" reps:"reps"`
-	Exercises        []Exercise `gorm:"constraint:OnDelete:CASCADE" json:"exercises"`
-	Active           bool       `gorm:"default:true" json:"active"`
-	WorkoutRoutineID uint       `json:"workoutRoutineId"`
+	BaseModel
+	Name      string     `gorm:"not null;size:32"`
+	Sets      uint       `gorm:"not null"`
+	Reps      uint       `gorm:"not null"`
+	Exercises []Exercise `gorm:"constraint:OnDelete:CASCADE"`
+	Active    bool       `gorm:"default:true"`
+	RoutineID uint
 }
 
-type WorkoutSession struct {
-	gorm.Model
-	Start            time.Time `gorm:"not null"`
-	End              *time.Time
-	WorkoutRoutine   WorkoutRoutine
-	Exercises        []Exercise `gorm:"constraint:OnDelete:CASCADE"`
-	WorkoutRoutineID uint
-	UserID           uint
+type Workout struct {
+	BaseModel
+	Start     time.Time `gorm:"not null"`
+	End       *time.Time
+	Routine   Routine
+	Exercises []Exercise `gorm:"constraint:OnDelete:CASCADE"`
+	RoutineID uint
+	UserID    uint
 }
 
 type Exercise struct {
-	gorm.Model
-	WorkoutSession    WorkoutSession
+	BaseModel
+	Workout           Workout
 	ExerciseRoutine   ExerciseRoutine
 	Sets              []SetEntry `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Notes             string     `gorm:"size:512"`
 	ExerciseRoutineID uint
-	WorkoutSessionID  uint
+	SessionID         uint
 }
 
 type SetEntry struct {
-	gorm.Model
-	Weight     float32 `sql:"type:decimal(10,2);"`
-	Reps       uint
+	BaseModel
+	Weight     *float32 `sql:"type:decimal(10,2);"`
+	Reps       *uint
 	ExerciseID uint
 }

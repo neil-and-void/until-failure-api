@@ -16,7 +16,7 @@ require github.com/opentracing/opentracing-go v1.2.0 // indirect
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.0 // indirect
-	github.com/google/uuid v1.5.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.13.0 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
