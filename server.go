@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -16,7 +17,7 @@ import (
 )
 
 const (
-	defaultPort   = "8080"
+	defaultPort   = "3000"
 	publicKeyPath = "public.pem"
 )
 
@@ -63,5 +64,7 @@ func main() {
 
 	handlers.RegisterRoutes(app, h, m)
 
-	app.Listen(":3000")
+	addr := fmt.Sprintf("0.0.0.0:%s", port)
+
+	app.Listen(addr)
 }
