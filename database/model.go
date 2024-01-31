@@ -3,63 +3,72 @@ package database
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
-type BaseModel struct {
-	CreatedAt time.Time      `json:"CreatedAt"`
-	UpdatedAt time.Time      `json:"updatedAt"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"deletedAt"`
-}
+type (
+	BaseModel struct {
+		CreatedAt time.Time      `json:"CreatedAt"`
+		UpdatedAt time.Time      `json:"updatedAt"`
+		DeletedAt gorm.DeletedAt `gorm:"index" json:"deletedAt"`
+	}
 
-type User struct {
-	BaseModel
-	ID    string `gorm:"primarykey"`
-	Email string `gorm:"unique"`
-}
+	User struct {
+		BaseModel
+		ID       string    `gorm:"primarykey"`
+		Email    string    `gorm:"unique"`
+		Routines []Routine `gorm:"constraint:OnDelete:CASCADE"`
+	}
 
-type Routine struct {
-	BaseModel
-	Name             string            `gorm:"not null;size:32"`
-	ExerciseRoutines []ExerciseRoutine `gorm:"constraint:OnDelete:CASCADE"`
-	Workouts         []Workout         `gorm:"constraint:OnDelete:CASCADE"`
-	Active           bool              `gorm:"default:true"`
-	UserID           uint              `json:"userId"`
-}
+	Routine struct {
+		BaseModel
+		ID               uuid.UUID         `gorm:"primarykey;type:uuid;default:uuid_generate_v4()"`
+		Name             string            `gorm:"not null;size:32"`
+		ExerciseRoutines []ExerciseRoutine `gorm:"constraint:OnDelete:CASCADE"`
+		Workouts         []Workout         `gorm:"constraint:OnDelete:CASCADE"`
+		Active           bool              `gorm:"default:true"`
+		UserID           string
+	}
 
-type ExerciseRoutine struct {
-	BaseModel
-	Name      string     `gorm:"not null;size:32"`
-	Sets      uint       `gorm:"not null"`
-	Reps      uint       `gorm:"not null"`
-	Exercises []Exercise `gorm:"constraint:OnDelete:CASCADE"`
-	Active    bool       `gorm:"default:true"`
-	RoutineID uint
-}
+	ExerciseRoutine struct {
+		BaseModel
+		ID        uuid.UUID  `gorm:"primarykey;type:uuid;default:uuid_generate_v4()"`
+		Name      string     `gorm:"not null;size:32"`
+		Sets      uint       `gorm:"not null"`
+		Reps      uint       `gorm:"not null"`
+		Exercises []Exercise `gorm:"constraint:OnDelete:CASCADE"`
+		Active    bool       `gorm:"default:true"`
+		RoutineID uuid.UUID
+	}
 
-type Workout struct {
-	BaseModel
-	Start     time.Time `gorm:"not null"`
-	End       *time.Time
-	Routine   Routine
-	Exercises []Exercise `gorm:"constraint:OnDelete:CASCADE"`
-	RoutineID uint
-	UserID    uint
-}
+	Workout struct {
+		BaseModel
+		ID        uuid.UUID `gorm:"primarykey;type:uuid;default:uuid_generate_v4()"`
+		Start     time.Time `gorm:"not null"`
+		End       *time.Time
+		Routine   Routine
+		Exercises []Exercise `gorm:"constraint:OnDelete:CASCADE"`
+		RoutineID uuid.UUID
+		UserID    uuid.UUID
+	}
 
-type Exercise struct {
-	BaseModel
-	Workout           Workout
-	ExerciseRoutine   ExerciseRoutine
-	Sets              []SetEntry `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Notes             string     `gorm:"size:512"`
-	ExerciseRoutineID uint
-	SessionID         uint
-}
+	Exercise struct {
+		BaseModel
+		ID                uuid.UUID `gorm:"primarykey;type:uuid;default:uuid_generate_v4()"`
+		Workout           Workout
+		ExerciseRoutine   ExerciseRoutine
+		Sets              []SetEntry `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+		Notes             string     `gorm:"size:512"`
+		ExerciseRoutineID uuid.UUID
+		WorkoutID         uuid.UUID
+	}
 
-type SetEntry struct {
-	BaseModel
-	Weight     *float32 `sql:"type:decimal(10,2);"`
-	Reps       *uint
-	ExerciseID uint
-}
+	SetEntry struct {
+		BaseModel
+		ID         uuid.UUID `gorm:"primarykey;type:uuid;default:uuid_generate_v4()"`
+		Weight     *float32  `sql:"type:decimal(10,2);"`
+		Reps       *uint
+		ExerciseID uuid.UUID
+	}
+)
