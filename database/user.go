@@ -1,7 +1,7 @@
 package database
 
-func (db UntilFailureDB) CreateUser(user User) error {
-	result := db.DB.Create(&user)
+func (db UntilFailureDB) CreateUser(user *User) error {
+	result := db.DB.Create(user)
 	return result.Error
 }
 

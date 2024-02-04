@@ -2,18 +2,17 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 
+	"github.com/clerkinc/clerk-sdk-go/clerk"
 	"github.com/gofiber/fiber/v2"
 	"github.com/neilZon/workout-logger-api/database"
-	"github.com/neilZon/workout-logger-api/handlers/validators"
+	"github.com/neilZon/workout-logger-api/middleware"
 
 	"gorm.io/gorm"
 )
 
 func (h Handler) CreateUser(c *fiber.Ctx) error {
-	userCreatedEvent := validators.UserCreatedEvent{}
-
+	userCreatedEvent := UserCreatedEvent{}
 	if err := c.BodyParser(&userCreatedEvent); err != nil {
 		return err
 	}
@@ -35,18 +34,25 @@ func (h Handler) CreateUser(c *fiber.Ctx) error {
 		Email: email,
 	}
 
-	err = h.DB.CreateUser(user)
+	err = h.DB.CreateUser(&user)
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(user)
 
 	return c.SendString("ok")
 }
 
 func (h Handler) GetUser(c *fiber.Ctx) error {
 	userId := c.Params("userId")
+
+	sessionClaims := c.Locals(middleware.SESSION_CLAIMS)
+	details, ok := sessionClaims.(*clerk.SessionClaims)
+	if !ok {
+		return errors.New("token error")
+	}
+	if details.Subject != userId {
+		return fiber.NewError(fiber.StatusForbidden)
+	}
 
 	user, err := h.DB.GetUser(userId)
 	if err != nil {
@@ -56,5 +62,7 @@ func (h Handler) GetUser(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.JSON(user)
+	userResponse := User{ID: user.ID, Email: user.Email}
+
+	return c.JSON(userResponse)
 }

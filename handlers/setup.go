@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"os"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/neilZon/workout-logger-api/middleware"
 )
@@ -10,13 +12,15 @@ func RegisterRoutes(app *fiber.App, h Handler, m middleware.Middleware) {
 
 	api.Post("/users", h.CreateUser)
 
-	// api.Use(m.JWTAuthMiddleware)
+	if os.Getenv("ENVIRONMENT") == "PROD" {
+		api.Use(m.JWTAuthMiddleware)
+	}
 	api.Use(m.MockAuthMiddleware)
 
 	api.Get("/users/:userId", h.GetUser)
 	api.Get("/users/:userId/routines", h.GetRoutines)
 
-	// api.Post("/routines", h.CreateRoutine)
+	api.Post("/routines", h.CreateRoutine)
 	// api.Put("/routines/:routineId", h.UpdateRoutine)
 	// api.Delete("/routines/:routineId", h.UpdateRoutine)
 

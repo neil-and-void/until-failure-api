@@ -1,6 +1,5 @@
-package validators
+package handlers
 
-// *** Clerk user create body ***
 type (
 	Verification struct {
 		Attempts int    `json:"attempts"`
@@ -64,17 +63,12 @@ type (
 
 // *** Requests ***
 type (
-	User struct {
-		ID    string `json:"id" validate:"required"`
-		Email string `json:"email" validate:"required,email"`
+	NewRoutine struct {
+		Name   string `json:"name" validate:"required,min=1,max=32"`
+		UserID string `json:"userId" validate:"required"`
 	}
-)
 
-// *** Responses ***
-type (
-	ErrorResponse struct {
-		Error string `json:"Error"`
-	}
-	Routine struct {
+	UpdateRoutine struct {
+		Name *string `json:"name"`
 	}
 )

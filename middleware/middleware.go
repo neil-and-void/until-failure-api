@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"context"
 	"strings"
 
 	"github.com/clerkinc/clerk-sdk-go/clerk"
@@ -9,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-const publicKeyPath = "public.pem"
+const SESSION_CLAIMS = "SESSION_CLAIMS"
 
 type Middleware struct {
 	Clerk clerk.Client
@@ -27,7 +26,7 @@ func (m Middleware) JWTAuthMiddleware(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"message": "Unauthorized"})
 	}
 
-	context.WithValue(c.Context(), "sessionClaims", sessClaims)
+	c.Locals("SESSION_CLAIMS", &sessClaims)
 
 	return c.Next()
 }
@@ -35,7 +34,11 @@ func (m Middleware) JWTAuthMiddleware(c *fiber.Ctx) error {
 func (m Middleware) MockAuthMiddleware(c *fiber.Ctx) error {
 	claims := clerk.SessionClaims{Claims: jwt.Claims{Subject: "user_2bhnSTV705sfQLZrf6Id3HXUR40"}}
 
-	context.WithValue(c.Context(), "sessionClaims", claims)
+	c.Locals("SESSION_CLAIMS", &claims)
 
 	return c.Next()
+}
+
+func GetSession(c *fiber.Ctx) {
+
 }

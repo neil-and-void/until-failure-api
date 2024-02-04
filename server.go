@@ -10,7 +10,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/joho/godotenv"
 	db "github.com/neilZon/workout-logger-api/database"
-	"github.com/neilZon/workout-logger-api/handlers/validators"
 	"github.com/neilZon/workout-logger-api/middleware"
 
 	"github.com/neilZon/workout-logger-api/handlers"
@@ -50,7 +49,7 @@ func main() {
 	app := fiber.New(fiber.Config{
 		// Global custom error handler
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			return c.Status(fiber.StatusBadRequest).JSON(validators.ErrorResponse{
+			return c.Status(fiber.StatusBadRequest).JSON(handlers.ErrorResponse{
 				Error: err.Error(),
 			})
 		},
