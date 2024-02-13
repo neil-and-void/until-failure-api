@@ -39,12 +39,11 @@ func (h Handler) CreateRoutine(c *fiber.Ctx) error {
 	createdAt := routine.CreatedAt.Format(utils.ISO8601Format)
 
 	return c.JSON(Routine{
-		ID:               routine.ID.String(),
-		Name:             routine.Name,
-		ExerciseRoutines: []ExerciseRoutine{},
-		Active:           routine.Active,
-		UserID:           routine.UserID,
-		CreatedAt:        createdAt,
+		ID:        routine.ID.String(),
+		Name:      routine.Name,
+		Active:    routine.Active,
+		UserID:    routine.UserID,
+		CreatedAt: createdAt,
 	})
 }
 
@@ -60,13 +59,63 @@ func (h Handler) GetRoutines(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusForbidden)
 	}
 
-	return c.SendString("I'm a GET request!")
-}
+	routines, err := h.DB.GetRoutines(userId)
+	if err != nil {
+		return err
+	}
 
-func (h Handler) UpdateRoutine(c *fiber.Ctx) error {
-	return c.SendString("I'm a PATCH request!")
-}
+	routinesResponse := []Routine{}
+	for _, routine := range routines {
+		exerciseRoutine := []ExerciseRoutine{}
 
-func (h Handler) DeleteRoutine(c *fiber.Ctx) error {
-	return c.SendString("I'm a GET request!")
+		routinesResponse = append(routinesResponse, Routine{
+			ID:               routine.ID.String(),
+			Name:             routine.Name,
+			Active:           routine.Active,
+			UserID:           routine.UserID,
+			Private:          routine.Private,
+			ExerciseRoutines: exerciseRoutine,
+			CreatedAt:        routine.CreatedAt.Format(utils.ISO8601Format),
+		})
+	}
+
+	return c.JSON(routinesResponse)
+}
+func (h Handler) GetRoutine(c *fiber.Ctx) error {
+	routineId := c.Params("routineId")
+
+	sessionClaims := c.Locals(middleware.SESSION_CLAIMS)
+	details, ok := sessionClaims.(*clerk.SessionClaims)
+	if !ok {
+		return errors.New("token error")
+	}
+	routine, err := h.DB.GetRoutine(routineId)
+	if err != nil {
+		return err
+	}
+
+	if details.Subject != routine.UserID {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"message": "Unauthorized"})
+	}
+
+	exerciseRoutines := []ExerciseRoutine{}
+	for _, exerciseRoutine := range routine.ExerciseRoutines {
+		exerciseRoutines = append(exerciseRoutines, ExerciseRoutine{
+			ID:        exerciseRoutine.ID.String(),
+			Name:      exerciseRoutine.Name,
+			Active:    exerciseRoutine.Active,
+			RoutineId: exerciseRoutine.RoutineID.String(),
+			CreatedAt: exerciseRoutine.CreatedAt.Format(utils.ISO8601Format),
+		})
+	}
+
+	return c.JSON(Routine{
+		ID:               routine.ID.String(),
+		Name:             routine.Name,
+		Active:           routine.Active,
+		ExerciseRoutines: exerciseRoutines,
+		Private:          routine.Private,
+		UserID:           routine.UserID,
+		CreatedAt:        routine.CreatedAt.Format(utils.ISO8601Format),
+	})
 }

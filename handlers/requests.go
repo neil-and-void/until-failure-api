@@ -69,6 +69,22 @@ type (
 	}
 
 	UpdateRoutine struct {
-		Name *string `json:"name"`
+		Name   *string `json:"name" validate:"min=1,max=32"`
+		Active *bool   `json:"active"`
 	}
+
+	NewExerciseRoutine struct {
+		Name      string `json:"name" validate:"required,min=1,max=99"`
+		RoutineID string `json:"routineId" validate:"required"`
+	}
+
+	NewSetScheme struct {
+		TargetReps        uint            `json:"targetReps" validate:"required,min=1,max=99"`
+		SetType           SetType         `json:"setType" validate:"required,oneof=WARMUP WORKING DROP SUPER,required"`
+		Measurement       MeasurementType `json:"measurement" validate:"required,oneof=WEIGHT DURATION BODYWEIGHT WEIGHTED_DURATION"`
+		ExerciseRoutineID string          `json:"exerciseRoutineId" validate:"required"`
+	}
+
+	SetType         string
+	MeasurementType string
 )

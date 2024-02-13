@@ -29,7 +29,7 @@ func InitDb() (UntilFailureDB, error) {
 		return UntilFailureDB{}, err
 	}
 
-	db.AutoMigrate(User{}, Routine{}, ExerciseRoutine{}, Workout{}, Exercise{}, SetEntry{})
+	db.AutoMigrate(User{}, Routine{}, ExerciseRoutine{}, Workout{}, Exercise{}, SetEntry{}, SetScheme{}, Tag{})
 
 	untilFailureDB := UntilFailureDB{DB: db}
 

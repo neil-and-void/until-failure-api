@@ -19,18 +19,10 @@ func RegisterRoutes(app *fiber.App, h Handler, m middleware.Middleware) {
 
 	api.Get("/users/:userId", h.GetUser)
 	api.Get("/users/:userId/routines", h.GetRoutines)
-
 	api.Post("/routines", h.CreateRoutine)
-	// api.Put("/routines/:routineId", h.UpdateRoutine)
-	// api.Delete("/routines/:routineId", h.UpdateRoutine)
+	api.Get("/routines/:routineId", h.GetRoutine)
 
-	// api.Get("/users/:userId/workouts", h.GetWorkouts)
-	// api.Post("/users/:userId/workouts")
-	// api.Put("/users/:userId/workouts")
+	api.Post("/exerciseRoutines", h.CreateExerciseRoutine)
 
-	// api.Get("/workouts/:workoutId")
-	//
-	// api.Get("/routines/:routineId")
-	//
-	// api.Post("/routines/:routineId/exercises")
+	api.Post("/setSchemes", h.CreateSetScheme)
 }

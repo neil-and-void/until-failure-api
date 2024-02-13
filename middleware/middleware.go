@@ -32,13 +32,9 @@ func (m Middleware) JWTAuthMiddleware(c *fiber.Ctx) error {
 }
 
 func (m Middleware) MockAuthMiddleware(c *fiber.Ctx) error {
-	claims := clerk.SessionClaims{Claims: jwt.Claims{Subject: "user_2bhnSTV705sfQLZrf6Id3HXUR40"}}
+	claims := clerk.SessionClaims{Claims: jwt.Claims{Subject: "user_2biARBs9Yl3iYUnqMmui0Th8EFn"}}
 
 	c.Locals("SESSION_CLAIMS", &claims)
 
 	return c.Next()
-}
-
-func GetSession(c *fiber.Ctx) {
-
 }

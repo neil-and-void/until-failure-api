@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/clerkinc/clerk-sdk-go/clerk"
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/joho/godotenv"
@@ -46,18 +47,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	app := fiber.New(fiber.Config{
-		// Global custom error handler
-		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			return c.Status(fiber.StatusBadRequest).JSON(handlers.ErrorResponse{
-				Error: err.Error(),
-			})
-		},
-	})
+	app := fiber.New()
 
 	app.Use(recover.New())
 
-	h := handlers.Handler{DB: db}
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
+	h := handlers.Handler{DB: db, Validate: validate}
 
 	m := middleware.Middleware{Clerk: client}
 
