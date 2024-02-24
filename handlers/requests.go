@@ -78,11 +78,21 @@ type (
 		RoutineID string `json:"routineId" validate:"required"`
 	}
 
+	UpdateExerciseRoutine struct {
+		Name string `json:"name" validate:"required,min=1,max=99"`
+	}
+
 	NewSetScheme struct {
-		TargetReps        uint            `json:"targetReps" validate:"required,min=1,max=99"`
+		TargetReps        uint            `json:"targetReps" validate:"min=0,max=99"`
 		SetType           SetType         `json:"setType" validate:"required,oneof=WARMUP WORKING DROP SUPER,required"`
 		Measurement       MeasurementType `json:"measurement" validate:"required,oneof=WEIGHT DURATION BODYWEIGHT WEIGHTED_DURATION"`
 		ExerciseRoutineID string          `json:"exerciseRoutineId" validate:"required"`
+	}
+
+	UpdateSetScheme struct {
+		TargetReps  uint            `json:"targetReps" validate:"min=0,max=99"`
+		SetType     SetType         `json:"setType" validate:"required,oneof=WARMUP WORKING DROP SUPER,required"`
+		Measurement MeasurementType `json:"measurement" validate:"required,oneof=WEIGHT DURATION BODYWEIGHT WEIGHTED_DURATION"`
 	}
 
 	SetType         string

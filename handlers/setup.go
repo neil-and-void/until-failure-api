@@ -23,6 +23,8 @@ func RegisterRoutes(app *fiber.App, h Handler, m middleware.Middleware) {
 	api.Get("/routines/:routineId", h.GetRoutine)
 
 	api.Post("/exerciseRoutines", h.CreateExerciseRoutine)
+	api.Put("/exerciseRoutines/:exerciseRoutineId", h.UpdateExerciseRoutine)
 
 	api.Post("/setSchemes", h.CreateSetScheme)
+	api.Put("/setSchemes/:setSchemeId", h.UpdateSetScheme)
 }

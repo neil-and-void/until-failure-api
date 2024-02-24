@@ -25,13 +25,24 @@ func (h Handler) CreateRoutine(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusForbidden)
 	}
 
+	routineCount, err := h.DB.GetRoutineCount(details.Subject)
+	if err != nil {
+		return err
+	}
+
+	if routineCount >= 100 {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
+			"error": "You cannot have more than 100 routines",
+		})
+	}
+
 	routine := database.Routine{
 		Name:   newRoutine.Name,
 		UserID: newRoutine.UserID,
 		Active: true,
 	}
 
-	err := h.DB.CreateRoutine(&routine)
+	err = h.DB.CreateRoutine(&routine)
 	if err != nil {
 		return err
 	}
@@ -89,6 +100,7 @@ func (h Handler) GetRoutine(c *fiber.Ctx) error {
 	if !ok {
 		return errors.New("token error")
 	}
+
 	routine, err := h.DB.GetRoutine(routineId)
 	if err != nil {
 		return err
@@ -100,12 +112,26 @@ func (h Handler) GetRoutine(c *fiber.Ctx) error {
 
 	exerciseRoutines := []ExerciseRoutine{}
 	for _, exerciseRoutine := range routine.ExerciseRoutines {
+
+		setSchemes := []SetScheme{}
+		for _, setScheme := range exerciseRoutine.SetSchemes {
+			setSchemes = append(setSchemes, SetScheme{
+				ID:                setScheme.ID.String(),
+				TargetReps:        setScheme.TargetReps,
+				SetType:           SetType(setScheme.SetType),
+				Measurement:       MeasurementType(setScheme.Measurement),
+				ExerciseRoutineId: setScheme.ExerciseRoutineId.String(),
+				CreatedAt:         setScheme.CreatedAt.Format(utils.ISO8601Format),
+			})
+		}
+
 		exerciseRoutines = append(exerciseRoutines, ExerciseRoutine{
-			ID:        exerciseRoutine.ID.String(),
-			Name:      exerciseRoutine.Name,
-			Active:    exerciseRoutine.Active,
-			RoutineId: exerciseRoutine.RoutineID.String(),
-			CreatedAt: exerciseRoutine.CreatedAt.Format(utils.ISO8601Format),
+			ID:         exerciseRoutine.ID.String(),
+			Name:       exerciseRoutine.Name,
+			Active:     exerciseRoutine.Active,
+			RoutineId:  exerciseRoutine.RoutineID.String(),
+			CreatedAt:  exerciseRoutine.CreatedAt.Format(utils.ISO8601Format),
+			SetSchemes: setSchemes,
 		})
 	}
 

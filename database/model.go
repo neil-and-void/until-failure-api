@@ -46,6 +46,7 @@ type (
 
 	SetScheme struct {
 		BaseModel
+		ID                uuid.UUID       `gorm:"primarykey;type:uuid;default:uuid_generate_v4()"`
 		TargetReps        uint            `gorm:"not null"`
 		SetType           SetType         `gorm:"default:'WORKING';not null;type:set_type"`
 		Measurement       MeasurementType `gorm:"default:'WEIGHT';not null;type:measurement_type"`
@@ -111,7 +112,7 @@ const (
 )
 
 func (m *MeasurementType) Scan(value interface{}) error {
-	*m = MeasurementType(value.([]byte))
+	*m = MeasurementType(value.(string))
 	return nil
 }
 
@@ -120,7 +121,7 @@ func (m MeasurementType) Value() (driver.Value, error) {
 }
 
 func (s *SetType) Scan(value interface{}) error {
-	*s = SetType(value.([]byte))
+	*s = SetType(value.(string))
 	return nil
 }
 

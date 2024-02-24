@@ -55,3 +55,36 @@ func (h Handler) CreateExerciseRoutine(c *fiber.Ctx) error {
 		CreatedAt: exerciseRoutine.CreatedAt.Format(utils.ISO8601Format),
 	})
 }
+
+func (h Handler) UpdateExerciseRoutine(c *fiber.Ctx) error {
+	updatedExerciseRoutine := UpdateExerciseRoutine{}
+	if err := c.BodyParser(&updatedExerciseRoutine); err != nil {
+		return err
+	}
+
+	if err := h.Validate.Struct(updatedExerciseRoutine); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	exerciseRoutineId := c.Params("exerciseRoutineId")
+	parsedUUID, err := uuid.Parse(exerciseRoutineId)
+	if err != nil {
+		return err
+	}
+
+	exerciseRoutine := database.ExerciseRoutine{
+		ID:   parsedUUID,
+		Name: updatedExerciseRoutine.Name,
+	}
+	if err := h.DB.UpdateExericseRoutine(&exerciseRoutine); err != nil {
+		return err
+	}
+
+	return c.JSON(ExerciseRoutine{
+		ID:        exerciseRoutine.ID.String(),
+		Name:      exerciseRoutine.Name,
+		Active:    exerciseRoutine.Active,
+		RoutineId: exerciseRoutine.RoutineID.String(),
+		CreatedAt: exerciseRoutine.CreatedAt.Format(utils.ISO8601Format),
+	})
+}

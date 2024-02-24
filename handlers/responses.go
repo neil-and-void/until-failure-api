@@ -22,11 +22,21 @@ type (
 	}
 
 	ExerciseRoutine struct {
-		ID        string `json:"id"`
-		Name      string `json:"name"`
-		Active    bool   `json:"active"`
-		RoutineId string `json:"routineId"`
-		CreatedAt string `json:"createdAt"`
+		ID         string      `json:"id"`
+		Name       string      `json:"name"`
+		Active     bool        `json:"active"`
+		RoutineId  string      `json:"routineId"`
+		SetSchemes []SetScheme `json:"setSchemes"`
+		CreatedAt  string      `json:"createdAt"`
+	}
+
+	SetScheme struct {
+		ID                string          `json:"id"`
+		TargetReps        uint            `json:"targetReps"`
+		SetType           SetType         `json:"setType"`
+		Measurement       MeasurementType `json:"measurement"`
+		ExerciseRoutineId string          `json:"exerciseRoutineId"`
+		CreatedAt         string          `json:"createdAt"`
 	}
 
 	// Workout
